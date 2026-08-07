@@ -70,4 +70,21 @@ describe('Phase 3 Search A core', () => {
     expect(() => searchStars(query({ startDate: '2026-02-31' }))).toThrow(RangeError);
     expect(() => searchStars(query({ conditions: [] }))).toThrow(RangeError);
   });
+
+  it('B 類同層多星為 OR、跨層固定 AND', () => {
+    const matches = searchStars(query({
+      endDate: '2026-09-10',
+      conditions: [
+        { level: 'hour', stars: [8, 9] },
+        { level: 'ke', stars: [8, 9] },
+      ],
+    }));
+    expect(matches.length).toBeGreaterThan(0);
+    for (const match of matches) {
+      expect([8, 9]).toContain(match.palaceStars.hour);
+      expect([8, 9]).toContain(match.palaceStars.ke);
+      expect(match.precision).toBe('ke');
+      expect(match.matchedConditions).toHaveLength(2);
+    }
+  });
 });

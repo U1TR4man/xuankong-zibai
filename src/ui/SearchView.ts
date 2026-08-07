@@ -7,12 +7,16 @@ import { setView, type AppState } from '../state/appState';
 import { el } from './dom';
 import { SearchResults } from './SearchResults';
 
+type SearchMode = 'simple' | 'advanced';
+
 interface SearchDraft {
+  mode: SearchMode;
   startDate: string;
   endDate: string;
   palace: string;
   level: SearchLevel;
   star: string;
+  advancedStars: Record<SearchLevel, string[]>;
 }
 
 interface SearchViewModel {
@@ -24,17 +28,42 @@ interface SearchViewModel {
 
 let model: SearchViewModel | undefined;
 
+const SEARCH_LEVELS: readonly SearchLevel[] = ['day', 'hour', 'ke'];
+
+function levelLabel(level: SearchLevel): string {
+  return level === 'day' ? '日' : level === 'hour' ? '時' : '刻';
+}
+
 function defaults(): SearchViewModel {
   const today = nowUtc8();
   return {
     draft: {
+      mode: 'simple',
       startDate: formatUtc8Date(today),
       endDate: formatUtc8Date(addDays(today, 30)),
       palace: '',
       level: 'hour',
       star: '',
+      advancedStars: { day: [], hour: [], ke: [] },
     },
   };
+}
+
+function starChoices(
+  name: string,
+  selected: readonly string[],
+  multiple: boolean,
+): HTMLElement {
+  return el('div', { class: 'search-stars' },
+    ...Array.from({ length: 9 }, (_, index) => {
+      const value = String(index + 1);
+      const checked = selected.includes(value);
+      return el('label', { class: `search-star${checked ? ' is-selected' : ''}` },
+        el('input', { type: multiple ? 'checkbox' : 'radio', name, value, checked }),
+        el('span', {}, STAR_NAMES[index + 1]!),
+      );
+    }),
+  );
 }
 
 function option(value: string, label: string, selected: boolean): HTMLOptionElement {
@@ -75,29 +104,33 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
     )),
   );
 
-  const level = el('fieldset', { class: 'search-choice-group' },
+  const simpleLevel = el('fieldset', { class: 'search-choice-group' },
     el('legend', { class: 'search-field__label' }, '層級'),
     el('div', { class: 'search-levels' },
-      ...(['day', 'hour', 'ke'] as const).map((value) => el('label', {
+      ...SEARCH_LEVELS.map((value) => el('label', {
         class: `search-choice${draft.level === value ? ' is-selected' : ''}`,
       },
       el('input', { type: 'radio', name: 'level', value, checked: draft.level === value }),
-      el('span', {}, value === 'day' ? '日' : value === 'hour' ? '時' : '刻'),
+      el('span', {}, levelLabel(value)),
       )),
     ),
   );
 
-  const stars = el('fieldset', { class: 'search-choice-group' },
+  const simpleStars = el('fieldset', { class: 'search-choice-group' },
     el('legend', { class: 'search-field__label' }, '飛星'),
-    el('div', { class: 'search-stars' },
-      ...Array.from({ length: 9 }, (_, index) => {
-        const value = String(index + 1);
-        return el('label', { class: `search-star${draft.star === value ? ' is-selected' : ''}` },
-          el('input', { type: 'radio', name: 'star', value, checked: draft.star === value }),
-          el('span', {}, STAR_NAMES[index + 1]!),
-        );
-      }),
-    ),
+    starChoices('star', draft.star ? [draft.star] : [], false),
+  );
+
+  const advanced = el('section', { class: 'search-advanced', 'aria-label': '進階多層條件' },
+    el('p', { class: 'search-advanced__rule' },
+      '同層選多星代表任一符合；跨層條件必須同時成立。'),
+    ...SEARCH_LEVELS.map((searchLevel) => el('fieldset', {
+      class: 'search-choice-group search-advanced__level',
+      'data-condition-level': searchLevel,
+    },
+    el('legend', { class: 'search-field__label' }, `流${levelLabel(searchLevel)}`),
+    starChoices(`${searchLevel}Stars`, draft.advancedStars[searchLevel], true),
+    )),
   );
 
   form.append(
@@ -106,21 +139,34 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
       el('span', { class: 'search-field__label' }, '宮位'),
       palace,
     ),
-    level,
-    stars,
+    draft.mode === 'simple' ? simpleLevel : advanced,
   );
+  if (draft.mode === 'simple') form.append(simpleStars);
   if (viewModel.error) {
     form.append(el('p', { class: 'search-form__error', role: 'alert' }, viewModel.error));
   }
   form.append(el('button', { class: 'btn btn--primary search-form__submit', type: 'submit' }, '尋找'));
 
   form.addEventListener('change', (event) => {
-    const input = event.target as HTMLInputElement;
+    const input = event.target as HTMLInputElement | HTMLSelectElement;
+    if (input.name === 'startDate') draft.startDate = input.value;
+    if (input.name === 'endDate') draft.endDate = input.value;
+    if (input.name === 'palace') draft.palace = input.value;
+    if (input.name === 'level') draft.level = input.value as SearchLevel;
+    if (input.name === 'star') draft.star = input.value;
+    for (const searchLevel of SEARCH_LEVELS) {
+      if (input.name !== `${searchLevel}Stars`) continue;
+      draft.advancedStars[searchLevel] = Array.from(
+        form.querySelectorAll<HTMLInputElement>(`input[name="${searchLevel}Stars"]:checked`),
+      ).map((item) => item.value);
+    }
     if (input.name === 'level' || input.name === 'star') {
       const group = input.closest('fieldset');
       group?.querySelectorAll('label').forEach((label) => {
         label.classList.toggle('is-selected', label.contains(input));
       });
+    } else if (input instanceof HTMLInputElement && input.type === 'checkbox') {
+      input.closest('label')?.classList.toggle('is-selected', input.checked);
     }
   });
 
@@ -128,21 +174,41 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
     event.preventDefault();
     const data = new FormData(form);
     const nextDraft: SearchDraft = {
+      mode: draft.mode,
       startDate: String(data.get('startDate') ?? ''),
       endDate: String(data.get('endDate') ?? ''),
       palace: String(data.get('palace') ?? ''),
-      level: String(data.get('level') ?? 'hour') as SearchLevel,
-      star: String(data.get('star') ?? ''),
+      level: String(data.get('level') ?? draft.level) as SearchLevel,
+      star: String(data.get('star') ?? draft.star),
+      advancedStars: {
+        day: draft.mode === 'advanced' ? data.getAll('dayStars').map(String) : draft.advancedStars.day,
+        hour: draft.mode === 'advanced' ? data.getAll('hourStars').map(String) : draft.advancedStars.hour,
+        ke: draft.mode === 'advanced' ? data.getAll('keStars').map(String) : draft.advancedStars.ke,
+      },
     };
     model = { draft: nextDraft };
     try {
-      if (!nextDraft.palace || !nextDraft.star) throw new RangeError('請選擇宮位與飛星');
+      if (!nextDraft.palace) throw new RangeError('請選擇宮位');
+      const conditions = nextDraft.mode === 'simple'
+        ? nextDraft.star
+          ? [{ level: nextDraft.level, stars: [asStarNumber(Number(nextDraft.star))] }]
+          : []
+        : SEARCH_LEVELS.flatMap((searchLevel) => {
+          const values = nextDraft.advancedStars[searchLevel];
+          return values.length > 0 ? [{
+            level: searchLevel,
+            stars: values.map((value) => asStarNumber(Number(value))),
+          }] : [];
+        });
+      if (conditions.length === 0) throw new RangeError(
+        nextDraft.mode === 'simple' ? '請選擇飛星' : '請至少設定一個層級條件',
+      );
       const query: StarSearchQuery = {
         version: 1,
         startDate: nextDraft.startDate,
         endDate: nextDraft.endDate,
         palace: nextDraft.palace as PalaceKey,
-        conditions: [{ level: nextDraft.level, stars: [asStarNumber(Number(nextDraft.star))] }],
+        conditions,
       };
       const matches = searchStars(query, {
         dayChangeMode: state.settings.dayChangeMode,
@@ -164,11 +230,30 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
 
 export function SearchView(state: AppState): HTMLElement {
   model ??= defaults();
+  const mode = model.draft.mode;
+  const switchMode = (nextMode: SearchMode) => {
+    model = { draft: { ...model!.draft, mode: nextMode } };
+    setView('search');
+  };
   return el('main', { class: 'search-view' },
     el('header', { class: 'search-view__head' },
-      el('p', { class: 'search-view__eyebrow' }, '尋星 · 簡易'),
+      el('p', { class: 'search-view__eyebrow' }, `尋星 · ${mode === 'simple' ? '簡易' : '進階'}`),
       el('h1', {}, '尋找宮內飛星'),
-      el('p', {}, '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。'),
+      el('p', {}, mode === 'simple'
+        ? '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。'
+        : '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。'),
+    ),
+    el('div', { class: 'search-mode', role: 'group', 'aria-label': '搜尋模式' },
+      el('button', {
+        class: `search-mode__item${mode === 'simple' ? ' is-active' : ''}`,
+        type: 'button', 'aria-pressed': String(mode === 'simple'),
+        onclick: () => switchMode('simple'),
+      }, '簡易'),
+      el('button', {
+        class: `search-mode__item${mode === 'advanced' ? ' is-active' : ''}`,
+        type: 'button', 'aria-pressed': String(mode === 'advanced'),
+        onclick: () => switchMode('advanced'),
+      }, '進階'),
     ),
     SearchForm(state, model),
     model.query && model.matches ? SearchResults(model.query, model.matches) : null,

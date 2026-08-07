@@ -42,6 +42,14 @@ function ResultCard(match: SearchMatch): HTMLElement {
     ));
   }
 
+  const combinations: HTMLElement[] = [];
+  if (match.matchedConditions.length > 1 && match.palaceStars.day && match.palaceStars.hour) {
+    combinations.push(el('span', {}, `日時 ${match.palaceStars.day}${match.palaceStars.hour}`));
+  }
+  if (match.matchedConditions.length > 1 && match.palaceStars.hour && match.palaceStars.ke) {
+    combinations.push(el('span', {}, `時刻 ${match.palaceStars.hour}${match.palaceStars.ke}`));
+  }
+
   return el('article', { class: 'search-result' },
     el('header', { class: 'search-result__head' },
       el('div', {},
@@ -51,6 +59,9 @@ function ResultCard(match: SearchMatch): HTMLElement {
       el('span', { class: 'search-result__palace' }, palaceLabel(match.palace)),
     ),
     layers,
+    combinations.length > 0
+      ? el('div', { class: 'search-result__combinations', 'aria-label': '組合摘要' }, ...combinations)
+      : null,
     el('button', {
       class: 'btn btn--ghost search-result__open',
       type: 'button',
@@ -64,13 +75,14 @@ function ResultCard(match: SearchMatch): HTMLElement {
 
 export function SearchResults(query: StarSearchQuery, matches: readonly SearchMatch[]): HTMLElement {
   const palace = palaceLabel(query.palace);
-  const condition = query.conditions[0]!;
-  const stars = condition.stars.map(starName).join('、');
+  const conditionText = query.conditions.map((condition) => (
+    `流${LEVEL_LABEL[condition.level]} ${condition.stars.map(starName).join('／')}`
+  )).join(' ＋ ');
 
   return el('section', { class: 'search-results', 'aria-labelledby': 'search-results-title' },
     el('header', { class: 'search-results__summary' },
       el('div', {},
-        el('h2', { id: 'search-results-title' }, `${palace} · 流${LEVEL_LABEL[condition.level]} · ${stars}`),
+        el('h2', { id: 'search-results-title' }, `${palace} · ${conditionText}`),
         el('p', {}, `${query.startDate} – ${query.endDate}`),
       ),
       el('strong', { class: 'search-results__count', 'aria-live': 'polite' }, `共 ${matches.length} 個結果`),

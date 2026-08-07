@@ -206,6 +206,16 @@ button, select, input { font: inherit; color: inherit; }
 .search-view__eyebrow { margin: 0; font-size: 13px; color: var(--cinnabar); }
 .search-view__head h1 { margin: 0; font-family: var(--font-display); font-size: 28px; font-weight: 500; }
 .search-view__head > p:last-child { margin: 0; font-size: 14px; color: var(--ink-secondary); }
+.search-mode { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s2); }
+.search-mode__item {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper-raised);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+.search-mode__item.is-active { border-color: var(--cinnabar); color: var(--cinnabar); background: var(--cinnabar-soft); }
 .search-form { display: flex; flex-direction: column; gap: var(--s5); }
 .search-date-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
 .search-field { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
@@ -241,6 +251,9 @@ button, select, input { font: inherit; color: inherit; }
 }
 .search-stars { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-top: var(--s2); }
 .search-star span { font-family: var(--font-display); font-size: 15px; }
+.search-advanced { display: flex; flex-direction: column; gap: var(--s5); }
+.search-advanced__rule { margin: 0; padding: var(--s3); background: var(--paper-muted); font-size: 13px; color: var(--ink-secondary); }
+.search-advanced__level { padding-top: var(--s1); }
 .search-form__error { margin: 0; color: var(--cinnabar); font-size: 14px; }
 .search-form__submit { width: 100%; }
 .search-results { display: flex; flex-direction: column; gap: var(--s4); padding-top: var(--s5); border-top: 1px solid var(--line); }
@@ -260,6 +273,8 @@ button, select, input { font: inherit; color: inherit; }
 .search-result__layer-label { font-size: 10px; color: var(--ink-tertiary); }
 .search-result__layer-star { font-family: var(--font-display); font-size: 13px; white-space: nowrap; }
 .search-result__match { position: absolute; top: 1px; right: 3px; color: var(--cinnabar); font-size: 10px; }
+.search-result__combinations { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.search-result__combinations span { padding: var(--s1) var(--s2); background: var(--paper-muted); font-size: 12px; color: var(--ink-secondary); }
 .search-result__open { align-self: flex-end; }
 .search-empty { padding: var(--s5); background: var(--paper-muted); text-align: center; color: var(--ink-secondary); }
 .search-empty p { margin: 0; }

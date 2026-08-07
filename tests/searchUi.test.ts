@@ -51,7 +51,7 @@ describe('Phase 3 尋星 A UI', () => {
     expect(document.querySelectorAll('.search-result')).toHaveLength(count);
     expect(document.querySelectorAll('.search-result:first-child .search-result__layer')).toHaveLength(4);
     expect(document.querySelectorAll('.search-result:first-child .search-result__layer.is-match')).toHaveLength(1);
-    expect($('.search-results__summary')?.textContent).toContain('離 · 南 · 流時 · 九紫');
+    expect($('.search-results__summary')?.textContent).toContain('離 · 南 · 流時 九紫');
   });
 
   it('查看結果會由正式盤面重算，開啟疊盤並高亮離宮', async () => {
@@ -76,5 +76,42 @@ describe('Phase 3 尋星 A UI', () => {
     expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');
     expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
     expect(document.querySelectorAll('.search-result').length).toBeGreaterThan(0);
+  });
+
+  it('進階搜尋支援同層多星 OR、跨層 AND 與組合摘要', () => {
+    const advanced = Array.from(document.querySelectorAll<HTMLButtonElement>('.search-mode__item'))
+      .find((button) => button.textContent === '進階')!;
+    advanced.click();
+
+    expect($('.search-view__eyebrow')?.textContent).toBe('尋星 · 進階');
+    expect($('.search-advanced__rule')?.textContent).toContain('同層選多星代表任一符合');
+    expect(document.querySelectorAll('.search-advanced__level')).toHaveLength(3);
+    for (const selector of [
+      'input[name="hourStars"][value="8"]',
+      'input[name="hourStars"][value="9"]',
+      'input[name="keStars"][value="8"]',
+      'input[name="keStars"][value="9"]',
+    ]) $<HTMLInputElement>(selector)!.click();
+
+    $<HTMLFormElement>('.search-form')!.dispatchEvent(new Event('submit', {
+      bubbles: true, cancelable: true,
+    }));
+
+    const count = Number(/共 (\d+) 個結果/.exec($('.search-results__count')?.textContent ?? '')?.[1]);
+    expect(count).toBeGreaterThan(0);
+    expect($('.search-results__summary')?.textContent).toContain('流時 八白／九紫 ＋ 流刻 八白／九紫');
+    expect(document.querySelectorAll('.search-result:first-child .search-result__layer')).toHaveLength(5);
+    expect(document.querySelectorAll('.search-result:first-child .search-result__layer.is-match')).toHaveLength(2);
+    expect($('.search-result:first-child .search-result__combinations')?.textContent).toContain('時刻');
+  });
+
+  it('切回簡易模式不會遺失原有單星條件', () => {
+    const simple = Array.from(document.querySelectorAll<HTMLButtonElement>('.search-mode__item'))
+      .find((button) => button.textContent === '簡易')!;
+    simple.click();
+
+    expect($('.search-view__eyebrow')?.textContent).toBe('尋星 · 簡易');
+    expect($<HTMLInputElement>('input[name="level"][value="hour"]')?.checked).toBe(true);
+    expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
   });
 });
