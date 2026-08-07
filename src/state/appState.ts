@@ -21,7 +21,9 @@ export interface AppState {
   selectedDateTime: Date;
   level: Level;
   settings: Settings;
-  /** 是否顯示首頁（尚未排盤） */
+  /** true 時才會由背景 timer 持續更新 nowUtc8。 */
+  followNow: boolean;
+  /** 舊版首頁相容標記；V2 Phase 2 起不再 render landing。 */
   home: boolean;
 }
 
@@ -31,8 +33,9 @@ const listeners = new Set<Listener>();
 
 const state: AppState = {
   selectedDateTime: nowUtc8(),
-  level: 'day',
+  level: 'hour',
   settings: loadSettings(),
+  followNow: true,
   home: true,
 };
 
@@ -49,8 +52,12 @@ function emit(): void {
   for (const fn of listeners) fn(state);
 }
 
-export function setDateTime(d: Date, opts: { push?: boolean } = {}): void {
+export function setDateTime(
+  d: Date,
+  opts: { push?: boolean; followNow?: boolean } = {},
+): void {
   state.selectedDateTime = d;
+  state.followNow = opts.followNow ?? false;
   state.home = false;
   syncUrl(opts.push);
   emit();
@@ -66,16 +73,43 @@ export function setLevel(level: Level, opts: { push?: boolean } = {}): void {
 export function setDateTimeAndLevel(d: Date, level: Level): void {
   state.selectedDateTime = d;
   state.level = level;
+  state.followNow = false;
   state.home = false;
   syncUrl(true);
   emit();
 }
 
+/**
+ * Phase 2 過渡：舊版以 `home=true` 表示尚未排盤；V2 不再顯示 landing，
+ * 而是把這個舊狀態正規化成「現在的流時盤」。先保留欄位，避免一次破壞舊流程。
+ */
+export function migrateLegacyHome(): void {
+  if (!state.home) return;
+  state.selectedDateTime = nowUtc8();
+  state.level = 'hour';
+  state.followNow = true;
+}
+
 export function goHome(): void {
+  state.selectedDateTime = nowUtc8();
+  state.level = 'hour';
+  state.followNow = true;
   state.home = true;
   try {
     history.pushState(null, '', location.pathname);
   } catch { /* 同上 */ }
+  emit();
+}
+
+export function returnToNow(): void {
+  setDateTime(nowUtc8(), { followNow: true });
+}
+
+/** App 開著跨分鐘／刻／時辰時，只更新仍在 follow-now 的使用者。 */
+export function refreshFollowedNow(): void {
+  if (!state.followNow) return;
+  state.selectedDateTime = nowUtc8();
+  if (!state.home) syncUrl();
   emit();
 }
 
@@ -111,11 +145,15 @@ export function restoreFromUrl(): boolean {
   if (!d) return false;
   state.selectedDateTime = d;
   if (level && LEVELS.includes(level)) state.level = level;
+  state.followNow = false;
   state.home = false;
   return true;
 }
 
 window.addEventListener('popstate', () => {
-  if (!restoreFromUrl()) state.home = true;
+  if (!restoreFromUrl()) {
+    state.home = true;
+    migrateLegacyHome();
+  }
   emit();
 });

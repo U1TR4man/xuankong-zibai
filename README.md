@@ -8,12 +8,12 @@
 ```
 npm install
 npm run dev       # 開發
-npm test          # 79 個單元測試
+npm test          # 99 個測試（含 1200 點 engine snapshot）
 npm run build     # 產生 dist/（含 service worker、manifest）
 npm run preview
 ```
 
-## 目前進度
+## 排盤功能進度
 
 Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的主要內容：
 
@@ -25,6 +25,20 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 | 4 | 流年、流月、Breadcrumb、上一個/下一個導航、Swipe | ✅ |
 | 5 | Explain Mode（為何是此星？） | ✅ |
 | 6 | PWA / Service Worker / Offline / Install | ✅ |
+
+## V2 Mobile-First UI/UX
+
+`docs/uiux-redesign-v2.md` 的 Phase 0–6 已完成：
+
+| Phase | 內容 | 狀態 |
+|---|---|---|
+| 0 | 算法 baseline + 1200 點 snapshot 護欄 | ✅ |
+| 1 | 紙墨朱砂 tokens + 一體九宮方盤 | ✅ |
+| 2 | 打開即見現在流時盤；一 tap 進刻盤 | ✅ |
+| 3 | native `<dialog>` BottomSheet、日期時間、設定 | ✅ |
+| 4 | Child／Ke picker sheets + 每層單一 CTA | ✅ |
+| 5 | ExplainSheet、簡潔／研習模式、StudyPanel | ✅ |
+| 6 | follow-now、盤面 swipe zone、motion、safe area、PWA polish | ✅ |
 
 ## 架構
 
@@ -52,9 +66,11 @@ src/
 │           ├── EightKe15MinuteStrategy.ts 第一版算法
 │           └── registry.ts                策略註冊表
 ├── data/    solarTerms.data.ts（45 KB）、vsop87Earth.data.ts（13 KB）
-├── ui/      NinePalaceGrid / Breadcrumb / TimeNavigator / KeSelector /
-│            ChildSelector / ExplainPanel / DetailPanel / SettingsSheet / Home
-├── state/   appState.ts（含 URL 同步）、settings.ts
+├── ui/      TopBar / DateTimeContext / LevelSegment / ChartHeader /
+│            NinePalaceGrid / TimeNavigator / ContextAction / BottomSheet /
+│            TimePickerSheet / ChildPickerSheet / KePickerSheet /
+│            ExplainSheet / SettingsSheet / StudyPanel
+├── state/   appState.ts（URL 同步、follow-now）、settings.ts（簡潔／研習）
 └── pwa/     registerSW.ts
 ```
 
@@ -96,8 +112,8 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 79 個測試，涵蓋規劃書 §36 A–E 全部項目，
-  含六段日紫白在每個節氣前後 ±1 分鐘的切換、以及 §39 的 V1 端到端下鑽流程。
+- `npm test` — 99 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽與 V2 Phase 2–6 UI state／interaction。
+  亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
   **2996 個取樣時間點**重算年／月／日／時／刻五層入中星與順逆：**零筆不一致**。
@@ -105,5 +121,5 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 ## 尚未做的事
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
-- UI 僅在 jsdom 下做過結構驗證；真實裝置的 375 / 390 / 430 / 768 版面請自行過目。
+- 已用真實瀏覽器驗證 320 / 375 / 390 / 430 / 768；正式發佈前仍建議在實體 iPhone spot-check native date/time 與 standalone safe area。
 - 未做 IndexedDB（目前資料量小，設定用 localStorage 已足夠）。

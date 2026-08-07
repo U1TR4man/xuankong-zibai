@@ -1,142 +1,135 @@
 # 接手說明（給 Codex / 下一位 AI）
 
-## 你要做什麼
+## 目前狀態
 
-繼續 `docs/uiux-redesign-v2.md` 的 **Phase 2**。
-**Phase 0 與 Phase 1 已完成並已合併進 `main`（commit `ff20339`）。**
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6 已全部完成**。
 
----
+- 專案：`U1TR4man/xuankong-zibai`
+- branch：`main`
+- 目前 HEAD：`3e66514`
+- Phase 2–6 仍在 working tree，**尚未 commit／push**
+- 規格真相來源：`docs/uiux-redesign-v2.md`
 
-## 專案是什麼
-
-`U1TR4man/xuankong-zibai` — 玄空紫白飛星排盤 PWA。
-Vanilla TypeScript + Vite，無框架。完全離線可用。
-
-- 線上：<https://u1tr4man.github.io/xuankong-zibai/>
-- 推上 `main` 會自動跑測試 → 打包 → 發佈（`.github/workflows/deploy.yml`）
-
-## 開始前先讀
-
-1. `docs/uiux-redesign-v2.md` — **本輪唯一規格書，以它為準**
-2. `README.md` — 玄學規則、資料來源、架構
-3. `src/app.ts`、`src/styles.css`、`src/ui/*`、`src/state/*`
-
-然後跑：
-
-```bash
-npm install
-npm test          # 應為 80 passed
-npm run build     # 應成功
-```
+下一步不是再擴功能，而是先 review diff、重跑驗證，再精準 stage／commit。
 
 ---
 
 ## 絕對不能碰
 
-```
+```text
 src/engine/**
 src/data/**
+tests/fixtures/chart-snapshot.json
 ```
 
-節氣、干支日、年月日時刻起星、`flyNineStars`、`KeStarStrategy`、UTC+8 規則，**一律不改**。
-
-### 護欄：`tests/engineSnapshot.test.ts`
-
-這支測試鎖死了 UI 重構開始前（commit `d86f724`）**1200 個時間點（1912–2104）** 的五層
-`centerStar` / `direction` / 完整九宮飛布。
-
-> **它失敗代表你動到了 engine。正確做法是把改動退掉，不是更新 fixture。**
-
-其餘 79 個算法測試的 expected values 同樣不得修改。
+節氣、干支日、年月日時刻起星、`flyNineStars`、`KeStarStrategy`、UTC+8 規則均未修改。
+`tests/engineSnapshot.test.ts` 持續鎖定 1912–2104 的 1200 個時間點；失敗時不可更新 fixture。
 
 ---
 
-## Phase 1 已完成的內容（不要重做）
+## 已完成內容
 
-改動檔案只有：`src/styles.css`、`src/ui/NinePalaceGrid.ts`（+ 測試與 tsconfig）。
+### Phase 1 — Visual system + 九宮
 
-- `styles.css` 全面改寫為**紙墨朱砂 light 主題**。Token 見檔頭 `:root`：
-  `--paper / --paper-raised / --ink / --ink-secondary / --ink-tertiary /
-   --line / --line-strong / --cinnabar / --cinnabar-soft / --bronze`，
-  4pt 節奏 `--s1..--s8`，雙字體 `--font-display`(serif) / `--font-ui`(sans)
-- 九宮由 9 張圓角卡 → **1 個共用細線的完整方盤**（`.grid` + `.cell` + `.is-lastcol/.is-lastrow`）
-- 主顯示改星名（`一白`…），`①②③` 已移除；每宮三層：`.cell__palace` / `.cell__star` / `.cell__meta`
-- 九星彩色收斂：`.star-1..9 { color: inherit }`，中宮是全 App 唯一朱砂位
-- `今` 改小朱砂印章 `.badge--now`；已加 `prefers-reduced-motion`
+- 紙／墨／朱砂 light tokens
+- 九宮改為共用細線的一體方盤
+- 中宮為唯一強朱砂位
+- 九星不再用九種高彩色
 
-**Checkpoint 1 已用真實瀏覽器驗過**，320 / 375 / 390 / 430 / 768 全部零橫向 overflow，
-九宮格子分別為 98 / 114 / 119 / 132 / 189 px 且皆為正方。
+### Phase 2 — 移除 landing friction
 
----
+- 空 URL：`nowUtc8() + level='hour'`
+- 0 tap 看現在流時盤，1 tap 進現在刻盤
+- 移除 landing、Breadcrumb、舊 Header／LevelTabs
+- 舊 `t`／`level` URL 與 `home=true` 相容
+- 新增 `TopBar`、`DateTimeContext`、`LevelSegment`
 
-## 下一步：Phase 2 — 移除 Landing Friction
+### Phase 3 — Bottom Sheet primitive
 
-規格書 §2.2、§4、§5、§6、§7、§22、§31、§40(P0)。
+- native `<dialog>`；單一 sheet、backdrop、Esc、swipe down、focus return
+- body scroll lock、80dvh、safe-area bottom、sheet 內捲動
+- `TimePickerSheet` 採 draft →「查看此時」才 apply
+- `SettingsSheet` 已移出 normal document flow
 
-目標：**打開 App 直接顯示「現在的流時盤」，0 tap 看到結果，1 tap 進刻盤。**
+### Phase 4 — Child／Ke picker sheets
 
-要改：`src/app.ts`、`src/state/appState.ts`，新增 `TopBar.ts` / `DateTimeContext.ts` / `LevelSegment.ts`。
+- 年／月／日／時各只保留一個 contextual CTA
+- 子月／日／時選單與八刻清單改為 Sheet
+- 完整年→月→日→時→刻流程不觸發 page navigation
+- selector 計算抽到 `src/ui/selectors/childItems.ts`
 
-要移除常駐：首頁 date/time inputs、「立即排盤」、home level buttons、技術說明文字、Breadcrumb。
+### Phase 5 — Explain + Study
 
-首次進入預設：
+- default `displayMode='simple'`
+- default `showLuoshu=false`
+- 解說改為 `ExplainSheet`
+- 研習模式才顯示預設收合的 `StudyPanel`
+- 模式以 localStorage 持久化
 
-```ts
-selectedDateTime = nowUtc8()
-level = 'hour'
-```
+### Phase 6 — Polish
 
-**舊 URL 相容（§31）**：URL 有明確 `t`/`level` 就尊重 URL；舊的 `home=true` 狀態 render 成 now hour view，先不要直接刪 `home` state。
-
-### Checkpoint 2
-
-```
-新用戶 0 tap → 現在流時盤
-        1 tap → 現在刻盤
-```
-
----
-
-## 之後的 Phase（做完 2 再往下，不要一次做完）
-
-- **Phase 3** BottomSheet primitive（native `<dialog>`）+ TimePickerSheet + SettingsSheet
-- **Phase 4** ChildPickerSheet / KePickerSheet，每層只留一個 contextual CTA
-- **Phase 5** ExplainSheet、StudyPanel、`displayMode: 'simple' | 'study'`
-- **Phase 6** motion、focus states、swipe zone 修正、copy polish、safe area
-
-Dark Mode 明確留到 V3 之後，本輪不要開。
+- swipe 只綁 `[data-swipe-zone="chart"]`，並排除 interactive elements
+- `followNow` 每 30 秒刷新；手動選時即停止，按「回到今」恢復
+- Chart Header hierarchy、兩欄 Prev／Next、functional motion
+- focus、44px touch target、safe area、PWA light theme、no-JS 文案
+- Dark Mode 沒有開 scope，留待 V3
 
 ---
 
-## 每個 Phase 完成後必做
+## 驗證結果
+
+```text
+test files  13 passed
+tests       99 passed
+build       production success
+single file 玄空紫白.html（約 102 KB）success
+```
+
+真實 production 瀏覽器已驗證：
+
+| viewport | overflow | 九宮 | 最小主頁按鈕 |
+|---|---:|---:|---:|
+| 320 | 無 | 296×296；cell 98×98 | 44px |
+| 375 | 無 | 343×343；cell 113.7×113.7 | 44px |
+| 390 | 無 | 358×358；cell 118.7×118.7 | 44px |
+| 430 | 無 | 398×398；cell 132×132 | 44px |
+| 768 | 無 | 568×568；cell 188.7×188.7 | 44px |
+
+另驗證：
+
+- 日期 Sheet apply、Esc、focus return
+- 320×667 native date/time 無 clipping
+- Settings Sheet 80dvh + 內部 scroll
+- simple／study 持久化
+- Explain chain／source
+- 完整 child／ke 流程
+- 明確 URL 與舊 `home=true`
+- browser console 無 error／warning
+
+---
+
+## 最後 closeout 建議
 
 ```bash
-npm test        # 必須全過，尤其 engineSnapshot
-npm run build   # 必須成功
+git status --short
+npm test
+npm run build
+npm run build:single
 ```
 
-然後回報：
+本 Codex shell 若找不到 `npm`，可使用 bundled Node：
 
-```
-changed files
-test result
-build result
-mobile layout risks
-下一 Phase 計劃
+```bash
+PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH node_modules/.bin/vitest run
 ```
 
-### 版面驗證建議
-
-沙箱通常裝不了 Chromium。可行的做法：把 app 放進**同源固定寬度 iframe** 量
-`document.documentElement.scrollWidth > clientWidth`，逐一檢查 320 / 375 / 390 / 430 / 768。
-或跑 `npm run build:single` 產生單檔 `玄空紫白.html`，在真實瀏覽器開來看。
+確認後只 stage 本次 V2 的明確檔案；不要修改或重生 engine snapshot fixture。
 
 ---
 
-## 已知待辦（規格書已涵蓋，但提醒）
+## 尚餘風險／未來工作
 
-- 首屏目前仍被 Breadcrumb + LevelTabs 佔掉約 190px → Phase 2 解決
-- `showLuoshu` 目前預設 `true`，規格書 §21 要求簡潔模式預設 `false` → Phase 5
-- `DetailPanel` 目前 `open: 'open'`，§19.2 要求預設關閉 → Phase 5
-- swipe listener 目前綁整個 `#app`，§17 要求只綁 `[data-swipe-zone="chart"]` 並排除
-  `button,input,select,dialog,a` → Phase 6
+- 發佈前仍建議在實體 iPhone spot-check native date/time、standalone status bar 與 home indicator。
+- 刻盤目前仍只有「八刻十五分鐘制」一種策略。
+- Dark Mode 明確留待 V3。
+- IndexedDB 目前沒有必要，設定繼續使用 localStorage。

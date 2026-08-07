@@ -20,7 +20,23 @@ const click = (node: Element | null | undefined) => {
   node?.dispatchEvent(new window.MouseEvent('click', { bubbles: true }));
 };
 
+function installDialogPolyfill(): void {
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+    configurable: true,
+    value(this: HTMLDialogElement) { this.setAttribute('open', ''); },
+  });
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+    configurable: true,
+    value(this: HTMLDialogElement) {
+      if (!this.open) return;
+      this.removeAttribute('open');
+      this.dispatchEvent(new Event('close'));
+    },
+  });
+}
+
 beforeAll(async () => {
+  installDialogPolyfill();
   document.body.innerHTML = '<div id="app"></div>';
   history.replaceState(null, '', '/?t=2026-08-07T11:38&level=year');
   __setNowForTesting(AT);
@@ -42,11 +58,15 @@ describe('V1 端到端下鑽', () => {
       expect(cell, p.name).toBeTruthy();
       expect(cell.className, p.name).toContain(`star-${expected[p.key]}`);
     }
-    expect($('.crumb')).toBeTruthy();
+    expect($('.crumb')).toBeNull();
+    expect($$('.picker')).toHaveLength(0);
+    expect(text('.level-segment__item.is-active')).toBe('年');
+    expect(text('.context-action')).toBe('查看十二月');
     expect(location.search).toContain('level=year');
   });
 
   it('點月 → 流月盤', () => {
+    click($('.context-action'));
     const target = $$('.picker--year .pick').find((b) => b.textContent?.startsWith('申月'));
     expect(target, '應列出申月').toBeTruthy();
     click(target);
@@ -56,10 +76,12 @@ describe('V1 端到端下鑽', () => {
     const shen = computeFullChart(fromUtc8(2026, 8, 10, 12, 0)).month;
     expect(shen.title).toBe('申月');
     expect(text('.card__sub')).toContain(starName(shen.centerStar));
+    expect(text('.context-action')).toBe('查看本月各日');
     expect(location.search).toContain('level=month');
   });
 
   it('點當日 → 流日盤', () => {
+    click($('.context-action'));
     const target = $$('.picker--month .pick').find((b) => b.textContent?.includes('08-07'));
     expect(target, '應列出 08-07').toBeTruthy();
     click(target);
@@ -67,23 +89,31 @@ describe('V1 端到端下鑽', () => {
     expect(chart.day.title).toBe('癸丑日');
     expect(text('.card__sub')).toContain(starName(chart.day.centerStar));
     expect(text('.card__sub')).toContain('逆飛');
+    expect(text('.context-action')).toBe('查看十二時辰');
     expect(location.search).toContain('level=day');
   });
 
   it('點午時 → 流時盤，並出現八刻選單', () => {
+    click($('.context-action'));
     const target = $$('.picker--day .pick').find((b) => b.textContent?.startsWith('午時'));
     expect(target, '應列出午時').toBeTruthy();
     click(target);
     expect(text('.card__title')).toContain('午時');
     expect(text('.card__sub')).toContain(starName(chart.hour.centerStar));
-    expect($$('.ke__item')).toHaveLength(8);
-    expect(text('.ke__note')).toContain('八刻十五分鐘制');
-    expect(text('.ke__note')).toContain('不視為唯一古法');
+    expect($$('.ke__item')).toHaveLength(0);
+    expect(text('.context-action')).toBe('查看此時八刻');
+    click($('.context-action'));
+    expect($$('.ke-pick')).toHaveLength(8);
+    expect(text('.ke-picker__note')).toContain('八刻十五分鐘制');
+    expect($('.ke-picker__disclaimer')?.hasAttribute('hidden')).toBe(true);
+    click($('.ke-picker__info'));
+    expect(text('.ke-picker__disclaimer')).toContain('不視為唯一古法');
+    expect($('.ke-picker__disclaimer')?.hasAttribute('hidden')).toBe(false);
     expect(location.search).toContain('level=hour');
   });
 
   it('點第三刻 → 流刻盤，九宮與 engine 一致', () => {
-    const items = $$('.ke__item');
+    const items = $$('.ke-pick');
     click(items[2]);
     expect(text('.card__title')).toContain('第三刻');
     expect(text('.card__sub')).toContain('11:30–11:44');
@@ -99,6 +129,7 @@ describe('V1 端到端下鑽', () => {
     }
     expect(location.search).toContain('level=ke');
     expect(location.search).toContain('t=2026-08-07T11%3A30');
+    expect(text('.context-action')).toBe('返回時盤');
   });
 
   it('刷新（由 URL 還原）不丟失盤面', async () => {

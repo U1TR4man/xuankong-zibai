@@ -1,13 +1,21 @@
-/** 設定（規劃書 §28）。 */
+/** 設定 Bottom Sheet（V2 §21）。 */
 
 import { DAY_CHANGE_LABEL, type DayChangeMode } from '../engine/time/ganzhiDay';
 import { YEAR_BOUNDARY_LABEL, type YearBoundary } from '../engine/flyingStar/yearStar';
 import { KE_STRATEGIES } from '../engine/flyingStar/ke/registry';
 import { getState, updateSettings } from '../state/appState';
+import type { DisplayMode } from '../state/settings';
+import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
 
 function row(label: string, control: HTMLElement): HTMLElement {
-  return el('div', { class: 'set__row' }, el('span', { class: 'set__label' }, label), control);
+  return el('label', { class: 'set__row' }, el('span', { class: 'set__label' }, label), control);
+}
+
+function staticRow(label: string, value: string): HTMLElement {
+  return el('div', { class: 'set__row' },
+    el('span', { class: 'set__label' }, label),
+    el('span', { class: 'set__static' }, value));
 }
 
 function select<T extends string>(
@@ -15,45 +23,60 @@ function select<T extends string>(
   options: Array<[T, string]>,
   onChange: (v: T) => void,
 ): HTMLElement {
-  const sel = el('select', {
+  const control = el('select', {
     class: 'set__control',
-    onchange: (e) => onChange((e.target as HTMLSelectElement).value as T),
+    onchange: (event) => onChange((event.target as HTMLSelectElement).value as T),
   });
-  for (const [v, label] of options) {
-    sel.append(el('option', { value: v, selected: v === value }, label));
+  for (const [optionValue, label] of options) {
+    control.append(el('option', { value: optionValue, selected: optionValue === value }, label));
   }
-  return sel;
+  return control;
 }
 
 function toggle(value: boolean, onChange: (v: boolean) => void): HTMLElement {
   return el('input', {
-    type: 'checkbox',
-    class: 'set__toggle',
-    checked: value,
-    onchange: (e) => onChange((e.target as HTMLInputElement).checked),
+    type: 'checkbox', class: 'set__toggle', checked: value,
+    onchange: (event) => onChange((event.target as HTMLInputElement).checked),
   });
 }
 
-export function SettingsSheet(): HTMLElement {
-  const s = getState().settings;
-  return el(
-    'details',
-    { class: 'panel panel--settings' },
-    el('summary', { class: 'panel__sum' }, '設定'),
-    el('div', { class: 'set' },
-      row('時間制', el('span', { class: 'set__static' }, 'UTC+8（固定，不使用裝置時區）')),
-      row('日柱換日', select<DayChangeMode>(s.dayChangeMode,
+function group(title: string, ...rows: HTMLElement[]): HTMLElement {
+  return el('section', { class: 'set-group' },
+    el('h3', { class: 'set-group__title' }, title),
+    el('div', { class: 'set' }, ...rows));
+}
+
+export function openSettingsSheet(trigger: HTMLElement): HTMLDialogElement {
+  const settings = getState().settings;
+  const content = el('div', { class: 'settings-sheet' },
+    group('顯示',
+      row('模式', select<DisplayMode>(settings.displayMode,
+        [['simple', '簡潔'], ['study', '研習']],
+        (v) => updateSettings({ displayMode: v }))),
+      row('顯示星名', toggle(settings.showStarName, (v) => updateSettings({ showStarName: v }))),
+      row('顯示宮名', toggle(settings.showPalaceName, (v) => updateSettings({ showPalaceName: v }))),
+      row('顯示洛書數', toggle(settings.showLuoshu, (v) => updateSettings({ showLuoshu: v }))),
+    ),
+    group('排盤',
+      row('日柱換日', select<DayChangeMode>(settings.dayChangeMode,
         [['midnight', DAY_CHANGE_LABEL.midnight], ['zishi2300', DAY_CHANGE_LABEL.zishi2300]],
         (v) => updateSettings({ dayChangeMode: v }))),
-      row('年界', select<YearBoundary>(s.yearBoundary,
+      row('年界', select<YearBoundary>(settings.yearBoundary,
         [['lichun', YEAR_BOUNDARY_LABEL.lichun], ['gregorian', YEAR_BOUNDARY_LABEL.gregorian]],
         (v) => updateSettings({ yearBoundary: v }))),
-      row('刻盤算法', select(s.keStrategyId,
-        KE_STRATEGIES.map((k) => [k.id, k.name] as [string, string]),
+      row('刻盤算法', select(settings.keStrategyId,
+        KE_STRATEGIES.map((strategy) => [strategy.id, strategy.name] as [string, string]),
         (v) => updateSettings({ keStrategyId: v }))),
-      row('顯示星名', toggle(s.showStarName, (v) => updateSettings({ showStarName: v }))),
-      row('顯示宮名', toggle(s.showPalaceName, (v) => updateSettings({ showPalaceName: v }))),
-      row('顯示洛書數', toggle(s.showLuoshu, (v) => updateSettings({ showLuoshu: v }))),
+    ),
+    group('關於',
+      staticRow('時間制', 'UTC+8'),
+      staticRow('節氣資料', '定氣法・離線計算'),
+      staticRow('離線狀態', 'PWA 可離線使用'),
     ),
   );
+
+  return openBottomSheet({
+    title: '設定', content, trigger,
+    className: 'sheet-dialog--settings', returnFocusSelector: '[data-sheet-trigger="settings"]',
+  }).dialog;
 }

@@ -33,8 +33,8 @@ export default defineConfig({
             orientation: 'portrait-primary',
             start_url: './',
             scope: './',
-            background_color: '#0e0f14',
-            theme_color: '#0e0f14',
+            background_color: '#f4f0e7',
+            theme_color: '#f4f0e7',
             icons: [
               { src: 'icons/icon-192.svg', sizes: '192x192', type: 'image/svg+xml', purpose: 'any' },
               { src: 'icons/icon-512.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' },

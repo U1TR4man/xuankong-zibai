@@ -4,6 +4,8 @@ import type { DayChangeMode } from '../engine/time/ganzhiDay';
 import type { YearBoundary } from '../engine/flyingStar/yearStar';
 import { DEFAULT_KE_STRATEGY_ID } from '../engine/flyingStar/ke/registry';
 
+export type DisplayMode = 'simple' | 'study';
+
 export interface Settings {
   /** 時間制固定 UTC+8，列出僅供顯示 */
   readonly timezone: 'UTC+8';
@@ -13,6 +15,7 @@ export interface Settings {
   showStarName: boolean;
   showPalaceName: boolean;
   showLuoshu: boolean;
+  displayMode: DisplayMode;
 }
 
 const KEY = 'zibai.settings.v1';
@@ -24,7 +27,8 @@ export const DEFAULT_SETTINGS: Settings = {
   keStrategyId: DEFAULT_KE_STRATEGY_ID,
   showStarName: true,
   showPalaceName: true,
-  showLuoshu: true,
+  showLuoshu: false,
+  displayMode: 'simple',
 };
 
 export function loadSettings(): Settings {

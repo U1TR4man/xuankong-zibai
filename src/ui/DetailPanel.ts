@@ -11,7 +11,7 @@ import { formatUtc8, formatUtc8Time } from '../engine/time/utc8';
 import { getState } from '../state/appState';
 import { el } from './dom';
 
-export function DetailPanel(chart: FullChart): HTMLElement {
+export function getDetailRows(chart: FullChart): Array<[string, string]> {
   const d = chart.datetime;
   const s = getState().settings;
   const term = getCurrentSolarTerm(d);
@@ -24,7 +24,7 @@ export function DetailPanel(chart: FullChart): HTMLElement {
   const strat = getKeStrategy(s.keStrategyId);
   const keInfo = strat.listKe(d)[chart.ke.keIndex]!;
 
-  const rows: Array<[string, string]> = [
+  return [
     ['公曆', `${formatUtc8(d, true)}（UTC+8）`],
     ['節氣', `${term.name}後 · ${formatUtc8(term.date)}${term.source === 'algorithm' ? '（演算法推算）' : ''}`],
     ['下一節氣', `${nextTerm.name} · ${formatUtc8(nextTerm.date)}`],
@@ -42,10 +42,15 @@ export function DetailPanel(chart: FullChart): HTMLElement {
     ['刻星', `${starName(chart.ke.centerStar)}入中 · ${DIRECTION_LABEL[chart.ke.direction]}`],
     ['刻盤算法', strat.name],
   ];
+}
+
+/** V1 compatibility；V2 主畫面改用 StudyPanel。 */
+export function DetailPanel(chart: FullChart): HTMLElement {
+  const rows = getDetailRows(chart);
 
   return el(
     'details',
-    { class: 'panel', open: 'open' },
+    { class: 'panel' },
     el('summary', { class: 'panel__sum' }, '時間資訊'),
     el(
       'dl',

@@ -1,5 +1,5 @@
 /**
- * 上一個／目前／下一個（規劃書 §24）。
+ * 上一個／下一個（V2 §17）。
  * 手勢在 app.ts 另外綁定，但按鈕永遠存在，不可只依賴 gesture。
  */
 
@@ -66,10 +66,9 @@ export function TimeNavigator(d: Date, level: Level): HTMLElement {
     'div',
     { class: 'nav' },
     el('button', { class: 'nav__btn', type: 'button', onclick: () => setDateTime(prev) },
-      '← ', labelFor(prev, level)),
-    el('div', { class: 'nav__cur' }, labelFor(d, level)),
+      '‹ ', labelFor(prev, level)),
     el('button', { class: 'nav__btn', type: 'button', onclick: () => setDateTime(next) },
-      labelFor(next, level), ' →'),
+      labelFor(next, level), ' ›'),
   );
 }
 
