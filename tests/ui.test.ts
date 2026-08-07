@@ -37,7 +37,9 @@ describe('V1 端到端下鑽', () => {
     expect(cells).toHaveLength(9);
     const expected = flyNineStars(chart.year.centerStar, chart.year.direction);
     for (const p of PALACES) {
-      const cell = cells.find((c) => c.textContent?.includes(p.name))!;
+      // V2 九宮以 aria-label 帶完整宮名（畫面上顯示簡寫「離 · 南」）
+      const cell = cells.find((c) => c.getAttribute('aria-label')?.startsWith(p.name))!;
+      expect(cell, p.name).toBeTruthy();
       expect(cell.className, p.name).toContain(`star-${expected[p.key]}`);
     }
     expect($('.crumb')).toBeTruthy();
@@ -90,7 +92,9 @@ describe('V1 端到端下鑽', () => {
     const cells = $$('.cell');
     const expected = flyNineStars(ke.centerStar, ke.direction);
     for (const p of PALACES) {
-      const cell = cells.find((c) => c.textContent?.includes(p.name))!;
+      // V2 九宮以 aria-label 帶完整宮名（畫面上顯示簡寫「離 · 南」）
+      const cell = cells.find((c) => c.getAttribute('aria-label')?.startsWith(p.name))!;
+      expect(cell, p.name).toBeTruthy();
       expect(cell.className, p.name).toContain(`star-${expected[p.key]}`);
     }
     expect(location.search).toContain('level=ke');
