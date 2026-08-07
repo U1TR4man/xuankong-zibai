@@ -280,7 +280,9 @@ button, select, input { font: inherit; color: inherit; }
 .search-results__summary p { margin: 0; color: var(--ink-tertiary); font-size: 13px; }
 .search-results__count { font-size: 14px; color: var(--ink-secondary); font-weight: 500; }
 .search-results__notice { margin: 0; padding: var(--s2) var(--s3); background: var(--paper-muted); font-size: 12px; color: var(--ink-secondary); }
+.search-results__body { display: flex; flex-direction: column; gap: var(--s4); }
 .search-results__list { display: flex; flex-direction: column; gap: var(--s3); }
+.search-results__more { width: 100%; }
 .search-result-group { display: flex; flex-direction: column; }
 .search-result-group__head { display: flex; align-items: center; justify-content: space-between; padding: var(--s2) 0; border-bottom: 1px solid var(--line-strong); }
 .search-result-group__head h3 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 500; }

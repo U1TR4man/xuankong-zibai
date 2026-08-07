@@ -11,6 +11,8 @@ const LEVEL_LABEL: Record<StarLevel, string> = {
   year: '年', month: '月', day: '日', hour: '時', ke: '刻',
 };
 
+const RESULT_PAGE_SIZE = 200;
+
 function palaceLabel(key: SearchMatch['palace']): string {
   const palace = PALACES.find((item) => item.key === key)!;
   return key === 'center' ? '中' : `${palace.name.replace(/宮$/, '')} · ${palace.bearing}`;
@@ -91,12 +93,23 @@ function groupLabel(date: string): string {
   return `${parts.month}月${parts.day}日`;
 }
 
+function groupSections(matches: readonly SearchMatch[]): HTMLElement[] {
+  return Array.from(groupMatches(matches), ([date, group]) => el('section', {
+    class: 'search-result-group', 'aria-labelledby': `search-group-${date}`,
+  },
+  el('header', { class: 'search-result-group__head' },
+    el('h3', { id: `search-group-${date}` }, groupLabel(date)),
+    el('span', {}, `${group.length} 個`),
+  ),
+  el('div', { class: 'search-result-group__items' }, ...group.map(ResultCard)),
+  ));
+}
+
 export function SearchResults(query: StarSearchQuery, matches: readonly SearchMatch[]): HTMLElement {
   const palace = palaceLabel(query.palace);
   const conditionText = query.conditions.map((condition) => (
     `流${LEVEL_LABEL[condition.level]} ${condition.stars.map(starName).join('／')}`
   )).join(' ＋ ');
-  const groups = groupMatches(matches);
   const start = parseUtc8(query.startDate)!;
   const end = parseUtc8(query.endDate)!;
   const rangeDays = Math.floor((end.getTime() - start.getTime()) / MS_PER_DAY) + 1;
@@ -107,8 +120,28 @@ export function SearchResults(query: StarSearchQuery, matches: readonly SearchMa
   }
   if (matches.length > 200) {
     notices.push(el('p', { class: 'search-results__notice' },
-      '結果較多，可縮短日期或增加條件；目前結果未被截斷。'));
+      '結果較多，可縮短日期或增加條件；列表會分批顯示，總結果不會被截斷。'));
   }
+
+  let visibleCount = Math.min(RESULT_PAGE_SIZE, matches.length);
+  const list = el('div', { class: 'search-results__list' });
+  const more = el('button', {
+    class: 'btn btn--ghost search-results__more', type: 'button',
+    hidden: visibleCount >= matches.length,
+  });
+  const renderVisible = () => {
+    list.replaceChildren(...groupSections(matches.slice(0, visibleCount)));
+    const remaining = matches.length - visibleCount;
+    more.textContent = remaining > 0
+      ? `再顯示 ${Math.min(RESULT_PAGE_SIZE, remaining)} 個（尚餘 ${remaining}）`
+      : '已顯示全部結果';
+    more.hidden = remaining === 0;
+  };
+  more.addEventListener('click', () => {
+    visibleCount = Math.min(visibleCount + RESULT_PAGE_SIZE, matches.length);
+    renderVisible();
+  });
+  renderVisible();
 
   return el('section', { class: 'search-results', 'aria-labelledby': 'search-results-title' },
     el('header', { class: 'search-results__summary' },
@@ -120,17 +153,7 @@ export function SearchResults(query: StarSearchQuery, matches: readonly SearchMa
       ...notices,
     ),
     matches.length > 0
-      ? el('div', { class: 'search-results__list' },
-        ...Array.from(groups, ([date, group]) => el('section', {
-          class: 'search-result-group', 'aria-labelledby': `search-group-${date}`,
-        },
-        el('header', { class: 'search-result-group__head' },
-          el('h3', { id: `search-group-${date}` }, groupLabel(date)),
-          el('span', {}, `${group.length} 個`),
-        ),
-        el('div', { class: 'search-result-group__items' }, ...group.map(ResultCard)),
-        )),
-      )
+      ? el('div', { class: 'search-results__body' }, list, more)
       : el('div', { class: 'search-empty' },
         el('p', {}, '這段時間沒有找到符合條件的時段'),
         el('p', {}, '請修改日期、宮位、層級或飛星後再搜尋。'),

@@ -51,8 +51,13 @@ describe('Phase 5 搜尋結果 UX', () => {
     const many = Array.from({ length: 201 }, () => match('2026-09-01T01:00'));
     const view = SearchResults({ ...QUERY, startDate: '2026-01-01', endDate: '2026-04-15' }, many);
     expect(view.querySelector('.search-results__count')?.textContent).toBe('共 201 個結果');
-    expect(view.querySelectorAll('.search-result')).toHaveLength(201);
+    expect(view.querySelectorAll('.search-result')).toHaveLength(200);
     expect(view.textContent).toContain('長範圍');
-    expect(view.textContent).toContain('未被截斷');
+    expect(view.textContent).toContain('不會被截斷');
+    const more = view.querySelector<HTMLButtonElement>('.search-results__more')!;
+    expect(more.textContent).toContain('尚餘 1');
+    more.click();
+    expect(view.querySelectorAll('.search-result')).toHaveLength(201);
+    expect(more.hidden).toBe(true);
   });
 });
