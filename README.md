@@ -2,13 +2,13 @@
 
 **線上版：<https://u1tr4man.github.io/xuankong-zibai/>** ｜ **離線單檔：<https://u1tr4man.github.io/xuankong-zibai/offline.html>**
 
-離線可用的紫白飛星排盤工具：**流年 → 流月 → 流日 → 流時 → 流刻**，每一層皆可點擊下鑽。
+離線可用的紫白飛星排盤工具：**流年 → 流月 → 流日 → 流時 → 流刻**，每一層皆可點擊下鑽；亦支援五層疊盤及日／時／刻尋星。
 手機優先、無框架（Vanilla TypeScript + Vite）、計算邏輯與 UI 完全分離。
 
 ```
 npm install
 npm run dev       # 開發
-npm test          # 104 個測試（含 1200 點 engine snapshot）
+npm test          # 131 個測試（含 1200 點 engine snapshot）
 npm run build     # 產生 dist/（含 service worker、manifest）
 npm run preview
 ```
@@ -49,10 +49,29 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 - 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
 - Chart Header、前後導覽與 contextual CTA 減少外框及大色塊；九宮 geometry 與算法完全不變。
 
+## 疊盤與尋星
+
+`docs/xuankong_zibai_overlay_star_search_feature_plan.md` 的 implementation Phase 0–6 已完成：
+
+| Phase | 內容 | 狀態 |
+|---|---|---|
+| 0 | 唯讀審查 Engine、AppState、九宮、Bottom Sheet 與 URL state | ✅ |
+| 1 | 疊盤 view model，直接組裝現有 `computeFullChart()` | ✅ |
+| 2 | 疊盤開關、五層九宮、主顯示層、選宮與詳情 Sheet | ✅ |
+| 3 | 尋星 A：日期、宮位、日／時／刻、單星、結果與跳盤 | ✅ |
+| 4 | 尋星 B：同層多星 OR、跨層 AND、組合摘要 | ✅ |
+| 5 | 日期分組、loading／empty state、範圍提示及大量結果分批顯示 | ✅ |
+| 6 | production／PWA／單檔驗證與文件 checkpoint | ✅ |
+
+正式語義：例如「離宮 · 流時 · 九紫」只比對流時盤的離宮格內飛星值 `9`，不是九紫入中、洛書數或任一宮出現九紫。搜尋結果只顯示截至精度為止的上層：日＝年月日、時＝年月日時、刻＝年月日時刻。
+
+搜尋仍完全消費正式 Engine；結果按「查看此盤」後，盤面會依結果時間重新計算，再開啟疊盤及高亮命中宮。V1 不含吉凶評分或最佳時窗 Ranking。
+
 ## 架構
 
 ```
-時間資料 → 規則 Engine → StarResult → 九宮 Rendering
+時間資料 → 規則 Engine → StarResult → 九宮 Rendering／Overlay
+                         └→ SearchEngine → SearchMatch[] → 正式盤面重算
 ```
 
 UI 只消費 `StarResult`，**不得自行計算飛星**。
@@ -75,8 +94,11 @@ src/
 │           ├── EightKe15MinuteStrategy.ts 第一版算法
 │           └── registry.ts                策略註冊表
 ├── data/    solarTerms.data.ts（45 KB）、vsop87Earth.data.ts（13 KB）
+├── overlay/ buildPalaceOverlay.ts、types.ts（只組裝 FullChart）
+├── search/  StarSearchEngine.ts、candidateIterator.ts、matchQuery.ts、types.ts
 ├── ui/      TopBar / DateTimeContext / LevelSegment / ChartHeader /
-│            NinePalaceGrid / TimeNavigator / ContextAction / BottomSheet /
+│            NinePalaceGrid / NinePalaceOverlayGrid / SearchView / SearchResults /
+│            TimeNavigator / ContextAction / BottomSheet /
 │            TimePickerSheet / ChildPickerSheet / KePickerSheet /
 │            ExplainSheet / SettingsSheet / StudyPanel
 ├── state/   appState.ts（URL 同步、follow-now）、settings.ts（簡潔／研習）
@@ -121,7 +143,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 104 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6 與 V2.1 UI／資產／鍵盤操作回歸。
+- `npm test` — 131 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、Search → Chart 與結果 UX 回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
@@ -130,5 +152,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 ## 尚未做的事
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
+- 最佳時窗 Ranking、吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前只做 deterministic 宮內飛星 matching。
+- 搜尋 query 尚未序列化到 URL，也未加入 recent search；目前切回尋星仍會保留本次頁面生命週期內的上一輪結果。
 - 已用真實 production 瀏覽器驗證 320 / 375 / 390 / 430 / 768，iPhone 實機使用亦回報無問題；如需 release-grade 證據，可再補 Safari／PWA standalone／iOS Chrome 分項紀錄。
 - 未做 IndexedDB（目前資料量小，設定用 localStorage 已足夠）。

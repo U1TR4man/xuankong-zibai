@@ -2,18 +2,20 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**，以及 V2.1 視覺精修 **Phase A–D 已全部完成**。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**，以及疊盤／尋星 implementation **Phase 0–6 均已完成**。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
 - V2.1 基線 commit：`e5e2d33`
 - V2.1 implementation checkpoint：`fdee2e7`
 - read-only review 修正後 code checkpoint：`333f7e1`（P1：`14fdc40`）
+- 疊盤／尋星 code checkpoint：`609e941`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
+- 疊盤／尋星規格：`docs/xuankong_zibai_overlay_star_search_feature_plan.md`
 
-P0 iPhone 實機使用已回報無問題。下一步不是再擴功能，而是重跑完整驗證後才決定 push／deploy。
+P0 iPhone 實機使用已回報無問題。疊盤與尋星 A/B 已完成；下一步不是再擴功能，而是 review 本輪 checkpoint 後才決定 push／deploy。
 
 ---
 
@@ -99,16 +101,43 @@ tests/fixtures/chart-snapshot.json
 - 文件：V2.1 規格及 review 原文均已收進 repo，不再依賴 `/Users/...` 本機路徑
 - `CHANGELOG.md` 自本輪起記錄每個可交付修改批次
 
+### 疊盤／尋星 Phase 0–6
+
+- Phase 0／規格：`61999e5` 收錄原始規格並完成 Engine、state、九宮、Sheet 與 URL 唯讀審查
+- Phase 1：`a13dbaa` 建立 `OverlayResult`／`PalaceOverlayViewModel`，只組裝 `computeFullChart()`
+- Phase 2：`672333a` 完成疊盤開關、五層九宮、主顯示層、選宮高亮與宮位詳情 Sheet
+- Phase 3：`fd3303f` 完成尋星 A、UTC+8 日／時／刻枚舉、結果列表與 Search → Chart → Overlay
+- Phase 4：`387dd2a` 完成尋星 B；同層 stars＝OR、跨層 conditions＝AND，沒有任意 Boolean
+- Phase 5：`662de72` 完成日期分組、loading／empty state、長範圍／大量結果提示與一年上限
+- Phase 5 safeguard：`609e941` 保留完整總數並每次顯示 200 筆，避免一次建立數萬個 mobile DOM nodes
+- 搜尋正式語義固定為「指定層級、指定宮位格內的飛星值」；不把入中星、洛書數或其他宮誤作命中
+- 日候選以 UTC+8 正午代表；時與刻使用正式時窗起點，全部呼叫現有 Engine
+- 搜尋結果只保存命中與上層 context；點入後仍由正式 Engine 依時間重算盤面
+- 320px／390px production 驗證無水平 overflow；疊盤小值有文字 layer label，controls 最低 44px
+
+#### Reserved future capability — 最佳時窗
+
+尋星模組的長期目標包含「最佳時窗」搜尋與排序。
+
+當前版本只負責 deterministic matching，不加入吉凶評分與推薦邏輯。
+
+未來 `RankingEngine` 應消費既有 `SearchMatch[]`，而不是重新計算年月日時刻飛星。
+
+因此目前不得把 `SearchEngine` 寫死為只能處理單星單層，也不得讓搜尋結果資料模型只適用於 A 類單星搜尋。
+
+後續 refactor 不得刪除此 extension point。
+
 ---
 
 ## 驗證結果
 
 ```text
-test files  14 passed
-tests       104 passed
+test files  19 passed
+tests       131 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-single file 玄空紫白.html（約 183 KB；font data URI）success
+PWA precache 11 entries（196.63 KiB）success
+single file 玄空紫白.html（約 208 KB；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -135,6 +164,9 @@ single file 玄空紫白.html（約 183 KB；font data URI）success
 - 完整 child／ke 流程
 - 明確 URL 與舊 `home=true`
 - browser console 無 error／warning
+- 疊盤 OFF 保留原 NinePalaceGrid；ON 顯示 9 宮 × 5 層，選宮與詳情 Sheet 正常
+- 尋星 A/B、同層 OR／跨層 AND、上層顯示、日期分組、loading／empty state 與跳盤正常
+- production 320／390px 疊盤及尋星無 horizontal overflow；主要 touch target ≥ 44px
 
 ---
 
@@ -163,3 +195,5 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - 刻盤目前仍只有「八刻十五分鐘制」一種策略。
 - Dark Mode 明確留待 V3。
 - IndexedDB 目前沒有必要，設定繼續使用 localStorage。
+- D 類最佳時窗 Ranking、吉凶評分與 Future filters 尚未實作；只能消費 `SearchMatch[]`，不得污染 deterministic SearchEngine。
+- 搜尋 query URL serialization、recent search、多宮／任一宮與入中星搜尋均未實作。

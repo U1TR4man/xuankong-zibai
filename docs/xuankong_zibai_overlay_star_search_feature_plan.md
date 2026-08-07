@@ -2538,3 +2538,74 @@ RankingEngine
 以及：
 
 > **D 最佳時窗必須保留為明確 extension point，後續 refactor 不得遺失。**
+
+---
+
+# 80. Implementation status — 2026-08-08
+
+本文件定義的 implementation Phase 0–6 已完成：
+
+```text
+Phase 0  規格與唯讀架構審查                  61999e5
+Phase 1  Overlay data model                  a13dbaa
+Phase 2  疊盤 UI、選宮與詳情 Sheet            672333a
+Phase 3  Search A 與 Search → Chart           fd3303f
+Phase 4  Search B：同層 OR／跨層 AND           387dd2a
+Phase 5  結果 UX、loading、日期分組與範圍防護   662de72
+Phase 5  大量結果分批顯示 safeguard            609e941
+Phase 6  完整驗證與文件 checkpoint             本節所在文件提交
+```
+
+## 80.1 V1 Definition of Done 對帳
+
+### 疊盤
+
+- [x] 可以 ON / OFF
+- [x] 九宮可同時查看年月日時刻
+- [x] 層級列可切主顯示層，state 仍獨立保存 `overlayPrimaryLevel`
+- [x] 可選宮並有明確高亮
+- [x] 點宮可看完整疊盤與 deterministic 日時／時刻摘要
+- [x] Overlay OFF 繼續使用原 `NinePalaceGrid`
+
+### 尋星 A
+
+- [x] UTC+8 日期範圍、宮位、日／時／刻、單星
+- [x] `SearchEngine` 只枚舉候選時間並呼叫現有 `computeFullChart()`
+- [x] 結果按日期與時間 ascending 分組
+- [x] 日顯示年月日；時顯示年月日時；刻顯示年月日時刻
+- [x] 點結果跳到正式盤面、開啟疊盤並高亮命中宮
+- [x] 明確測試「宮內飛星」不等於入中星或洛書數
+
+### 尋星 B
+
+- [x] 可設定多個 layer
+- [x] 每 layer 可選多星
+- [x] 同層 OR、跨層 AND
+- [x] 結果逐層顯示命中及組合摘要
+- [x] Search A regression tests 通過
+- [x] 沒有 arbitrary Boolean、NOT、吉凶評分或 Ranking
+
+### 基礎與 UX
+
+- [x] 沒有修改 `src/engine/**`、`src/data/**` 或 engine snapshot fixture
+- [x] 19 個 test files、131 tests 通過
+- [x] TypeScript、production、PWA 及單檔 build 通過
+- [x] 320px／390px production 實測無 horizontal overflow，主要 controls ≥ 44px
+- [x] 空結果、loading、結果總數、長範圍／大量結果提示、一年上限及每批 200 筆顯示完成
+
+## 80.2 仍然 Reserved／Deferred
+
+以下內容沒有在本輪實作：
+
+```text
+D 最佳時窗 Ranking
+吉凶評分與推薦
+任意 Boolean Builder / NOT / 括號
+節氣前後排除等 Future filters
+任一宮／多宮／方向群搜尋
+入中星搜尋
+Search query URL serialization
+recent search
+```
+
+`RankingEngine` 未來只能消費 deterministic `SearchMatch[]`；不得重算飛星，也不得把 score／權重反向塞進 `SearchEngine.match()`。
