@@ -26,7 +26,7 @@ describe('Phase 1 疊盤資料模型', () => {
     expect(overlay.palaces).toHaveLength(9);
     expect(overlay.palaces.map((palace) => palace.key)).toEqual(PALACES.map((palace) => palace.key));
     expect(findPalaceOverlay(overlay, 'li')).toMatchObject({
-      key: 'li', name: '離', bearing: '南', luoshu: 9,
+      key: 'li', name: '離', bearing: '南', luoshu: 9, row: 0, col: 1,
     });
   });
 

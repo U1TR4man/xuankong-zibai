@@ -10,6 +10,7 @@ import './styles.css';
 
 import { computeFullChart, type FullChart } from './engine/flyingStar';
 import type { StarResult } from './engine/flyingStar/types';
+import { buildPalaceOverlay } from './overlay/buildPalaceOverlay';
 import {
   getState, migrateLegacyHome, refreshFollowedNow, restoreFromUrl, setDateTime, subscribe,
   type AppState, type Level,
@@ -20,6 +21,8 @@ import { DateTimeContext } from './ui/DateTimeContext';
 import { ExplainTrigger } from './ui/ExplainSheet';
 import { LevelSegment } from './ui/LevelSegment';
 import { NinePalaceGrid } from './ui/NinePalaceGrid';
+import { NinePalaceOverlayGrid } from './ui/NinePalaceOverlayGrid';
+import { OverlayControls } from './ui/OverlayControls';
 import { TimeNavigator, shiftByLevel } from './ui/TimeNavigator';
 import { TopBar } from './ui/TopBar';
 import { StudyPanel } from './ui/StudyPanel';
@@ -32,13 +35,16 @@ function resultFor(chart: FullChart, level: Level): StarResult {
   return level === 'ke' ? chart.ke : chart[level];
 }
 
-function ChartCard(result: StarResult, state: AppState): HTMLElement {
+function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLElement {
   const card = el('section', {
     class: 'card', id: 'current-chart', role: 'tabpanel',
     'aria-labelledby': `level-tab-${state.level}`, 'data-swipe-zone': 'chart',
   },
     ChartHeader(result, state.level),
-    NinePalaceGrid(result, state.settings),
+    state.overlayMode
+      ? NinePalaceOverlayGrid(
+        buildPalaceOverlay(chart), state.overlayPrimaryLevel, state.selectedPalace)
+      : NinePalaceGrid(result, state.settings),
   );
 
   let touchX = 0;
@@ -78,13 +84,15 @@ function render(state: AppState): void {
     yearBoundary: state.settings.yearBoundary,
     keStrategyId: state.settings.keStrategyId,
   });
-  const result = resultFor(chart, state.level);
+  const displayLevel = state.overlayMode ? state.overlayPrimaryLevel : state.level;
+  const result = resultFor(chart, displayLevel);
 
   root.append(
     TopBar(state),
     DateTimeContext(state),
     LevelSegment(state.level),
-    ChartCard(result, state),
+    OverlayControls(state),
+    ChartCard(result, state, chart),
     TimeNavigator(state.selectedDateTime, state.level),
     ContextAction(state, chart),
   );

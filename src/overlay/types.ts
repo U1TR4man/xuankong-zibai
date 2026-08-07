@@ -13,6 +13,8 @@ export interface PalaceOverlayViewModel {
   name: string;
   bearing: string;
   luoshu: number;
+  row: number;
+  col: number;
   stars: PalaceLayerStars;
 }
 

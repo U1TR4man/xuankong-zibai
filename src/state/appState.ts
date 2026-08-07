@@ -7,6 +7,7 @@
  */
 
 import { formatUtc8Date, formatUtc8Time, nowUtc8, parseUtc8 } from '../engine/time/utc8';
+import { PALACE_KEYS, type PalaceKey } from '../engine/flyingStar/types';
 import { loadSettings, saveSettings, type Settings } from './settings';
 
 export type Level = 'year' | 'month' | 'day' | 'hour' | 'ke';
@@ -25,6 +26,11 @@ export interface AppState {
   followNow: boolean;
   /** 舊版首頁相容標記；V2 Phase 2 起不再 render landing。 */
   home: boolean;
+  /** 疊盤只改變資訊呈現，不建立另一份盤面 truth source。 */
+  overlayMode: boolean;
+  selectedPalace?: PalaceKey;
+  /** 與 chart level 分開保存，V1 UI 切層時會同步兩者。 */
+  overlayPrimaryLevel: Level;
 }
 
 type Listener = (s: AppState) => void;
@@ -37,6 +43,9 @@ const state: AppState = {
   settings: loadSettings(),
   followNow: true,
   home: true,
+  overlayMode: false,
+  selectedPalace: undefined,
+  overlayPrimaryLevel: 'hour',
 };
 
 export function getState(): AppState {
@@ -65,6 +74,7 @@ export function setDateTime(
 
 export function setLevel(level: Level, opts: { push?: boolean } = {}): void {
   state.level = level;
+  if (state.overlayMode) state.overlayPrimaryLevel = level;
   state.home = false;
   syncUrl(opts.push);
   emit();
@@ -73,6 +83,7 @@ export function setLevel(level: Level, opts: { push?: boolean } = {}): void {
 export function setDateTimeAndLevel(d: Date, level: Level): void {
   state.selectedDateTime = d;
   state.level = level;
+  if (state.overlayMode) state.overlayPrimaryLevel = level;
   state.followNow = false;
   state.home = false;
   syncUrl(true);
@@ -95,6 +106,9 @@ export function goHome(): void {
   state.level = 'hour';
   state.followNow = true;
   state.home = true;
+  state.overlayMode = false;
+  state.selectedPalace = undefined;
+  state.overlayPrimaryLevel = 'hour';
   try {
     history.pushState(null, '', location.pathname);
   } catch { /* 同上 */ }
@@ -119,6 +133,27 @@ export function updateSettings(patch: Partial<Settings>): void {
   emit();
 }
 
+export function setOverlayMode(enabled: boolean, opts: { push?: boolean } = {}): void {
+  state.overlayMode = enabled;
+  state.overlayPrimaryLevel = state.level;
+  if (!enabled) state.selectedPalace = undefined;
+  state.home = false;
+  syncUrl(opts.push);
+  emit();
+}
+
+export function setOverlayPrimaryLevel(level: Level, opts: { push?: boolean } = {}): void {
+  state.overlayPrimaryLevel = level;
+  syncUrl(opts.push);
+  emit();
+}
+
+export function selectPalace(palace: PalaceKey | undefined, opts: { push?: boolean } = {}): void {
+  state.selectedPalace = palace;
+  syncUrl(opts.push);
+  emit();
+}
+
 /* ------------------------------------------------------------------ */
 /* URL 同步（可分享、可 bookmark、刷新不丟失）                          */
 /* ------------------------------------------------------------------ */
@@ -127,6 +162,11 @@ function syncUrl(push = false): void {
   const p = new URLSearchParams();
   p.set('t', `${formatUtc8Date(state.selectedDateTime)}T${formatUtc8Time(state.selectedDateTime)}`);
   p.set('level', state.level);
+  if (state.overlayMode) {
+    p.set('overlay', '1');
+    p.set('primary', state.overlayPrimaryLevel);
+    if (state.selectedPalace) p.set('palace', state.selectedPalace);
+  }
   const url = `${location.pathname}?${p.toString()}`;
   try {
     if (push) history.pushState(null, '', url);
@@ -145,6 +185,13 @@ export function restoreFromUrl(): boolean {
   if (!d) return false;
   state.selectedDateTime = d;
   if (level && LEVELS.includes(level)) state.level = level;
+  state.overlayMode = p.get('overlay') === '1';
+  const primary = p.get('primary') as Level | null;
+  state.overlayPrimaryLevel = primary && LEVELS.includes(primary) ? primary : state.level;
+  const palace = p.get('palace') as PalaceKey | null;
+  state.selectedPalace = state.overlayMode && palace && PALACE_KEYS.includes(palace)
+    ? palace
+    : undefined;
   state.followNow = false;
   state.home = false;
   return true;

@@ -29,6 +29,8 @@ export function buildPalaceOverlay(chart: FullChart): OverlayResult {
     name: shortPalaceName(palace.name),
     bearing: palace.bearing,
     luoshu: palace.luoshu,
+    row: palace.row,
+    col: palace.col,
     stars: palaceStars(chart, palace.key),
   }));
 
