@@ -5,6 +5,7 @@ import { fromUtc8, __setNowForTesting } from '../src/engine/time/utc8';
 
 const NOW = fromUtc8(2026, 8, 7, 11, 38);
 const $ = <T extends Element = Element>(selector: string) => document.querySelector<T>(selector);
+const waitForSearch = () => new Promise((resolve) => window.setTimeout(resolve, 10));
 
 beforeAll(async () => {
   document.body.innerHTML = '<div id="app"></div>';
@@ -35,7 +36,7 @@ describe('Phase 3 尋星 A UI', () => {
     expect(document.querySelector('input[name="star"]:checked')).toBeNull();
   });
 
-  it('搜尋離宮流時九紫，結果顯示年月日時與明確命中', () => {
+  it('搜尋離宮流時九紫，結果顯示年月日時與明確命中', async () => {
     $<HTMLInputElement>('input[name="startDate"]')!.value = '2026-09-01';
     $<HTMLInputElement>('input[name="endDate"]')!.value = '2026-09-03';
     $<HTMLSelectElement>('select[name="palace"]')!.value = 'li';
@@ -45,13 +46,18 @@ describe('Phase 3 尋星 A UI', () => {
     $<HTMLFormElement>('.search-form')!.dispatchEvent(new Event('submit', {
       bubbles: true, cancelable: true,
     }));
+    expect($('.search-status')?.textContent).toContain('正在裝置內計算');
+    expect($<HTMLButtonElement>('.search-form__submit')?.disabled).toBe(true);
+    await waitForSearch();
 
     const count = Number(/共 (\d+) 個結果/.exec($('.search-results__count')?.textContent ?? '')?.[1]);
     expect(count).toBeGreaterThan(0);
     expect(document.querySelectorAll('.search-result')).toHaveLength(count);
-    expect(document.querySelectorAll('.search-result:first-child .search-result__layer')).toHaveLength(4);
-    expect(document.querySelectorAll('.search-result:first-child .search-result__layer.is-match')).toHaveLength(1);
+    const firstResult = $('.search-result')!;
+    expect(firstResult.querySelectorAll('.search-result__layer')).toHaveLength(4);
+    expect(firstResult.querySelectorAll('.search-result__layer.is-match')).toHaveLength(1);
     expect($('.search-results__summary')?.textContent).toContain('離 · 南 · 流時 九紫');
+    expect(document.querySelectorAll('.search-result-group').length).toBeGreaterThan(0);
   });
 
   it('查看結果會由正式盤面重算，開啟疊盤並高亮離宮', async () => {
@@ -78,7 +84,7 @@ describe('Phase 3 尋星 A UI', () => {
     expect(document.querySelectorAll('.search-result').length).toBeGreaterThan(0);
   });
 
-  it('進階搜尋支援同層多星 OR、跨層 AND 與組合摘要', () => {
+  it('進階搜尋支援同層多星 OR、跨層 AND 與組合摘要', async () => {
     const advanced = Array.from(document.querySelectorAll<HTMLButtonElement>('.search-mode__item'))
       .find((button) => button.textContent === '進階')!;
     advanced.click();
@@ -96,13 +102,15 @@ describe('Phase 3 尋星 A UI', () => {
     $<HTMLFormElement>('.search-form')!.dispatchEvent(new Event('submit', {
       bubbles: true, cancelable: true,
     }));
+    await waitForSearch();
 
     const count = Number(/共 (\d+) 個結果/.exec($('.search-results__count')?.textContent ?? '')?.[1]);
     expect(count).toBeGreaterThan(0);
     expect($('.search-results__summary')?.textContent).toContain('流時 八白／九紫 ＋ 流刻 八白／九紫');
-    expect(document.querySelectorAll('.search-result:first-child .search-result__layer')).toHaveLength(5);
-    expect(document.querySelectorAll('.search-result:first-child .search-result__layer.is-match')).toHaveLength(2);
-    expect($('.search-result:first-child .search-result__combinations')?.textContent).toContain('時刻');
+    const firstResult = $('.search-result')!;
+    expect(firstResult.querySelectorAll('.search-result__layer')).toHaveLength(5);
+    expect(firstResult.querySelectorAll('.search-result__layer.is-match')).toHaveLength(2);
+    expect(firstResult.querySelector('.search-result__combinations')?.textContent).toContain('時刻');
   });
 
   it('切回簡易模式不會遺失原有單星條件', () => {
@@ -113,5 +121,16 @@ describe('Phase 3 尋星 A UI', () => {
     expect($('.search-view__eyebrow')?.textContent).toBe('尋星 · 簡易');
     expect($<HTMLInputElement>('input[name="level"][value="hour"]')?.checked).toBe(true);
     expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
+  });
+
+  it('超過一年會明確拒絕，不會在背景無限掃描', () => {
+    $<HTMLInputElement>('input[name="startDate"]')!.value = '2026-01-01';
+    $<HTMLInputElement>('input[name="endDate"]')!.value = '2027-01-02';
+    $<HTMLFormElement>('.search-form')!.dispatchEvent(new Event('submit', {
+      bubbles: true, cancelable: true,
+    }));
+
+    expect($('.search-form__error')?.textContent).toContain('最多搜尋一年');
+    expect($('.search-status')).toBeNull();
   });
 });

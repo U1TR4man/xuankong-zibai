@@ -1,9 +1,10 @@
 import { PALACES, STAR_NAMES, type PalaceKey } from '../engine/flyingStar/types';
-import { addDays, formatUtc8Date, nowUtc8 } from '../engine/time/utc8';
+import { addDays, formatUtc8Date, MS_PER_DAY, nowUtc8 } from '../engine/time/utc8';
 import { asStarNumber } from '../overlay/types';
+import { parseCandidateRange } from '../search/candidateIterator';
 import { searchStars } from '../search/StarSearchEngine';
 import type { SearchLevel, SearchMatch, StarSearchQuery } from '../search/types';
-import { setView, type AppState } from '../state/appState';
+import { getState, setView, type AppState } from '../state/appState';
 import { el } from './dom';
 import { SearchResults } from './SearchResults';
 
@@ -24,9 +25,11 @@ interface SearchViewModel {
   query?: StarSearchQuery;
   matches?: SearchMatch[];
   error?: string;
+  searching?: boolean;
 }
 
 let model: SearchViewModel | undefined;
+let searchRunId = 0;
 
 const SEARCH_LEVELS: readonly SearchLevel[] = ['day', 'hour', 'ke'];
 
@@ -145,7 +148,14 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
   if (viewModel.error) {
     form.append(el('p', { class: 'search-form__error', role: 'alert' }, viewModel.error));
   }
-  form.append(el('button', { class: 'btn btn--primary search-form__submit', type: 'submit' }, '尋找'));
+  form.append(el('button', {
+    class: 'btn btn--primary search-form__submit', type: 'submit',
+    disabled: viewModel.searching,
+  }, viewModel.searching ? '搜尋中…' : '尋找'));
+  if (viewModel.searching) {
+    form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')
+      .forEach((control) => { control.disabled = true; });
+  }
 
   form.addEventListener('change', (event) => {
     const input = event.target as HTMLInputElement | HTMLSelectElement;
@@ -186,7 +196,7 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
         ke: draft.mode === 'advanced' ? data.getAll('keStars').map(String) : draft.advancedStars.ke,
       },
     };
-    model = { draft: nextDraft };
+    let query: StarSearchQuery;
     try {
       if (!nextDraft.palace) throw new RangeError('請選擇宮位');
       const conditions = nextDraft.mode === 'simple'
@@ -203,19 +213,40 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
       if (conditions.length === 0) throw new RangeError(
         nextDraft.mode === 'simple' ? '請選擇飛星' : '請至少設定一個層級條件',
       );
-      const query: StarSearchQuery = {
+      query = {
         version: 1,
         startDate: nextDraft.startDate,
         endDate: nextDraft.endDate,
         palace: nextDraft.palace as PalaceKey,
         conditions,
       };
-      const matches = searchStars(query, {
+      const range = parseCandidateRange(query.startDate, query.endDate);
+      const rangeDays = Math.floor(
+        (range.endInclusive.getTime() - range.start.getTime()) / MS_PER_DAY,
+      ) + 1;
+      if (rangeDays > 366) throw new RangeError('第一版每次最多搜尋一年（366 日）');
+      const options = {
         dayChangeMode: state.settings.dayChangeMode,
         yearBoundary: state.settings.yearBoundary,
         keStrategyId: state.settings.keStrategyId,
-      });
-      model = { draft: nextDraft, query, matches };
+      };
+      const runId = ++searchRunId;
+      model = { draft: nextDraft, query, searching: true };
+      setView('search');
+      window.setTimeout(() => {
+        if (runId !== searchRunId) return;
+        try {
+          const matches = searchStars(query, options);
+          model = { draft: nextDraft, query, matches };
+        } catch (error) {
+          model = {
+            draft: nextDraft,
+            error: error instanceof Error ? error.message : '搜尋失敗，請檢查條件。',
+          };
+        }
+        if (getState().view === 'search') setView('search');
+      }, 0);
+      return;
     } catch (error) {
       model = {
         draft: nextDraft,
@@ -232,10 +263,11 @@ export function SearchView(state: AppState): HTMLElement {
   model ??= defaults();
   const mode = model.draft.mode;
   const switchMode = (nextMode: SearchMode) => {
+    searchRunId += 1;
     model = { draft: { ...model!.draft, mode: nextMode } };
     setView('search');
   };
-  return el('main', { class: 'search-view' },
+  return el('main', { class: 'search-view', 'aria-busy': String(Boolean(model.searching)) },
     el('header', { class: 'search-view__head' },
       el('p', { class: 'search-view__eyebrow' }, `尋星 · ${mode === 'simple' ? '簡易' : '進階'}`),
       el('h1', {}, '尋找宮內飛星'),
@@ -256,6 +288,12 @@ export function SearchView(state: AppState): HTMLElement {
       }, '進階'),
     ),
     SearchForm(state, model),
+    model.searching
+      ? el('div', { class: 'search-status', role: 'status', 'aria-live': 'polite' },
+        el('span', { class: 'search-status__mark', 'aria-hidden': 'true' }),
+        el('span', {}, '正在裝置內計算，請稍候…'),
+      )
+      : null,
     model.query && model.matches ? SearchResults(model.query, model.matches) : null,
   );
 }

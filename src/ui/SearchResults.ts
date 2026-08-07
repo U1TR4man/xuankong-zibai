@@ -1,5 +1,7 @@
 import { PALACES, starName, type StarLevel } from '../engine/flyingStar/types';
-import { formatUtc8Date, formatUtc8Time, parseUtc8 } from '../engine/time/utc8';
+import {
+  formatUtc8Date, formatUtc8Time, MS_PER_DAY, parseUtc8, toUtc8Parts,
+} from '../engine/time/utc8';
 import { overlayLevelsThrough } from '../overlay/types';
 import { showOverlayChart } from '../state/appState';
 import type { SearchMatch, StarSearchQuery } from '../search/types';
@@ -73,11 +75,40 @@ function ResultCard(match: SearchMatch): HTMLElement {
   );
 }
 
+function groupMatches(matches: readonly SearchMatch[]): Map<string, SearchMatch[]> {
+  const groups = new Map<string, SearchMatch[]>();
+  for (const match of matches) {
+    const date = formatUtc8Date(parseUtc8(match.startDateTime)!);
+    const group = groups.get(date) ?? [];
+    group.push(match);
+    groups.set(date, group);
+  }
+  return groups;
+}
+
+function groupLabel(date: string): string {
+  const parts = toUtc8Parts(parseUtc8(date)!);
+  return `${parts.month}月${parts.day}日`;
+}
+
 export function SearchResults(query: StarSearchQuery, matches: readonly SearchMatch[]): HTMLElement {
   const palace = palaceLabel(query.palace);
   const conditionText = query.conditions.map((condition) => (
     `流${LEVEL_LABEL[condition.level]} ${condition.stars.map(starName).join('／')}`
   )).join(' ＋ ');
+  const groups = groupMatches(matches);
+  const start = parseUtc8(query.startDate)!;
+  const end = parseUtc8(query.endDate)!;
+  const rangeDays = Math.floor((end.getTime() - start.getTime()) / MS_PER_DAY) + 1;
+  const notices: HTMLElement[] = [];
+  if (rangeDays > 90) {
+    notices.push(el('p', { class: 'search-results__notice' },
+      `本次搜尋 ${rangeDays} 日；長範圍可能需要較多計算時間。`));
+  }
+  if (matches.length > 200) {
+    notices.push(el('p', { class: 'search-results__notice' },
+      '結果較多，可縮短日期或增加條件；目前結果未被截斷。'));
+  }
 
   return el('section', { class: 'search-results', 'aria-labelledby': 'search-results-title' },
     el('header', { class: 'search-results__summary' },
@@ -86,9 +117,20 @@ export function SearchResults(query: StarSearchQuery, matches: readonly SearchMa
         el('p', {}, `${query.startDate} – ${query.endDate}`),
       ),
       el('strong', { class: 'search-results__count', 'aria-live': 'polite' }, `共 ${matches.length} 個結果`),
+      ...notices,
     ),
     matches.length > 0
-      ? el('div', { class: 'search-results__list' }, ...matches.map(ResultCard))
+      ? el('div', { class: 'search-results__list' },
+        ...Array.from(groups, ([date, group]) => el('section', {
+          class: 'search-result-group', 'aria-labelledby': `search-group-${date}`,
+        },
+        el('header', { class: 'search-result-group__head' },
+          el('h3', { id: `search-group-${date}` }, groupLabel(date)),
+          el('span', {}, `${group.length} 個`),
+        ),
+        el('div', { class: 'search-result-group__items' }, ...group.map(ResultCard)),
+        )),
+      )
       : el('div', { class: 'search-empty' },
         el('p', {}, '這段時間沒有找到符合條件的時段'),
         el('p', {}, '請修改日期、宮位、層級或飛星後再搜尋。'),
