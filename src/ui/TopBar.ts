@@ -38,13 +38,15 @@ function openCurrentExplanation(): void {
 export function TopBar(state: AppState): HTMLElement {
   return el(
     'header',
-    { class: 'topbar', 'aria-label': `玄空紫白・目前為流${LEVEL_LABEL[state.level]}盤` },
+    { class: 'topbar', 'aria-label': state.view === 'search'
+      ? '玄空紫白・尋星'
+      : `玄空紫白・目前為流${LEVEL_LABEL[state.level]}盤` },
     el('button', { class: 'topbar__brand', type: 'button', onclick: goHome }, '玄空紫白'),
     el('div', { class: 'topbar__actions' },
-      el('button', {
+      state.view === 'chart' ? el('button', {
         class: 'topbar__icon', type: 'button', 'aria-label': '查看排盤說明',
         onclick: openCurrentExplanation,
-      }, svgIcon('info')),
+      }, svgIcon('info')) : null,
       el('button', {
         class: 'topbar__icon', type: 'button', 'aria-label': '開啟設定',
         'data-sheet-trigger': 'settings',

@@ -23,6 +23,8 @@ import { LevelSegment } from './ui/LevelSegment';
 import { NinePalaceGrid } from './ui/NinePalaceGrid';
 import { NinePalaceOverlayGrid } from './ui/NinePalaceOverlayGrid';
 import { OverlayControls } from './ui/OverlayControls';
+import { PrimaryNavigation } from './ui/PrimaryNavigation';
+import { SearchView } from './ui/SearchView';
 import { TimeNavigator, shiftByLevel } from './ui/TimeNavigator';
 import { TopBar } from './ui/TopBar';
 import { StudyPanel } from './ui/StudyPanel';
@@ -79,6 +81,15 @@ function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLE
 function render(state: AppState): void {
   clear(root);
 
+  root.append(TopBar(state), PrimaryNavigation(state));
+  if (state.view === 'search') {
+    root.append(
+      SearchView(state),
+      el('p', { class: 'foot' }, '離線搜尋 · 所有計算均在裝置內完成'),
+    );
+    return;
+  }
+
   const chart = computeFullChart(state.selectedDateTime, {
     dayChangeMode: state.settings.dayChangeMode,
     yearBoundary: state.settings.yearBoundary,
@@ -88,7 +99,6 @@ function render(state: AppState): void {
   const result = resultFor(chart, displayLevel);
 
   root.append(
-    TopBar(state),
     DateTimeContext(state),
     LevelSegment(state.level),
     OverlayControls(state),

@@ -11,6 +11,7 @@ import { PALACE_KEYS, type PalaceKey } from '../engine/flyingStar/types';
 import { loadSettings, saveSettings, type Settings } from './settings';
 
 export type Level = 'year' | 'month' | 'day' | 'hour' | 'ke';
+export type AppView = 'chart' | 'search';
 
 export const LEVELS: readonly Level[] = ['year', 'month', 'day', 'hour', 'ke'];
 
@@ -19,6 +20,7 @@ export const LEVEL_LABEL: Record<Level, string> = {
 };
 
 export interface AppState {
+  view: AppView;
   selectedDateTime: Date;
   level: Level;
   settings: Settings;
@@ -38,6 +40,7 @@ type Listener = (s: AppState) => void;
 const listeners = new Set<Listener>();
 
 const state: AppState = {
+  view: 'chart',
   selectedDateTime: nowUtc8(),
   level: 'hour',
   settings: loadSettings(),
@@ -81,6 +84,7 @@ export function setLevel(level: Level, opts: { push?: boolean } = {}): void {
 }
 
 export function setDateTimeAndLevel(d: Date, level: Level): void {
+  state.view = 'chart';
   state.selectedDateTime = d;
   state.level = level;
   if (state.overlayMode) state.overlayPrimaryLevel = level;
@@ -102,6 +106,7 @@ export function migrateLegacyHome(): void {
 }
 
 export function goHome(): void {
+  state.view = 'chart';
   state.selectedDateTime = nowUtc8();
   state.level = 'hour';
   state.followNow = true;
@@ -130,6 +135,27 @@ export function refreshFollowedNow(): void {
 export function updateSettings(patch: Partial<Settings>): void {
   Object.assign(state.settings, patch);
   saveSettings(state.settings);
+  emit();
+}
+
+export function setView(view: AppView, opts: { push?: boolean } = {}): void {
+  state.view = view;
+  state.home = false;
+  syncUrl(opts.push);
+  emit();
+}
+
+/** Search → Chart 的單一 transition；盤面會由 app.ts 使用正式 Engine 重新計算。 */
+export function showOverlayChart(d: Date, level: Level, palace: PalaceKey): void {
+  state.view = 'chart';
+  state.selectedDateTime = d;
+  state.level = level;
+  state.overlayMode = true;
+  state.overlayPrimaryLevel = level;
+  state.selectedPalace = palace;
+  state.followNow = false;
+  state.home = false;
+  syncUrl(true);
   emit();
 }
 
@@ -162,6 +188,7 @@ function syncUrl(push = false): void {
   const p = new URLSearchParams();
   p.set('t', `${formatUtc8Date(state.selectedDateTime)}T${formatUtc8Time(state.selectedDateTime)}`);
   p.set('level', state.level);
+  if (state.view === 'search') p.set('view', 'search');
   if (state.overlayMode) {
     p.set('overlay', '1');
     p.set('primary', state.overlayPrimaryLevel);
@@ -184,6 +211,7 @@ export function restoreFromUrl(): boolean {
   const d = t ? parseUtc8(t) : null;
   if (!d) return false;
   state.selectedDateTime = d;
+  state.view = p.get('view') === 'search' ? 'search' : 'chart';
   if (level && LEVELS.includes(level)) state.level = level;
   state.overlayMode = p.get('overlay') === '1';
   const primary = p.get('primary') as Level | null;
