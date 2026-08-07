@@ -1,0 +1,56 @@
+# 推上 GitHub 後自動：跑測試 → 打包 → 發佈到 GitHub Pages。
+# 完全不需要在自己電腦上做任何事。
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: 跑單元測試
+        run: npm test
+
+      - name: 打包網站版（可安裝、可離線）
+        run: npm run build
+
+      - name: 打包單檔版（可下載、雙擊即用）
+        run: |
+          npm run build:single
+          cp 玄空紫白.html dist/
+          touch dist/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
