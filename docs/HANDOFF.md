@@ -7,11 +7,13 @@
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
 - V2.1 基線 commit：`e5e2d33`
-- 本文件所在 checkpoint 已包含 V2.1；**尚未 push**
+- V2.1 implementation checkpoint：`fdee2e7`
+- read-only review 修正後 code checkpoint：`333f7e1`（P1：`14fdc40`）
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
-- V2.1 規格：`/Users/chungyingwa/Downloads/xuankong_zibai_v2_1_visual_refinement_ios_datetime_fix.md`
+- V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
+- `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
 
-下一步不是再擴功能，而是先做實體 iPhone spot-check；確認後才 push／deploy。
+P0 iPhone 實機使用已回報無問題。下一步不是再擴功能，而是重跑完整驗證後才決定 push／deploy。
 
 ---
 
@@ -89,16 +91,24 @@ tests/fixtures/chart-snapshot.json
 
 舊版由 WebKit 原生 date/time input 同時負責內容、border 與 focus outline；iOS 的 native appearance 在開關 picker 前後可能採用不同的內部尺寸，造成 border 走位或雙框。V2.1 把可控視覺責任移到固定尺寸的外層 shell，以 `:focus-within` 畫唯一 focus；原生 input 只保留值與系統 picker 行為。
 
+### `fdee2e7` read-only review 收尾
+
+- P0：0 個 code bug；使用者完成 iPhone 實機使用並回報無問題，日期／時間 code 不再調整
+- P1：`14fdc40` 補齊 LevelSegment roving `tabindex`、ArrowLeft／ArrowRight、Home／End、automatic activation 與 tabpanel 關聯
+- P2：`333f7e1` 將「‹ 返回時盤」改為方向、視覺與閱讀順序一致
+- 文件：V2.1 規格及 review 原文均已收進 repo，不再依賴 `/Users/...` 本機路徑
+- `CHANGELOG.md` 自本輪起記錄每個可交付修改批次
+
 ---
 
 ## 驗證結果
 
 ```text
 test files  14 passed
-tests       103 passed
+tests       104 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-single file 玄空紫白.html（約 182 KB；font data URI）success
+single file 玄空紫白.html（約 183 KB；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -118,7 +128,7 @@ single file 玄空紫白.html（約 182 KB；font data URI）success
 - date/time focus：shell 1px border + 2px outline；input 0 border + no outline
 - 品牌字體 `document.fonts.check()` 命中；TopBar 兩個 SVG 均為 1.5px stroke
 - 主頁一個「今」、無常駐 UTC+8；TimePicker／Settings 仍顯示 UTC+8
-- LevelSegment tab 語意、八刻 8-item Sheet 與 contextual CTA 流程正常
+- LevelSegment tab 語意、完整鍵盤操作、八刻 8-item Sheet 與 contextual CTA 流程正常
 - Settings Sheet 80dvh + 內部 scroll
 - simple／study 持久化
 - Explain chain／source
@@ -149,7 +159,7 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 
 ## 尚餘風險／未來工作
 
-- 桌面自動化無法替代 iOS 系統 calendar／time picker；需確認 picker 實際開啟、關閉後 layout 不跳，以及 standalone safe area。
+- iPhone 一般實機使用已回報無問題；若發佈流程需要可稽核證據，仍可補 Safari／PWA standalone／iOS Chrome 的分項紀錄。
 - 刻盤目前仍只有「八刻十五分鐘制」一種策略。
 - Dark Mode 明確留待 V3。
 - IndexedDB 目前沒有必要，設定繼續使用 localStorage。

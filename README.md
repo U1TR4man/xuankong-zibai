@@ -8,7 +8,7 @@
 ```
 npm install
 npm run dev       # 開發
-npm test          # 103 個測試（含 1200 點 engine snapshot）
+npm test          # 104 個測試（含 1200 點 engine snapshot）
 npm run build     # 產生 dist/（含 service worker、manifest）
 npm run preview
 ```
@@ -46,6 +46,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 - 自帶 59 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003 子集，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌。
 - 頂欄 info／settings 改為同一套 1.5px inline SVG，不再依賴平台 emoji。
 - 層級列改為無外框 tab + 朱砂短底線；主畫面只保留一個「今」，UTC+8 說明留在選時與設定 Sheet。
+- 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
 - Chart Header、前後導覽與 contextual CTA 減少外框及大色塊；九宮 geometry 與算法完全不變。
 
 ## 架構
@@ -120,7 +121,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 103 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6 與 V2.1 UI／資產回歸。
+- `npm test` — 104 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6 與 V2.1 UI／資產／鍵盤操作回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
@@ -129,5 +130,5 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 ## 尚未做的事
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
-- 已用真實 production 瀏覽器驗證 320 / 375 / 390 / 430 / 768；正式發佈前仍需在實體 iPhone spot-check 系統 date/time picker、calendar 關閉後 layout 與 standalone safe area。
+- 已用真實 production 瀏覽器驗證 320 / 375 / 390 / 430 / 768，iPhone 實機使用亦回報無問題；如需 release-grade 證據，可再補 Safari／PWA standalone／iOS Chrome 分項紀錄。
 - 未做 IndexedDB（目前資料量小，設定用 localStorage 已足夠）。
