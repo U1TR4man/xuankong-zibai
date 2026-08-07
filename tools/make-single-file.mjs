@@ -13,7 +13,17 @@ if (!jsFile) throw new Error('找不到 build 產物，請先跑 vite build');
 
 // IIFE 模式下 Vite 會把 CSS 直接注入 JS，因此 .css 檔可能不存在。
 const css = cssFile ? readFileSync(join(dir, cssFile), 'utf8') : '';
-const js = readFileSync(join(dir, jsFile), 'utf8').replace(/\/\/# sourceMappingURL=.*/g, '');
+const font = readFileSync('public/fonts/zibai-serif-medium.woff2');
+const fontUrl = 'data:font/woff2;base64,' + font.toString('base64');
+const viteFontExpression = 'new URL("fonts/zibai-serif-medium.woff2",document.currentScript&&document.currentScript.tagName.toUpperCase()==="SCRIPT"&&document.currentScript.src||document.baseURI).href';
+const js = readFileSync(join(dir, jsFile), 'utf8')
+  .replace(/\/\/# sourceMappingURL=.*/g, '')
+  .replaceAll(viteFontExpression, JSON.stringify(fontUrl))
+  .replaceAll('./fonts/zibai-serif-medium.woff2', fontUrl)
+  .replaceAll('/fonts/zibai-serif-medium.woff2', fontUrl);
+if (js.includes('fonts/zibai-serif-medium.woff2') || !js.includes('data:font/woff2;base64,')) {
+  throw new Error('品牌字體未成功內嵌，單檔版將無法離線顯示宋體');
+}
 const icon = readFileSync('public/icons/icon-192.svg', 'utf8');
 const iconUrl = 'data:image/svg+xml;base64,' + Buffer.from(icon).toString('base64');
 
@@ -22,9 +32,9 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0e0f14">
+<meta name="theme-color" content="#f4f0e7">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="玄空紫白">
 <link rel="icon" href="${iconUrl}">
 <link rel="apple-touch-icon" href="${iconUrl}">

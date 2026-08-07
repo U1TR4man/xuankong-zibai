@@ -7,11 +7,11 @@ import { el } from './dom';
 
 export function openTimePickerSheet(trigger: HTMLElement, selected: Date): HTMLDialogElement {
   const dateInput = el('input', {
-    class: 'sheet-field', type: 'date', value: formatUtc8Date(selected),
+    class: 'sheet-native-input', type: 'date', value: formatUtc8Date(selected),
     'aria-label': '日期', 'data-autofocus': 'true',
   });
   const timeInput = el('input', {
-    class: 'sheet-field', type: 'time', value: formatUtc8Time(selected),
+    class: 'sheet-native-input', type: 'time', value: formatUtc8Time(selected),
     'aria-label': '時間',
   });
 
@@ -35,10 +35,12 @@ export function openTimePickerSheet(trigger: HTMLElement, selected: Date): HTMLD
     class: 'sheet-form', onsubmit: (event) => { event.preventDefault(); apply(); },
   },
     el('label', { class: 'sheet-field-group' },
-      el('span', { class: 'sheet-field-label' }, '日期'), dateInput),
+      el('span', { class: 'sheet-field-label' }, '日期'),
+      el('span', { class: 'sheet-input-shell' }, dateInput)),
     el('label', { class: 'sheet-field-group' },
-      el('span', { class: 'sheet-field-label' }, '時間'), timeInput),
-    el('p', { class: 'sheet-form__meta' }, '所有時間以 UTC+8 判定'),
+      el('span', { class: 'sheet-field-label' }, '時間'),
+      el('span', { class: 'sheet-input-shell' }, timeInput)),
+    el('p', { class: 'sheet-form__meta' }, '時間基準：UTC+8'),
     el('div', { class: 'sheet-actions' },
       el('button', { class: 'btn btn--ghost', type: 'button', onclick: useNow }, '現在'),
       el('button', { class: 'btn btn--primary', type: 'submit' }, '查看此時'),

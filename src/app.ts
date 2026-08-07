@@ -10,10 +10,6 @@ import './styles.css';
 
 import { computeFullChart, type FullChart } from './engine/flyingStar';
 import type { StarResult } from './engine/flyingStar/types';
-import { getChineseHour } from './engine/time/chineseHour';
-import { getKeStrategy } from './engine/flyingStar/ke/registry';
-import { getSolarMonthByJieqi } from './engine/time/solarTerms';
-import { formatUtc8Date, nowUtc8, toUtc8Parts } from './engine/time/utc8';
 import {
   getState, migrateLegacyHome, refreshFollowedNow, restoreFromUrl, setDateTime, subscribe,
   type AppState, type Level,
@@ -36,27 +32,11 @@ function resultFor(chart: FullChart, level: Level): StarResult {
   return level === 'ke' ? chart.ke : chart[level];
 }
 
-/** 目前盤是否即為 UTC+8 此刻所在的盤（規劃書 §25）。 */
-function isNow(d: Date, level: Level): boolean {
-  const n = nowUtc8();
-  switch (level) {
-    case 'year': return toUtc8Parts(n).year === toUtc8Parts(d).year;
-    case 'month': return getSolarMonthByJieqi(n).start.getTime() === getSolarMonthByJieqi(d).start.getTime();
-    case 'day': return formatUtc8Date(n) === formatUtc8Date(d);
-    case 'hour': return getChineseHour(n).start.getTime() === getChineseHour(d).start.getTime();
-    case 'ke': {
-      const s = getKeStrategy(getState().settings.keStrategyId);
-      return getChineseHour(n).start.getTime() === getChineseHour(d).start.getTime()
-        && s.getKeIndex(n) === s.getKeIndex(d);
-    }
-  }
-}
-
-function ChartCard(result: StarResult, now: boolean, state: AppState): HTMLElement {
+function ChartCard(result: StarResult, state: AppState): HTMLElement {
   const card = el('section', {
     class: 'card', id: 'current-chart', 'data-swipe-zone': 'chart',
   },
-    ChartHeader(result, state.level, now),
+    ChartHeader(result, state.level),
     NinePalaceGrid(result, state.settings),
   );
 
@@ -103,14 +83,14 @@ function render(state: AppState): void {
     TopBar(state),
     DateTimeContext(state),
     LevelSegment(state.level),
-    ChartCard(result, isNow(state.selectedDateTime, state.level), state),
+    ChartCard(result, state),
     TimeNavigator(state.selectedDateTime, state.level),
     ContextAction(state, chart),
   );
 
   root.append(ExplainTrigger(result));
   if (state.settings.displayMode === 'study') root.append(StudyPanel(chart));
-  root.append(el('p', { class: 'foot' }, '所有時間以 UTC+8 判定 · 離線可用'));
+  root.append(el('p', { class: 'foot' }, '離線可用 · 所有計算均在裝置內完成'));
 }
 
 subscribe(render);

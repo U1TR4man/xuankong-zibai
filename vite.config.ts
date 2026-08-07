@@ -24,7 +24,6 @@ export default defineConfig({
     : [
         VitePWA({
           registerType: 'autoUpdate',
-          includeAssets: ['icons/*.svg'],
           manifest: {
             name: '玄空紫白',
             short_name: '紫白',

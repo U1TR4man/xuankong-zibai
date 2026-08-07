@@ -27,7 +27,7 @@ export function DateTimeContext(state: AppState): HTMLElement {
       onclick: (event) => openTimePickerSheet(event.currentTarget as HTMLElement, d),
     },
       el('div', { class: 'date-context__value' }, dateTime),
-      el('div', { class: 'date-context__meta' }, `${term.name}後 · UTC+8`),
+      el('div', { class: 'date-context__meta' }, `${term.name}後`),
     ),
     current
       ? el('span', { class: 'badge badge--now', 'aria-label': '現在' }, '今')

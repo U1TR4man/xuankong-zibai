@@ -43,6 +43,12 @@ describe('Phase 3 Bottom Sheet', () => {
 
     const date = $<HTMLInputElement>('input[type="date"]')!;
     const time = $<HTMLInputElement>('input[type="time"]')!;
+    expect(document.querySelectorAll('.sheet-input-shell')).toHaveLength(2);
+    expect(date.classList.contains('sheet-native-input')).toBe(true);
+    expect(time.classList.contains('sheet-native-input')).toBe(true);
+    expect(date.parentElement?.classList.contains('sheet-input-shell')).toBe(true);
+    expect(time.parentElement?.classList.contains('sheet-input-shell')).toBe(true);
+    expect(document.querySelector('.sheet-form__meta')?.textContent).toBe('時間基準：UTC+8');
     date.value = '2025-12-03';
     time.value = '14:20';
     expect(getState().selectedDateTime.getTime()).toBe(NOW.getTime());

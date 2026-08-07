@@ -5,6 +5,14 @@
    禁止：漸層背景、大面積金、glow、玻璃擬態、九色 neon、貼圖紋理。
    ========================================================================== */
 
+@font-face {
+  font-family: 'Zibai Serif';
+  src: url('/fonts/zibai-serif-medium.woff2') format('woff2');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 500;
+}
+
 :root {
   /* 紙 */
   --paper: #f4f0e7;
@@ -42,7 +50,7 @@
   --s6: 24px;
   --s8: 32px;
 
-  --font-display: 'Songti TC', 'STSong', 'Noto Serif TC', 'Source Han Serif TC',
+  --font-display: 'Zibai Serif', 'Songti TC', 'STSong', 'Noto Serif TC', 'Source Han Serif TC',
     'Songti SC', 'PMingLiU', serif;
   --font-ui: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Noto Sans TC',
     'Microsoft JhengHei', 'Hiragino Sans', sans-serif;
@@ -161,8 +169,8 @@ button, select, input { font: inherit; color: inherit; }
   border: none;
   cursor: pointer;
   color: var(--ink-secondary);
-  font-size: 20px;
 }
+.topbar__icon svg { width: 20px; height: 20px; }
 
 /* ---------- 日期時間 context ---------- */
 .date-context {
@@ -172,7 +180,6 @@ button, select, input { font: inherit; color: inherit; }
   justify-content: space-between;
   gap: var(--s3);
   padding: var(--s2) 0;
-  border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 .date-context__select {
@@ -189,7 +196,7 @@ button, select, input { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .date-context__value {
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.4;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -206,30 +213,40 @@ button, select, input { font: inherit; color: inherit; }
   cursor: pointer;
 }
 
-/* ---------- 層級 segment（單一外框，非五張卡） ---------- */
+/* ---------- 層級：無外框，以短底線表示 active ---------- */
 .level-segment {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  background: var(--paper-raised);
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  background: transparent;
 }
 .level-segment__item {
+  position: relative;
   min-height: var(--tap);
   border: none;
-  border-left: 1px solid var(--line);
   background: transparent;
   cursor: pointer;
   font-family: var(--font-display);
   font-size: 17px;
   color: var(--ink-secondary);
 }
-.level-segment__item:first-child { border-left: none; }
 .level-segment__item.is-active {
-  background: var(--cinnabar-soft);
+  background: transparent;
   color: var(--cinnabar);
+}
+.level-segment__item.is-active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 22px;
+  height: 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--cinnabar);
 }
 
 /* ---------- 盤 ---------- */
@@ -310,15 +327,22 @@ button, select, input { font: inherit; color: inherit; }
 .cell--center .cell__meta { color: var(--cinnabar); opacity: .8; }
 
 /* ---------- 上一個 / 下一個 ---------- */
-.nav { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s2); align-items: stretch; }
+.nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s2);
+  align-items: stretch;
+  padding-top: var(--s1);
+  border-top: 1px solid var(--line);
+}
 .nav__btn {
   min-height: 48px;
   padding: var(--s2) var(--s3);
   font-size: 15px;
   cursor: pointer;
   background: transparent;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
+  border: none;
+  border-radius: 0;
   color: var(--ink-secondary);
 }
 .nav__btn:first-child { text-align: left; }
@@ -328,19 +352,26 @@ button, select, input { font: inherit; color: inherit; }
 .context-action {
   width: 100%;
   min-height: 48px;
-  padding: var(--s2) var(--s4);
-  border: 1px solid var(--cinnabar);
-  border-radius: var(--radius-sm);
-  background: var(--cinnabar);
-  color: var(--paper-raised);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s2) 0;
+  border: none;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
   font-size: 16px;
+  text-align: left;
   cursor: pointer;
 }
 .context-action--secondary {
-  background: transparent;
-  border-color: var(--line-strong);
   color: var(--ink-secondary);
 }
+.context-action__copy { display: flex; flex-direction: column; gap: 1px; }
+.context-action__detail { font-size: 12px; color: var(--ink-tertiary); }
+.context-action__arrow { color: var(--ink-tertiary); font-size: 22px; }
 
 /* ---------- 刻選擇 ---------- */
 .ke { display: flex; flex-direction: column; gap: var(--s3); }
@@ -632,15 +663,35 @@ button, select, input { font: inherit; color: inherit; }
 .sheet-form { display: flex; flex-direction: column; gap: var(--s4); }
 .sheet-field-group { display: flex; flex-direction: column; gap: var(--s2); }
 .sheet-field-label { font-size: 14px; color: var(--ink-secondary); }
-.sheet-field {
+.sheet-input-shell {
   width: 100%;
   min-height: 48px;
+  display: flex;
+  align-items: center;
   padding: var(--s2) var(--s3);
   background: var(--paper);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
+}
+.sheet-input-shell:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.sheet-native-input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 30px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
   font-variant-numeric: tabular-nums;
 }
+.sheet-native-input:focus-visible { outline: none; }
 .sheet-form__meta { margin: 0; font-size: 13px; color: var(--ink-tertiary); }
 .sheet-actions {
   display: grid;

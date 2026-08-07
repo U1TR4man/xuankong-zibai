@@ -27,12 +27,33 @@ beforeAll(async () => {
 
 describe('Phase 6 polish', () => {
   it('Chart Header 有清楚 hierarchy，導航只保留上一個／下一個', () => {
-    expect($('.card__eyebrow')?.textContent).toContain('流時盤');
+    expect($('.card__eyebrow')?.textContent).toBe('流時');
     expect($('.card__title')?.textContent).toContain('午時');
     expect($('.card__range')?.textContent).toContain('11:00–12:59');
     expect($('.card__result')?.textContent).toContain('入中');
     expect(document.querySelectorAll('.nav__btn')).toHaveLength(2);
     expect($('.nav__cur')).toBeNull();
+  });
+
+  it('主畫面只顯示一個「今」，且 UTC+8 留在設定／選時脈絡', () => {
+    expect(document.querySelectorAll('.date-context > .badge--now')).toHaveLength(1);
+    expect($('.card__head .badge--now')).toBeNull();
+    expect($('.date-context__meta')?.textContent).not.toContain('UTC+8');
+    expect($('#app')?.textContent).not.toContain('UTC+8');
+  });
+
+  it('層級仍保留 tab 語意', () => {
+    expect($('.level-segment')?.getAttribute('role')).toBe('tablist');
+    expect(document.querySelectorAll('.level-segment__item[role="tab"]')).toHaveLength(5);
+    expect(document.querySelectorAll('.level-segment__item[aria-selected="true"]')).toHaveLength(1);
+  });
+
+  it('頂欄圖示是可縮放的 SVG，不依賴平台 emoji', () => {
+    expect(document.querySelectorAll('.topbar__icon svg')).toHaveLength(2);
+    expect($('.topbar')?.textContent).not.toContain('ⓘ');
+    expect($('.topbar')?.textContent).not.toContain('⚙');
+    expect(document.querySelector('[aria-label="查看排盤說明"]')).not.toBeNull();
+    expect(document.querySelector('[aria-label="開啟設定"]')).not.toBeNull();
   });
 
   it('盤外 swipe 與盤內互動元素不會換盤', async () => {

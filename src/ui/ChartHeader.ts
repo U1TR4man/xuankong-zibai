@@ -5,14 +5,12 @@ import type { Level } from '../state/appState';
 import { el } from './dom';
 
 const CHART_LABEL: Record<Level, string> = {
-  year: '流年盤', month: '流月盤', day: '流日盤', hour: '流時盤', ke: '流刻盤',
+  year: '流年', month: '流月', day: '流日', hour: '流時', ke: '流刻',
 };
 
-export function ChartHeader(result: StarResult, level: Level, isNow: boolean): HTMLElement {
+export function ChartHeader(result: StarResult, level: Level): HTMLElement {
   return el('div', { class: 'card__head' },
-    el('div', { class: 'card__eyebrow' },
-      el('span', {}, CHART_LABEL[level]),
-      isNow ? el('span', { class: 'badge badge--now' }, '今') : null),
+    el('div', { class: 'card__eyebrow' }, CHART_LABEL[level]),
     el('h1', { class: 'card__title' }, result.title),
     el('p', { class: 'card__sub' },
       result.subtitle ? el('span', { class: 'card__range' }, result.subtitle) : null,

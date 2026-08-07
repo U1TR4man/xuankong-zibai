@@ -61,7 +61,7 @@ describe('V1 端到端下鑽', () => {
     expect($('.crumb')).toBeNull();
     expect($$('.picker')).toHaveLength(0);
     expect(text('.level-segment__item.is-active')).toBe('年');
-    expect(text('.context-action')).toBe('查看十二月');
+    expect(text('.context-action__label')).toBe('查看十二月');
     expect(location.search).toContain('level=year');
   });
 
@@ -76,7 +76,7 @@ describe('V1 端到端下鑽', () => {
     const shen = computeFullChart(fromUtc8(2026, 8, 10, 12, 0)).month;
     expect(shen.title).toBe('申月');
     expect(text('.card__sub')).toContain(starName(shen.centerStar));
-    expect(text('.context-action')).toBe('查看本月各日');
+    expect(text('.context-action__label')).toBe('查看本月各日');
     expect(location.search).toContain('level=month');
   });
 
@@ -89,7 +89,7 @@ describe('V1 端到端下鑽', () => {
     expect(chart.day.title).toBe('癸丑日');
     expect(text('.card__sub')).toContain(starName(chart.day.centerStar));
     expect(text('.card__sub')).toContain('逆飛');
-    expect(text('.context-action')).toBe('查看十二時辰');
+    expect(text('.context-action__label')).toBe('查看十二時辰');
     expect(location.search).toContain('level=day');
   });
 
@@ -101,7 +101,8 @@ describe('V1 端到端下鑽', () => {
     expect(text('.card__title')).toContain('午時');
     expect(text('.card__sub')).toContain(starName(chart.hour.centerStar));
     expect($$('.ke__item')).toHaveLength(0);
-    expect(text('.context-action')).toBe('查看此時八刻');
+    expect(text('.context-action__label')).toBe('查看八刻');
+    expect(text('.context-action')).toContain('8 × 15 分鐘');
     click($('.context-action'));
     expect($$('.ke-pick')).toHaveLength(8);
     expect(text('.ke-picker__note')).toContain('八刻十五分鐘制');
@@ -129,7 +130,7 @@ describe('V1 端到端下鑽', () => {
     }
     expect(location.search).toContain('level=ke');
     expect(location.search).toContain('t=2026-08-07T11%3A30');
-    expect(text('.context-action')).toBe('返回時盤');
+    expect(text('.context-action__label')).toBe('返回時盤');
   });
 
   it('刷新（由 URL 還原）不丟失盤面', async () => {
