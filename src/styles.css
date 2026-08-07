@@ -367,6 +367,7 @@ button, select, input { font: inherit; color: inherit; }
   cursor: pointer;
 }
 .context-action--secondary {
+  justify-content: flex-start;
   color: var(--ink-secondary);
 }
 .context-action__copy { display: flex; flex-direction: column; gap: 1px; }

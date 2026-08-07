@@ -12,13 +12,13 @@ const LABEL = {
   day: '查看十二時辰',
 } as const;
 
-function actionContent(label: string, detail?: string, arrow = '›'): Node[] {
-  return [
-    el('span', { class: 'context-action__copy' },
-      el('span', { class: 'context-action__label' }, label),
-      detail ? el('span', { class: 'context-action__detail' }, detail) : null),
-    el('span', { class: 'context-action__arrow', 'aria-hidden': 'true' }, arrow),
-  ];
+function actionContent(label: string, detail?: string, direction: 'forward' | 'back' = 'forward'): Node[] {
+  const copy = el('span', { class: 'context-action__copy' },
+    el('span', { class: 'context-action__label' }, label),
+    detail ? el('span', { class: 'context-action__detail' }, detail) : null);
+  const arrow = el('span', { class: 'context-action__arrow', 'aria-hidden': 'true' },
+    direction === 'back' ? '‹' : '›');
+  return direction === 'back' ? [arrow, copy] : [copy, arrow];
 }
 
 export function ContextAction(state: AppState, chart: FullChart): HTMLElement {
@@ -26,8 +26,9 @@ export function ContextAction(state: AppState, chart: FullChart): HTMLElement {
     return el('button', {
       class: 'context-action context-action--secondary', type: 'button',
       'data-context-action': 'true',
+      'aria-label': '返回時盤',
       onclick: () => setLevel('hour', { push: true }),
-    }, ...actionContent('返回時盤', undefined, '‹'));
+    }, ...actionContent('返回時盤', undefined, 'back'));
   }
 
   if (state.level === 'hour') {

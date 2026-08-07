@@ -131,6 +131,11 @@ describe('V1 端到端下鑽', () => {
     expect(location.search).toContain('level=ke');
     expect(location.search).toContain('t=2026-08-07T11%3A30');
     expect(text('.context-action__label')).toBe('返回時盤');
+    const action = $('.context-action')!;
+    expect(action.children[0]?.classList.contains('context-action__arrow')).toBe(true);
+    expect(action.children[1]?.classList.contains('context-action__copy')).toBe(true);
+    expect(action.children[0]?.getAttribute('aria-hidden')).toBe('true');
+    expect(action.getAttribute('aria-label')).toBe('返回時盤');
   });
 
   it('刷新（由 URL 還原）不丟失盤面', async () => {
