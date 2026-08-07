@@ -39,6 +39,7 @@ jobs:
         run: |
           npm run build:single
           cp 玄空紫白.html dist/
+          cp 玄空紫白.html dist/offline.html
           touch dist/.nojekyll
 
       - uses: actions/upload-pages-artifact@v3

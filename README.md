@@ -1,5 +1,7 @@
 # 玄空紫白 — 年月日時刻飛星 PWA
 
+**線上版：<https://u1tr4man.github.io/xuankong-zibai/>** ｜ **離線單檔：<https://u1tr4man.github.io/xuankong-zibai/offline.html>**
+
 離線可用的紫白飛星排盤工具：**流年 → 流月 → 流日 → 流時 → 流刻**，每一層皆可點擊下鑽。
 手機優先、無框架（Vanilla TypeScript + Vite）、計算邏輯與 UI 完全分離。
 
