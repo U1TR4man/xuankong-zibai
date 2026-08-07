@@ -34,7 +34,8 @@ function resultFor(chart: FullChart, level: Level): StarResult {
 
 function ChartCard(result: StarResult, state: AppState): HTMLElement {
   const card = el('section', {
-    class: 'card', id: 'current-chart', 'data-swipe-zone': 'chart',
+    class: 'card', id: 'current-chart', role: 'tabpanel',
+    'aria-labelledby': `level-tab-${state.level}`, 'data-swipe-zone': 'chart',
   },
     ChartHeader(result, state.level),
     NinePalaceGrid(result, state.settings),

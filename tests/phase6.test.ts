@@ -46,6 +46,35 @@ describe('Phase 6 polish', () => {
     expect($('.level-segment')?.getAttribute('role')).toBe('tablist');
     expect(document.querySelectorAll('.level-segment__item[role="tab"]')).toHaveLength(5);
     expect(document.querySelectorAll('.level-segment__item[aria-selected="true"]')).toHaveLength(1);
+    expect($('.level-segment__item[aria-selected="true"]')?.getAttribute('tabindex')).toBe('0');
+    expect(document.querySelectorAll('.level-segment__item[tabindex="-1"]')).toHaveLength(4);
+    expect($('#current-chart')?.getAttribute('role')).toBe('tabpanel');
+    expect($('#current-chart')?.getAttribute('aria-labelledby')).toBe('level-tab-hour');
+  });
+
+  it('層級 tabs 支援方向鍵、Home、End 與 automatic activation', async () => {
+    const { getState } = await import('../src/state/appState');
+    const press = (level: string, key: string) => {
+      $<HTMLButtonElement>(`#level-tab-${level}`)?.dispatchEvent(new KeyboardEvent('keydown', {
+        key, bubbles: true, cancelable: true,
+      }));
+    };
+
+    $<HTMLButtonElement>('#level-tab-hour')?.focus();
+    press('hour', 'ArrowRight');
+    expect(getState().level).toBe('ke');
+    expect(document.activeElement).toBe($('#level-tab-ke'));
+    expect($('#level-tab-ke')?.getAttribute('aria-selected')).toBe('true');
+
+    press('ke', 'Home');
+    expect(getState().level).toBe('year');
+    expect(document.activeElement).toBe($('#level-tab-year'));
+
+    press('year', 'End');
+    expect(getState().level).toBe('ke');
+    press('ke', 'ArrowLeft');
+    expect(getState().level).toBe('hour');
+    expect(document.activeElement).toBe($('#level-tab-hour'));
   });
 
   it('頂欄圖示是可縮放的 SVG，不依賴平台 emoji', () => {
