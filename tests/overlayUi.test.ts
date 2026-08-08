@@ -50,20 +50,17 @@ describe('Phase 2 疊盤 UI', () => {
     expect(document.querySelectorAll('.overlay-cell__layers')).toHaveLength(9);
     expect(document.querySelectorAll('.overlay-cell:first-child .overlay-cell__layer')).toHaveLength(5);
     expect(document.querySelectorAll('.overlay-cell__layer.is-search-match')).toHaveLength(0);
+    expect($('.overlay-primary')).toBeNull();
     expect($('.overlay-grid')?.getAttribute('aria-label')).toContain('主顯示流時');
   });
 
-  it('導覽層級與疊盤主顯示層可分開切換', async () => {
+  it('疊盤主顯示跟隨唯一的層級導覽列', async () => {
     $<HTMLButtonElement>('#level-tab-ke')!.click();
     const { getState } = await import('../src/state/appState');
 
     expect(getState().level).toBe('ke');
-    expect(getState().overlayPrimaryLevel).toBe('hour');
-    expect(document.querySelectorAll('.overlay-cell__layer[data-layer="hour"].is-primary')).toHaveLength(9);
-
-    $<HTMLButtonElement>('[data-overlay-primary="ke"]')!.click();
-    expect(getState().level).toBe('ke');
     expect(getState().overlayPrimaryLevel).toBe('ke');
+    expect($('[data-overlay-primary]')).toBeNull();
     expect(document.querySelectorAll('.overlay-cell__layer[data-layer="ke"].is-primary')).toHaveLength(9);
     expect($('.overlay-grid')?.getAttribute('aria-label')).toContain('主顯示流刻');
   });

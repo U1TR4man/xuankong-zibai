@@ -31,7 +31,7 @@ export interface AppState {
   /** 疊盤只改變資訊呈現，不建立另一份盤面 truth source。 */
   overlayMode: boolean;
   selectedPalace?: PalaceKey;
-  /** 疊盤的大字主顯示層；開啟後與導覽精度 `level` 各自獨立。 */
+  /** 疊盤的大字主顯示層；目前主畫面不另設控制，跟隨 `level`。 */
   overlayPrimaryLevel: Level;
   /** Search → Chart 時命中的層，只供 selected palace 的輕量 UI 標示。 */
   searchMatchedLevels: Level[];
@@ -81,6 +81,7 @@ export function setDateTime(
 
 export function setLevel(level: Level, opts: { push?: boolean } = {}): void {
   state.level = level;
+  state.overlayPrimaryLevel = level;
   state.searchMatchedLevels = [];
   state.home = false;
   syncUrl(opts.push);
@@ -91,6 +92,7 @@ export function setDateTimeAndLevel(d: Date, level: Level): void {
   state.view = 'chart';
   state.selectedDateTime = d;
   state.level = level;
+  state.overlayPrimaryLevel = level;
   state.searchMatchedLevels = [];
   state.followNow = false;
   state.home = false;
@@ -106,6 +108,7 @@ export function migrateLegacyHome(): void {
   if (!state.home) return;
   state.selectedDateTime = nowUtc8();
   state.level = 'hour';
+  state.overlayPrimaryLevel = 'hour';
   state.followNow = true;
 }
 

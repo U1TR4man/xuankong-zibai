@@ -33,14 +33,17 @@ describe('Phase 3 尋星 A UI', () => {
     searchButton.click();
 
     expect($('.workspace-nav__item[aria-current="page"]')?.textContent).toBe('尋星');
-    expect($('.search-view__eyebrow')?.textContent).toBe('尋星');
+    expect($('.search-view__head h1')?.textContent).toBe('尋星');
     expect($('.search-mode')).toBeNull();
     expect($('.search-advanced-toggle')?.textContent).toContain('進階條件');
     expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('false');
+    expect($('.search-form__submit')?.textContent).toBe('開始尋星');
     expect(document.querySelectorAll('.search-date-range input[type="date"]')).toHaveLength(2);
     expect(document.querySelectorAll('select[name="palace"] option')).toHaveLength(10);
     expect(document.querySelectorAll('input[name="level"]')).toHaveLength(3);
     expect(document.querySelectorAll('input[name="star"]')).toHaveLength(9);
+    expect(Array.from(document.querySelectorAll<HTMLInputElement>('input[name="star"]'))
+      .map((input) => input.value)).toEqual(['4', '9', '2', '3', '5', '7', '8', '1', '6']);
     expect($<HTMLInputElement>('input[name="level"][value="hour"]')?.checked).toBe(true);
     expect(document.querySelector('input[name="star"]:checked')).toBeNull();
   });
@@ -106,10 +109,14 @@ describe('Phase 3 尋星 A UI', () => {
     const advanced = $<HTMLButtonElement>('.search-advanced-toggle')!;
     advanced.click();
 
-    expect($('.search-view__eyebrow')?.textContent).toBe('尋星');
+    expect($('.search-view__head h1')?.textContent).toBe('尋星');
     expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('true');
     expect($('.search-advanced__rule')?.textContent).toContain('同層選多星代表任一符合');
     expect(document.querySelectorAll('.search-advanced__level')).toHaveLength(3);
+    for (const name of ['dayStars', 'hourStars', 'keStars']) {
+      expect(Array.from(document.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`))
+        .map((input) => input.value)).toEqual(['4', '9', '2', '3', '5', '7', '8', '1', '6']);
+    }
     for (const selector of [
       'input[name="hourStars"][value="8"]',
       'input[name="hourStars"][value="9"]',

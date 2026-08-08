@@ -32,9 +32,18 @@ let model: SearchViewModel | undefined;
 let searchRunId = 0;
 
 const SEARCH_LEVELS: readonly SearchLevel[] = ['day', 'hour', 'ke'];
+const LUOSHU_STARS = [
+  { value: '4', position: '巽' }, { value: '9', position: '離' }, { value: '2', position: '坤' },
+  { value: '3', position: '震' }, { value: '5', position: '中' }, { value: '7', position: '兌' },
+  { value: '8', position: '艮' }, { value: '1', position: '坎' }, { value: '6', position: '乾' },
+] as const;
 
 function levelLabel(level: SearchLevel): string {
   return level === 'day' ? '日' : level === 'hour' ? '時' : '刻';
+}
+
+function sortStarValues(values: string[]): string[] {
+  return values.sort((a, b) => Number(a) - Number(b));
 }
 
 function defaults(): SearchViewModel {
@@ -57,13 +66,15 @@ function starChoices(
   selected: readonly string[],
   multiple: boolean,
 ): HTMLElement {
-  return el('div', { class: 'search-stars' },
-    ...Array.from({ length: 9 }, (_, index) => {
-      const value = String(index + 1);
+  return el('div', { class: 'search-stars', 'data-layout': 'luoshu' },
+    ...LUOSHU_STARS.map(({ value, position }) => {
       const checked = selected.includes(value);
       return el('label', { class: `search-star${checked ? ' is-selected' : ''}` },
-        el('input', { type: multiple ? 'checkbox' : 'radio', name, value, checked }),
-        el('span', {}, STAR_NAMES[index + 1]!),
+        el('input', {
+          type: multiple ? 'checkbox' : 'radio', name, value, checked,
+          'aria-label': `${position}位 ${STAR_NAMES[Number(value)]}`,
+        }),
+        el('span', {}, STAR_NAMES[Number(value)]!),
       );
     }),
   );
@@ -157,7 +168,7 @@ function SearchForm(
   form.append(el('button', {
     class: 'btn btn--primary search-form__submit', type: 'submit',
     disabled: viewModel.searching,
-  }, viewModel.searching ? '搜尋中…' : '尋找'));
+  }, viewModel.searching ? '尋星中…' : '開始尋星'));
   form.append(el('button', {
     class: 'search-advanced-toggle',
     type: 'button',
@@ -182,7 +193,7 @@ function SearchForm(
       if (input.name !== `${searchLevel}Stars`) continue;
       draft.advancedStars[searchLevel] = Array.from(
         form.querySelectorAll<HTMLInputElement>(`input[name="${searchLevel}Stars"]:checked`),
-      ).map((item) => item.value);
+      ).map((item) => item.value).sort((a, b) => Number(a) - Number(b));
     }
     if (input.name === 'level' || input.name === 'star') {
       const group = input.closest('fieldset');
@@ -205,9 +216,12 @@ function SearchForm(
       level: String(data.get('level') ?? draft.level) as SearchLevel,
       star: String(data.get('star') ?? draft.star),
       advancedStars: {
-        day: draft.mode === 'advanced' ? data.getAll('dayStars').map(String) : draft.advancedStars.day,
-        hour: draft.mode === 'advanced' ? data.getAll('hourStars').map(String) : draft.advancedStars.hour,
-        ke: draft.mode === 'advanced' ? data.getAll('keStars').map(String) : draft.advancedStars.ke,
+        day: draft.mode === 'advanced'
+          ? sortStarValues(data.getAll('dayStars').map(String)) : draft.advancedStars.day,
+        hour: draft.mode === 'advanced'
+          ? sortStarValues(data.getAll('hourStars').map(String)) : draft.advancedStars.hour,
+        ke: draft.mode === 'advanced'
+          ? sortStarValues(data.getAll('keStars').map(String)) : draft.advancedStars.ke,
       },
     };
     let query: StarSearchQuery;
@@ -283,8 +297,7 @@ export function SearchView(state: AppState): HTMLElement {
   };
   return el('main', { class: 'search-view', 'aria-busy': String(Boolean(model.searching)) },
     el('header', { class: 'search-view__head' },
-      el('p', { class: 'search-view__eyebrow' }, '尋星'),
-      el('h1', {}, '尋找宮內飛星'),
+      el('h1', {}, '尋星'),
       el('p', {}, mode === 'simple'
         ? '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。'
         : '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。'),

@@ -41,10 +41,10 @@ function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLE
     class: 'card', id: 'current-chart', role: 'tabpanel',
     'aria-labelledby': `level-tab-${state.level}`, 'data-swipe-zone': 'chart',
   },
-    ChartHeader(result, state.overlayMode ? state.overlayPrimaryLevel : state.level, state),
+    ChartHeader(result, state.level, state),
     state.overlayMode
       ? NinePalaceOverlayGrid(
-        buildPalaceOverlay(chart), state.overlayPrimaryLevel, state.selectedPalace,
+        buildPalaceOverlay(chart), state.level, state.selectedPalace,
         state.searchMatchedLevels)
       : NinePalaceGrid(result, state.settings),
   );
@@ -95,8 +95,7 @@ function render(state: AppState): void {
     yearBoundary: state.settings.yearBoundary,
     keStrategyId: state.settings.keStrategyId,
   });
-  const displayLevel = state.overlayMode ? state.overlayPrimaryLevel : state.level;
-  const result = resultFor(chart, displayLevel);
+  const result = resultFor(chart, state.level);
 
   root.append(
     DateTimeContext(state),
