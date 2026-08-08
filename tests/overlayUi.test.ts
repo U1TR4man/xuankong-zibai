@@ -49,6 +49,7 @@ describe('Phase 2 疊盤 UI', () => {
     expect(document.querySelectorAll('.overlay-cell')).toHaveLength(9);
     expect(document.querySelectorAll('.overlay-cell__layers')).toHaveLength(9);
     expect(document.querySelectorAll('.overlay-cell:first-child .overlay-cell__layer')).toHaveLength(5);
+    expect(document.querySelectorAll('.overlay-cell__layer.is-search-match')).toHaveLength(0);
     expect($('.overlay-grid')?.getAttribute('aria-label')).toContain('主顯示流時');
   });
 

@@ -44,7 +44,8 @@ function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLE
     ChartHeader(result, state.overlayMode ? state.overlayPrimaryLevel : state.level, state),
     state.overlayMode
       ? NinePalaceOverlayGrid(
-        buildPalaceOverlay(chart), state.overlayPrimaryLevel, state.selectedPalace)
+        buildPalaceOverlay(chart), state.overlayPrimaryLevel, state.selectedPalace,
+        state.searchMatchedLevels)
       : NinePalaceGrid(result, state.settings),
   );
 

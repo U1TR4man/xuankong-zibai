@@ -625,6 +625,8 @@ button, select, input { font: inherit; color: inherit; }
   color: var(--ink-secondary);
   font-variant-numeric: tabular-nums;
 }
+.overlay-cell__layer.is-search-match .overlay-cell__value { color: var(--cinnabar); }
+.overlay-cell__match { margin-left: 1px; color: var(--cinnabar); font-size: 9px; }
 
 /* ---------- 宮位疊盤詳情 ---------- */
 .palace-detail { display: flex; flex-direction: column; gap: var(--s5); }

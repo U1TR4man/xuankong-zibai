@@ -5,7 +5,13 @@ import { fromUtc8, __setNowForTesting } from '../src/engine/time/utc8';
 
 const NOW = fromUtc8(2026, 8, 7, 11, 38);
 const $ = <T extends Element = Element>(selector: string) => document.querySelector<T>(selector);
-const waitForSearch = () => new Promise((resolve) => window.setTimeout(resolve, 10));
+async function waitForSearch(): Promise<void> {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
+    if (!$('.search-status')) return;
+    await new Promise((resolve) => window.setTimeout(resolve, 10));
+  }
+  throw new Error('搜尋未在 2 秒內完成');
+}
 
 beforeAll(async () => {
   document.body.innerHTML = '<div id="app"></div>';
@@ -74,6 +80,14 @@ describe('Phase 3 尋星 A UI', () => {
     expect(getState().overlayPrimaryLevel).toBe('hour');
     expect(getState().selectedPalace).toBe('li');
     expect($('[data-palace="li"]')?.classList.contains('is-selected')).toBe(true);
+    expect(getState().searchMatchedLevels).toEqual(['hour']);
+    expect(document.querySelectorAll(
+      '[data-palace="li"] .overlay-cell__layer.is-search-match',
+    )).toHaveLength(1);
+    expect($('[data-palace="li"] [data-layer="hour"] .overlay-cell__match')?.textContent).toBe('✓');
+    expect(document.querySelectorAll(
+      '.overlay-cell:not([data-palace="li"]) .overlay-cell__layer.is-search-match',
+    )).toHaveLength(0);
     expect(location.search).toContain('overlay=1');
     expect(location.search).toContain('palace=li');
   });

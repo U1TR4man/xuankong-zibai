@@ -60,7 +60,12 @@ function ResultCard(match: SearchMatch): HTMLElement {
     'aria-label': `${time.date} ${time.time}，${palaceLabel(match.palace)}，查看此盤`,
     onclick: () => {
       const date = parseUtc8(match.startDateTime);
-      if (date) showOverlayChart(date, match.precision, match.palace);
+      if (date) showOverlayChart(
+        date,
+        match.precision,
+        match.palace,
+        match.matchedConditions.map((condition) => condition.level),
+      );
     },
   },
     el('span', { class: 'search-result__head' },

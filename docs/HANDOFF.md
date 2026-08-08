@@ -125,6 +125,7 @@ tests/fixtures/chart-snapshot.json
 - 導覽層級 `level` 與疊盤 `overlayPrimaryLevel` 開啟後完全獨立，URL 仍各自保存
 - 疊盤未選宮時中心只作淡焦點；選宮後只有命中宮使用強朱砂框
 - 疊盤主顯示層不再使用朱砂，朱砂只保留給搜尋真正命中層及選宮
+- Search → Chart 會暫存 `searchMatchedLevels`，只在 selected palace 的命中層顯示朱砂＋✓；改時間、導覽層級或宮位會清除，避免留下過期命中
 - 尋星取消等權重的簡易／進階 tabs，改由「＋ 進階條件」漸進展開，收合不丟條件
 - 結果改為精簡整列可點，移除大型「查看此盤」按鈕；每批顯示 50 筆
 
@@ -149,8 +150,8 @@ test files  19 passed
 tests       131 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（198.82 KiB）success
-single file 玄空紫白.html（約 210 KB；font data URI）success
+PWA precache 11 entries（199.52 KiB）success
+single file 玄空紫白.html（約 211 KB；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：

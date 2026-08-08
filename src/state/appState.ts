@@ -33,6 +33,8 @@ export interface AppState {
   selectedPalace?: PalaceKey;
   /** 疊盤的大字主顯示層；開啟後與導覽精度 `level` 各自獨立。 */
   overlayPrimaryLevel: Level;
+  /** Search → Chart 時命中的層，只供 selected palace 的輕量 UI 標示。 */
+  searchMatchedLevels: Level[];
 }
 
 type Listener = (s: AppState) => void;
@@ -49,6 +51,7 @@ const state: AppState = {
   overlayMode: false,
   selectedPalace: undefined,
   overlayPrimaryLevel: 'hour',
+  searchMatchedLevels: [],
 };
 
 export function getState(): AppState {
@@ -69,6 +72,7 @@ export function setDateTime(
   opts: { push?: boolean; followNow?: boolean } = {},
 ): void {
   state.selectedDateTime = d;
+  state.searchMatchedLevels = [];
   state.followNow = opts.followNow ?? false;
   state.home = false;
   syncUrl(opts.push);
@@ -77,6 +81,7 @@ export function setDateTime(
 
 export function setLevel(level: Level, opts: { push?: boolean } = {}): void {
   state.level = level;
+  state.searchMatchedLevels = [];
   state.home = false;
   syncUrl(opts.push);
   emit();
@@ -86,6 +91,7 @@ export function setDateTimeAndLevel(d: Date, level: Level): void {
   state.view = 'chart';
   state.selectedDateTime = d;
   state.level = level;
+  state.searchMatchedLevels = [];
   state.followNow = false;
   state.home = false;
   syncUrl(true);
@@ -112,6 +118,7 @@ export function goHome(): void {
   state.overlayMode = false;
   state.selectedPalace = undefined;
   state.overlayPrimaryLevel = 'hour';
+  state.searchMatchedLevels = [];
   try {
     history.pushState(null, '', location.pathname);
   } catch { /* 同上 */ }
@@ -144,13 +151,19 @@ export function setView(view: AppView, opts: { push?: boolean } = {}): void {
 }
 
 /** Search → Chart 的單一 transition；盤面會由 app.ts 使用正式 Engine 重新計算。 */
-export function showOverlayChart(d: Date, level: Level, palace: PalaceKey): void {
+export function showOverlayChart(
+  d: Date,
+  level: Level,
+  palace: PalaceKey,
+  matchedLevels: readonly Level[] = [level],
+): void {
   state.view = 'chart';
   state.selectedDateTime = d;
   state.level = level;
   state.overlayMode = true;
   state.overlayPrimaryLevel = level;
   state.selectedPalace = palace;
+  state.searchMatchedLevels = [...matchedLevels];
   state.followNow = false;
   state.home = false;
   syncUrl(true);
@@ -161,6 +174,7 @@ export function setOverlayMode(enabled: boolean, opts: { push?: boolean } = {}):
   if (enabled && !state.overlayMode) state.overlayPrimaryLevel = state.level;
   state.overlayMode = enabled;
   if (!enabled) state.selectedPalace = undefined;
+  if (!enabled) state.searchMatchedLevels = [];
   state.home = false;
   syncUrl(opts.push);
   emit();
@@ -173,6 +187,7 @@ export function setOverlayPrimaryLevel(level: Level, opts: { push?: boolean } = 
 }
 
 export function selectPalace(palace: PalaceKey | undefined, opts: { push?: boolean } = {}): void {
+  if (palace !== state.selectedPalace) state.searchMatchedLevels = [];
   state.selectedPalace = palace;
   syncUrl(opts.push);
   emit();
@@ -218,6 +233,7 @@ export function restoreFromUrl(): boolean {
   state.selectedPalace = state.overlayMode && palace && PALACE_KEYS.includes(palace)
     ? palace
     : undefined;
+  state.searchMatchedLevels = [];
   state.followNow = false;
   state.home = false;
   return true;
