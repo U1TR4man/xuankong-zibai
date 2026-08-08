@@ -8,7 +8,7 @@
 ```
 npm install
 npm run dev       # 開發
-npm test          # 131 個測試（含 1200 點 engine snapshot）
+npm test          # 133 個測試（含 1200 點 engine snapshot）
 npm run build     # 產生 dist/（含 service worker、manifest）
 npm run preview
 ```
@@ -48,7 +48,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 - 層級列改為無外框 tab + 朱砂短底線；主畫面只保留一個「今」，UTC+8 說明留在選時與設定 Sheet。
 - 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
 - Chart Header、前後導覽與 contextual CTA 減少外框及大色塊；九宮 geometry 與算法完全不變。
-- 日期時間與節氣改為同列，盤名與時段同列；疊盤 switch 移入盤頭，疊盤的「主顯示層」與排盤導覽層級可獨立切換。
+- 日期時間與節氣改為同列，盤名與時段同列；疊盤 switch 移入盤頭，疊盤主星跟隨唯一的排盤層級列。
 
 ## 疊盤與尋星
 
@@ -66,7 +66,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 
 正式語義：例如「離宮 · 流時 · 九紫」只比對流時盤的離宮格內飛星值 `9`，不是九紫入中、洛書數或任一宮出現九紫。搜尋結果只顯示截至精度為止的上層：日＝年月日、時＝年月日時、刻＝年月日時刻。
 
-搜尋仍完全消費正式 Engine；預設顯示簡易條件，按「＋ 進階條件」才展開多層／多星設定，收起後不會遺失已選條件。搜尋結果整列可點；點入後盤面會依結果時間重新計算，再開啟疊盤及高亮命中宮。大量結果每次明示載入 50 筆，總數不會被截斷。V1 不含吉凶評分或最佳時窗 Ranking。
+搜尋仍完全消費正式 Engine；預設顯示簡易條件，按「＋ 進階條件」才展開多層／多星設定，兩者都以洛書九宮順序選星。搜尋結果整列可點；點入後盤面會依結果時間重新計算，再開啟疊盤及高亮命中宮。大量結果每次明示載入 50 筆，總數不會被截斷。簡易條件可由 URL refresh／bookmark／share 還原；進階條件暫不序列化。V1 不含吉凶評分或最佳時窗 Ranking。
 
 ## 架構
 
@@ -144,7 +144,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 131 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、Search → Chart 與結果 UX 回歸。
+- `npm test` — 133 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、URL restore、Search → Chart 與結果 UX 回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
@@ -154,6 +154,6 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
 - 最佳時窗 Ranking、吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前只做 deterministic 宮內飛星 matching。
-- 搜尋 query 尚未序列化到 URL，也未加入 recent search；目前切回尋星仍會保留本次頁面生命週期內的上一輪結果。
+- 進階搜尋條件尚未序列化到 URL，也未加入 recent search；簡易搜尋已支援 URL restore，切回尋星仍會保留本次頁面生命週期內的上一輪結果。
 - 已用真實 production 瀏覽器驗證 320 / 375 / 390 / 430 / 768，iPhone 實機使用亦回報無問題；如需 release-grade 證據，可再補 Safari／PWA standalone／iOS Chrome 分項紀錄。
 - 未做 IndexedDB（目前資料量小，設定用 localStorage 已足夠）。

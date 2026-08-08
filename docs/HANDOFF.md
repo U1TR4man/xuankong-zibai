@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**，以及下一輪盤面／尋星精修均已完成。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**，以及盤面／尋星／URL cleanup 均已完成。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -14,13 +14,16 @@
 - 尋星漸進展開／結果列精修 checkpoint：`0429c4f`
 - 四寬度 QA／文件 checkpoint：`8b4189e`（CSS production fix：`c651ef9`）
 - Search 命中層帶回疊盤 closeout：`9ae61d9`
+- 唯一層級列／洛書選星／主星朱紅 checkpoint：`3bcd1d0`
+- Chart／Search URL state cleanup checkpoint：`d2e74cf`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
 - 疊盤／尋星規格：`docs/xuankong_zibai_overlay_star_search_feature_plan.md`
 - 最新盤面／尋星精修紀錄：`docs/ui-search-polish-short.md`
+- UI／Search URL cleanup 紀錄：`docs/ui-search-url-cleanup-short.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B 與本輪 UI 精修已完成；下一步不是再擴功能，而是 review 本輪 checkpoint 後才決定 push／deploy。
+P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup 已完成；下一步不是再擴功能，而是 review 本輪 checkpoint 後才決定 push／deploy。
 
 ---
 
@@ -124,12 +127,23 @@ tests/fixtures/chart-snapshot.json
 
 - 日期／時間、節氣與 now action 同列；層級列和盤頭的垂直間距縮短
 - 盤名與時段同列；疊盤改為盤頭右側 switch，不再有獨立大型控制區
-- 導覽層級 `level` 與疊盤 `overlayPrimaryLevel` 開啟後完全獨立，URL 仍各自保存
+- `overlayPrimaryLevel` 底層欄位保留，但目前跟隨 `level`；主畫面永遠只有一套層級列
 - 疊盤未選宮時中心只作淡焦點；選宮後只有命中宮使用強朱砂框
-- 疊盤主顯示層不再使用朱砂，朱砂只保留給搜尋真正命中層及選宮
+- 普通盤與疊盤的主顯示星使用朱紅 500；五層小值只有 Search 真正命中層才使用朱砂＋✓
 - Search → Chart 會暫存 `searchMatchedLevels`，只在 selected palace 的命中層顯示朱砂＋✓；改時間、導覽層級或宮位會清除，避免留下過期命中
 - 尋星取消等權重的簡易／進階 tabs，改由「＋ 進階條件」漸進展開，收合不丟條件
 - 結果改為精簡整列可點，移除大型「查看此盤」按鈕；每批顯示 50 筆
+
+### UI／Search URL cleanup
+
+- 尋星頁標題與 primary CTA 統一為「尋星／開始尋星」
+- 簡易單選與進階多選共用洛書九宮順序 `4,9,2 / 3,5,7 / 8,1,6`
+- Shared URL state：`t`、`view`
+- Chart-only：`level`、`overlay`、`overlayPrimary`、`selectedPalace`
+- Search-only（簡易）：`from`、`to`、`searchPalace`、`precision`、`star`
+- `view=search` 不序列化 Chart-only state；簡易條件 refresh／bookmark／share 可還原
+- Search Result → Chart deep-link refresh 可還原時間、層級、疊盤及 selected palace
+- 舊 `primary`／`palace` 仍可讀取，載入後會正規化成 `overlayPrimary`／`selectedPalace`
 
 #### Reserved future capability — 最佳時窗
 
@@ -149,10 +163,10 @@ tests/fixtures/chart-snapshot.json
 
 ```text
 test files  19 passed
-tests       131 passed
+tests       133 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（199.52 KiB）success
+PWA precache 11 entries（199.72 KiB）success
 single file 玄空紫白.html（約 211 KB；font data URI）success
 ```
 
@@ -184,8 +198,10 @@ single file 玄空紫白.html（約 211 KB；font data URI）success
 - 尋星 A/B、同層 OR／跨層 AND、上層顯示、日期分組、loading／empty state 與跳盤正常
 - production 320／390px 疊盤及尋星無 horizontal overflow；主要 touch target ≥ 44px
 - production 320／375／390／430px 的排盤、疊盤、簡易搜尋均無 horizontal overflow
-- 320px 疊盤 9 宮 × 5 層維持單列；主顯示層與導覽層級獨立，選宮後只有一個強焦點
+- 320px 疊盤 9 宮 × 5 層維持單列；主顯示跟隨唯一層級列，選宮後只有一個強焦點
 - 320px 進階條件可展開／收合並保留設定；結果整列可點，命中層以朱砂＋✓ 表示
+- 320px 洛書單選／三組進階多選皆為 44px touch target；四種手機寬度均無 overflow
+- 簡易 Search URL 與 Chart deep-link 均實測 reload 後完整還原；Search URL 無 Chart-only params
 
 ---
 
@@ -215,4 +231,4 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - Dark Mode 明確留待 V3。
 - IndexedDB 目前沒有必要，設定繼續使用 localStorage。
 - D 類最佳時窗 Ranking、吉凶評分與 Future filters 尚未實作；只能消費 `SearchMatch[]`，不得污染 deterministic SearchEngine。
-- 搜尋 query URL serialization、recent search、多宮／任一宮與入中星搜尋均未實作。
+- 進階搜尋 URL serialization、recent search、多宮／任一宮與入中星搜尋均未實作；簡易搜尋 URL restore 已完成。
