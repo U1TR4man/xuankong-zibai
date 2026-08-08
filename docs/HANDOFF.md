@@ -22,6 +22,7 @@
 - 擇吉 Phase 2 主盤 checkpoint：`9fb4eb0`
 - 擇吉 Phase 3 有序雙星搜尋 checkpoint：`bed1d46`
 - 擇吉 Phase 4 學習／用途搜尋 checkpoint：`abffa42`
+- 擇吉 V1 四寬度 QA／文件 closeout：`79bbe64`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
