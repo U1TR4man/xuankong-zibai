@@ -1,0 +1,31 @@
+# 紫白擇吉方向 V1 implementation record
+
+本文件記錄 `紫白擇吉方向_V1_規劃.md` 的可攜式實作邊界與驗收結果。
+
+- 原始規格：1127 行
+- SHA-256：`6bcd5d89fd761e20fa15a9b99281a0ba05b94e96a83f6013e637ac915296c156`
+- V1 只處理時間紫白 × 八方；不加入宅盤、運星／山星／向星、坐向宅命或個人八字
+- `src/engine/**`、`src/data/**`、UTC+8 規則及 snapshot fixture 維持唯讀
+
+## 資料安全原則
+
+- 新規則庫放在 `src/selection/`，不修改既有 `src/data/**`。
+- 81 個 ordered pair 全部有穩定 schema、五行結構與 review 狀態。
+- 規格未提供古訣判語、極性或適用條件的條目，一律為 `neutral`／`pending`／「資料待校對」。
+- 規格直接列出的組合可以保存名稱與用途，但沒有古籍版本或逐字引文時仍標 `needs-review`。
+- 古訣規則、五行結構與 `TOOL_HEURISTIC` 分層保存；不顯示 0–100 分或星級評分。
+
+## Phase 1 — Data / Engine
+
+- [x] 11–99 共 81 條 ordered pair，`68 !== 86`、`37 !== 73`。
+- [x] 八方 `DirectionSnapshot` 只組裝正式 `FullChart` 的年月日時值；中宮不納入。
+- [x] 每方向建立 YM／YD／YH／MD／MH／DH 六個 pair。
+- [x] 建立「優先／可用／普通／吉凶並見／慎用」可解釋 heuristic，不產生數值分數。
+- [x] 用途 tag 只參與高亮／同級排序，不重新計算飛星。
+- [x] 8 個 Phase 1 unit tests 及 TypeScript 通過。
+
+## 後續 Phase
+
+- [ ] Phase 2：主盤擇吉模式、八方結果、方向詳情與排序。
+- [ ] Phase 3：尋組合、結果與跳回擇吉高亮。
+- [ ] Phase 4：Pair 學習卡、來源、reverse pair 與用途 tags。
