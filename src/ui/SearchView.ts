@@ -8,9 +8,11 @@ import {
   getState, setSimpleSearchUrlState, setView, type AppState, type SimpleSearchUrlState,
 } from '../state/appState';
 import { el } from './dom';
+import { cancelPairSearch, PairSearchView } from './PairSearchView';
 import { SearchResults } from './SearchResults';
 
 type SearchMode = 'simple' | 'advanced';
+type SearchTool = 'stars' | 'pairs';
 
 interface SearchDraft {
   mode: SearchMode;
@@ -33,6 +35,7 @@ interface SearchViewModel {
 let model: SearchViewModel | undefined;
 let searchRunId = 0;
 let appliedSearchRestoreVersion = -1;
+let activeSearchTool: SearchTool = 'stars';
 
 const SEARCH_LEVELS: readonly SearchLevel[] = ['day', 'hour', 'ke'];
 const LUOSHU_STARS = [
@@ -321,10 +324,39 @@ export function SearchView(state: AppState): HTMLElement {
     setSimpleSearchUrlState(simpleUrlState(nextDraft));
     setView('search');
   };
+  const switchTool = (tool: SearchTool) => {
+    if (tool === activeSearchTool) return;
+    searchRunId += 1;
+    cancelPairSearch();
+    activeSearchTool = tool;
+    setSimpleSearchUrlState(tool === 'stars' ? simpleUrlState(model!.draft) : undefined);
+    setView('search');
+  };
+  const toolSwitch = el('div', { class: 'search-tool', role: 'radiogroup', 'aria-label': '搜尋類型' },
+    el('button', {
+      class: `search-tool__item${activeSearchTool === 'stars' ? ' is-active' : ''}`,
+      type: 'button', role: 'radio', 'aria-checked': String(activeSearchTool === 'stars'),
+      onclick: () => switchTool('stars'),
+    }, '尋星'),
+    el('button', {
+      class: `search-tool__item${activeSearchTool === 'pairs' ? ' is-active' : ''}`,
+      type: 'button', role: 'radio', 'aria-checked': String(activeSearchTool === 'pairs'),
+      onclick: () => switchTool('pairs'),
+    }, '尋組合'),
+  );
+  if (activeSearchTool === 'pairs') {
+    return el('main', { class: 'search-view' },
+      el('p', { class: 'search-view__helper' },
+        '指定有序或不分次序的雙星組合，搜尋年月日時六種 Pair Layer。'),
+      toolSwitch,
+      PairSearchView(state),
+    );
+  }
   return el('main', { class: 'search-view', 'aria-busy': String(Boolean(model.searching)) },
     el('p', { class: 'search-view__helper' }, mode === 'simple'
       ? '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。'
       : '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。'),
+    toolSwitch,
     SearchForm(state, model, () => switchMode(mode === 'simple' ? 'advanced' : 'simple')),
     model.searching
       ? el('div', { class: 'search-status', role: 'status', 'aria-live': 'polite' },

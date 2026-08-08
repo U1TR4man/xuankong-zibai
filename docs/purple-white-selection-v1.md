@@ -27,7 +27,7 @@
 ## 後續 Phase
 
 - [x] Phase 2：原盤／疊盤／擇吉三段模式、八方四星、文字 verdict、主要 pair、方向詳情、可解釋原因、用途與無分數排序。
-- [ ] Phase 3：尋組合、結果與跳回擇吉高亮。
+- [x] Phase 3：尋星頁加入尋組合；支援指定／不分次序、六種 Pair Layer、日期 presets、分批結果、跳回擇吉與可 refresh 高亮 deep-link。
 - [ ] Phase 4：Pair 學習卡、來源、reverse pair 與用途 tags。
 
 ### Phase 2 驗證
@@ -37,3 +37,12 @@
 - 點方向可查看四星、狀態、主要組合、判斷原因、全部六組、五行關係與 TOOL_HEURISTIC 聲明。
 - 原盤／疊盤／擇吉互斥；`selection=1`、用途與選中方向可由 URL 還原。
 - Vitest：21 files、149 tests 全數通過；TypeScript 通過。
+
+### Phase 3 驗證
+
+- `14` 指定次序只命中 `14`；不分次序可命中 `14／41`。
+- Layer filter 只回傳所選 YM／YD／YH／MD／MH／DH；中宮不參與搜尋。
+- 結果顯示日期、時段、方向、命中 layer／pair 與年月日時 context；每批 50 筆，總數不截斷。
+- 點結果後以正式 Engine 重算，開啟擇吉並高亮方向、pair 與 layer；deep-link refresh 可還原。
+- 搜尋範圍最多 366 日，超出時明確拒絕。
+- Vitest：23 files、161 tests 全數通過；TypeScript 通過。

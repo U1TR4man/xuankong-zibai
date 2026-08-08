@@ -225,6 +225,29 @@ export function showOverlayChart(
   emit();
 }
 
+/** 尋組合 → 擇吉盤的單一 transition；app.ts 仍會以正式 Engine 重算。 */
+export function showSelectionChart(
+  d: Date,
+  palace: Exclude<PalaceKey, 'center'>,
+  pair: PairKey,
+  layer: PairLayer,
+): void {
+  state.view = 'chart';
+  state.selectedDateTime = d;
+  state.level = 'hour';
+  state.overlayPrimaryLevel = 'hour';
+  state.overlayMode = false;
+  state.selectionMode = true;
+  state.selectedPalace = palace;
+  state.selectedPair = pair;
+  state.selectedPairLayer = layer;
+  state.searchMatchedLevels = [];
+  state.followNow = false;
+  state.home = false;
+  syncUrl(true);
+  emit();
+}
+
 export function setOverlayMode(enabled: boolean, opts: { push?: boolean } = {}): void {
   if (enabled && !state.overlayMode) state.overlayPrimaryLevel = state.level;
   state.overlayMode = enabled;

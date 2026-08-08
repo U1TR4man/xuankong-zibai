@@ -203,6 +203,30 @@ button, select, input { font: inherit; color: inherit; }
 /* ---------- 尋星 ---------- */
 .search-view { display: flex; flex-direction: column; gap: var(--s6); }
 .search-view__helper { margin: 0; font-size: 14px; color: var(--ink-secondary); }
+.search-tool {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  border-bottom: 1px solid var(--line);
+}
+.search-tool__item {
+  position: relative;
+  min-height: var(--tap);
+  border: 0;
+  background: transparent;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+.search-tool__item.is-active { color: var(--cinnabar); }
+.search-tool__item.is-active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: 28px;
+  height: 2px;
+  transform: translateX(-50%);
+  background: var(--cinnabar);
+}
 .search-form { display: flex; flex-direction: column; gap: var(--s5); }
 .search-date-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
 .search-field { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
@@ -327,6 +351,56 @@ button, select, input { font: inherit; color: inherit; }
 .search-empty { padding: var(--s5); background: var(--paper-muted); text-align: center; color: var(--ink-secondary); }
 .search-empty p { margin: 0; }
 .search-empty p + p { margin-top: var(--s1); font-size: 13px; color: var(--ink-tertiary); }
+
+/* ---------- 尋組合 ---------- */
+.pair-search-view { display: flex; flex-direction: column; gap: var(--s6); }
+.pair-search-form__stars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+.pair-search-form__order { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pair-search-form__order .search-choice { padding: var(--s2); font-size: 12px; text-align: center; }
+.pair-layer-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); margin-top: var(--s2); }
+.pair-layer-choice {
+  position: relative;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  padding: var(--s2) var(--s3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+.pair-layer-choice input { position: absolute; opacity: 0; pointer-events: none; }
+.pair-layer-choice:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pair-layer-choice.is-selected { border-color: var(--cinnabar); background: var(--cinnabar-soft); color: var(--cinnabar); }
+.pair-search-results { display: flex; flex-direction: column; gap: var(--s4); padding-top: var(--s5); border-top: 1px solid var(--line); }
+.pair-search-results__list { display: flex; flex-direction: column; gap: var(--s3); }
+.pair-search-results__more { width: 100%; }
+.pair-search-result-group { display: flex; flex-direction: column; }
+.pair-search-result-group__items { display: flex; flex-direction: column; }
+.pair-search-result {
+  position: relative;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--s2) var(--s3);
+  padding: var(--s3) var(--s5) var(--s3) 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+.pair-search-result:hover { background: rgb(122 34 32 / 3%); }
+.pair-search-result__head { display: flex; align-items: baseline; gap: var(--s3); }
+.pair-search-result__time { font-family: var(--font-display); font-size: 17px; font-variant-numeric: tabular-nums; }
+.pair-search-result__direction { color: var(--ink-secondary); font-size: 13px; }
+.pair-search-result__match { grid-column: 1; display: flex; align-items: baseline; gap: var(--s2); }
+.pair-search-result__match small { color: var(--ink-tertiary); }
+.pair-search-result__match strong { color: var(--cinnabar); font-family: var(--font-display); font-size: 18px; font-weight: 500; }
+.pair-search-result__match span { min-width: 0; font-size: 13px; }
+.pair-search-result__context { grid-column: 1; color: var(--ink-tertiary); font-size: 12px; }
+.pair-search-result__arrow { position: absolute; top: 50%; right: 0; transform: translateY(-50%); color: var(--ink-tertiary); font-size: 22px; }
 
 /* ---------- 日期時間 context ---------- */
 .date-context {
