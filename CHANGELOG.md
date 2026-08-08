@@ -23,9 +23,10 @@
 
 ### Fixed
 
+- 非疊盤九宮的九個中央大星名改回墨色，中宮亦不再將大星轉為朱紅；中宮背景／輔助標示及疊盤目前層小值配色保持不變。
 - 移除疊盤開啟後重複的第二套「主顯示」五欄控制；主畫面永遠只保留一套層級列。
 - 尋星導覽與 CTA 維持「尋星／開始尋星」，移除內容區重複的 `h1`，讓 helper paragraph 成為首個內容元素；簡易與進階選星繼續共用洛書九宮順序。
-- 普通盤主星維持原有朱紅；疊盤中央大星改為墨色，只有目前層級的小值使用朱紅，中宮與 selected palace 繼續以底色／框表達 focus。
+- 疊盤中央大星使用墨色，只有目前層級的小值使用朱紅，中宮與 selected palace 繼續以底色／框表達 focus。
 - Search URL 不再夾帶隱藏的 `level/overlay/overlayPrimary/selectedPalace`；Chart deep-link 則完整保留時間、層級、疊盤與選宮。
 - Chart URL 將模糊的 `primary/palace` 正規化為 `overlayPrimary/selectedPalace`，同時保留舊 key 的讀取相容。
 - 修正盤頭精修時的一個多餘 CSS 結尾括號；production／PWA build 再次通過。

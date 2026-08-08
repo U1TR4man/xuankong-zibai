@@ -604,9 +604,9 @@ button, select, input { font: inherit; color: inherit; }
   font-size: clamp(19px, 6.2vw, 24px);
   line-height: 1.15;
   font-weight: 500;
-  color: var(--cinnabar);
+  color: var(--ink);
 }
-.cell--center .cell__star { color: var(--cinnabar); }
+.cell--center .cell__star { color: var(--ink); }
 .cell__meta { font-size: 11px; line-height: 1.2; color: var(--ink-tertiary); }
 .cell--center .cell__meta { color: var(--cinnabar); opacity: .8; }
 
