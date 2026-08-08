@@ -12,6 +12,8 @@
 - 疊盤／尋星 code checkpoint：`609e941`
 - 盤面工具列／疊盤精修 checkpoint：`0e99b49`
 - 尋星漸進展開／結果列精修 checkpoint：`0429c4f`
+- 四寬度 QA／文件 checkpoint：`8b4189e`（CSS production fix：`c651ef9`）
+- Search 命中層帶回疊盤 closeout：`9ae61d9`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
