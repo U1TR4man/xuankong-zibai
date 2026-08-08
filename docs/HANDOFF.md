@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**，以及盤面／尋星／URL cleanup 均已完成。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup，以及疊盤配色／尋星重複標題補丁均已完成。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -14,7 +14,7 @@
 - 尋星漸進展開／結果列精修 checkpoint：`0429c4f`
 - 四寬度 QA／文件 checkpoint：`8b4189e`（CSS production fix：`c651ef9`）
 - Search 命中層帶回疊盤 closeout：`9ae61d9`
-- 唯一層級列／洛書選星／主星朱紅 checkpoint：`3bcd1d0`
+- 唯一層級列／洛書選星 cleanup checkpoint：`3bcd1d0`
 - Chart／Search URL state cleanup checkpoint：`d2e74cf`
 - 本輪文件／QA closeout：`7a10d83`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
@@ -23,6 +23,7 @@
 - 疊盤／尋星規格：`docs/xuankong_zibai_overlay_star_search_feature_plan.md`
 - 最新盤面／尋星精修紀錄：`docs/ui-search-polish-short.md`
 - UI／Search URL cleanup 紀錄：`docs/ui-search-url-cleanup-short.md`
+- 疊盤配色／尋星標題修正紀錄：`docs/overlay-color-search-heading-patch.md`
 
 P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup 已完成；下一步不是再擴功能，而是 review 本輪 checkpoint 後才決定 push／deploy。
 
@@ -130,14 +131,14 @@ tests/fixtures/chart-snapshot.json
 - 盤名與時段同列；疊盤改為盤頭右側 switch，不再有獨立大型控制區
 - `overlayPrimaryLevel` 底層欄位保留，但目前跟隨 `level`；主畫面永遠只有一套層級列
 - 疊盤未選宮時中心只作淡焦點；選宮後只有命中宮使用強朱砂框
-- 普通盤與疊盤的主顯示星使用朱紅 500；五層小值只有 Search 真正命中層才使用朱砂＋✓
+- 普通盤主星維持朱紅；疊盤中央大星使用墨色，五層小值只有目前層級使用朱紅；Search 真正命中層仍使用朱砂＋✓
 - Search → Chart 會暫存 `searchMatchedLevels`，只在 selected palace 的命中層顯示朱砂＋✓；改時間、導覽層級或宮位會清除，避免留下過期命中
 - 尋星取消等權重的簡易／進階 tabs，改由「＋ 進階條件」漸進展開，收合不丟條件
 - 結果改為精簡整列可點，移除大型「查看此盤」按鈕；每批顯示 50 筆
 
 ### UI／Search URL cleanup
 
-- 尋星頁標題與 primary CTA 統一為「尋星／開始尋星」
+- 尋星導覽與 primary CTA 維持「尋星／開始尋星」；內容區不再重複 `h1`，helper paragraph 為首個內容元素
 - 簡易單選與進階多選共用洛書九宮順序 `4,9,2 / 3,5,7 / 8,1,6`
 - Shared URL state：`t`、`view`
 - Chart-only：`level`、`overlay`、`overlayPrimary`、`selectedPalace`
@@ -203,6 +204,8 @@ single file 玄空紫白.html（約 211 KB；font data URI）success
 - 320px 進階條件可展開／收合並保留設定；結果整列可點，命中層以朱砂＋✓ 表示
 - 320px 洛書單選／三組進階多選皆為 44px touch target；四種手機寬度均無 overflow
 - 簡易 Search URL 與 Chart deep-link 均實測 reload 後完整還原；Search URL 無 Chart-only params
+- production 320／375／390／430px：疊盤大星為墨色、目前層小值為朱紅、其他層小值為墨灰，排盤與尋星均無 horizontal overflow
+- 簡易／進階尋星內容區均沒有重複 `h1`；導覽「尋星」、首段 helper 與 CTA「開始尋星」正常
 
 ---
 

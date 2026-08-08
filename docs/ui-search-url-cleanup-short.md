@@ -10,9 +10,9 @@
 
 - 疊盤開啟後不再顯示第二套「主顯示 年／月／日／時／刻」。
 - `overlayPrimaryLevel` 底層欄位保留，但目前跟隨 `level`；主畫面只有一套層級控制。
-- 尋星 Navigation、頁標題與 primary CTA 統一為「尋星／開始尋星」。
+- 尋星 Navigation 與 primary CTA 維持「尋星／開始尋星」；後續補丁移除內容區重複頁標題，helper paragraph 改為首個內容元素。
 - 簡易單選與進階多選共用洛書九宮順序：`4,9,2 / 3,5,7 / 8,1,6`。
-- 普通盤與疊盤的主顯示星皆為朱紅、500 字重；中宮與 selected palace 以底色／框表達 focus。
+- 普通盤主星維持朱紅；後續補丁將疊盤中央大星改為墨色，並只讓目前層級的小值使用朱紅；中宮與 selected palace 仍以底色／框表達 focus。
 
 ## Phase B — URL／state responsibility
 

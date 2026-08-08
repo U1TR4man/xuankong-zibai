@@ -50,6 +50,8 @@ describe('Phase 2 疊盤 UI', () => {
     expect(document.querySelectorAll('.overlay-cell__layers')).toHaveLength(9);
     expect(document.querySelectorAll('.overlay-cell:first-child .overlay-cell__layer')).toHaveLength(5);
     expect(document.querySelectorAll('.overlay-cell__layer.is-search-match')).toHaveLength(0);
+    expect(document.querySelectorAll('.overlay-cell__layer[data-layer="hour"].is-primary')).toHaveLength(9);
+    expect(document.querySelectorAll('.overlay-cell__layer:not([data-layer="hour"]).is-primary')).toHaveLength(0);
     expect($('.overlay-primary')).toBeNull();
     expect($('.overlay-grid')?.getAttribute('aria-label')).toContain('主顯示流時');
   });
@@ -62,6 +64,7 @@ describe('Phase 2 疊盤 UI', () => {
     expect(getState().overlayPrimaryLevel).toBe('ke');
     expect($('[data-overlay-primary]')).toBeNull();
     expect(document.querySelectorAll('.overlay-cell__layer[data-layer="ke"].is-primary')).toHaveLength(9);
+    expect(document.querySelectorAll('.overlay-cell__layer[data-layer="hour"].is-primary')).toHaveLength(0);
     expect($('.overlay-grid')?.getAttribute('aria-label')).toContain('主顯示流刻');
   });
 

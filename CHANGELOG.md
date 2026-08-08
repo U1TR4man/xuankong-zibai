@@ -20,14 +20,14 @@
 ### Fixed
 
 - 移除疊盤開啟後重複的第二套「主顯示」五欄控制；主畫面永遠只保留一套層級列。
-- 尋星頁標題與 CTA 統一為「尋星／開始尋星」，簡易與進階選星共用洛書九宮順序。
-- 普通盤與疊盤的目前主顯示星恢復朱紅 500 字重；中宮與 selected palace 繼續只以底色／框表達 focus。
+- 尋星導覽與 CTA 維持「尋星／開始尋星」，移除內容區重複的 `h1`，讓 helper paragraph 成為首個內容元素；簡易與進階選星繼續共用洛書九宮順序。
+- 普通盤主星維持原有朱紅；疊盤中央大星改為墨色，只有目前層級的小值使用朱紅，中宮與 selected palace 繼續以底色／框表達 focus。
 - Search URL 不再夾帶隱藏的 `level/overlay/overlayPrimary/selectedPalace`；Chart deep-link 則完整保留時間、層級、疊盤與選宮。
 - Chart URL 將模糊的 `primary/palace` 正規化為 `overlayPrimary/selectedPalace`，同時保留舊 key 的讀取相容。
 - 修正盤頭精修時的一個多餘 CSS 結尾括號；production／PWA build 再次通過。
 - 搜尋 UI 回歸測試改為等待搜尋狀態真正結束，不再以固定 10ms 猜測完成時間，避免完整套件並行時誤判。
 - 壓縮日期／時間、節氣、層級列與盤頭的垂直距離；盤名與時段改為同列，並讓疊盤在選宮後只有命中宮維持強焦點。
-- 疊盤九宮五層資料維持單列、標籤與數值分級；主顯示層不再誤用朱砂色，避免與真正命中標記混淆。
+- 疊盤九宮五層資料維持單列、標籤與非當前數值使用墨灰；目前層級小值使用朱紅，Search 真正命中層仍以朱砂＋✓ 表示。
 - 搜尋結果改為整列可點的精簡列表，移除大型「查看此盤」按鈕；保留時段、宮位、各層、命中勾號、組合摘要及方向箭頭。
 - 補齊層級 tabs 的 roving `tabindex`、方向鍵、Home／End、automatic activation 與 `tabpanel` 關聯，改善外接鍵盤及輔助科技操作。
 - 將「返回時盤」的左箭頭移到文案前方，讓視覺順序、閱讀順序與返回方向一致。
@@ -35,6 +35,7 @@
 
 ### Documentation
 
+- 收錄疊盤配色／尋星重複標題修正的可攜式 implementation record、原始規格 checksum、133 tests 與四種手機寬度驗收結果。
 - 收錄 UI／Search URL cleanup 的可攜式 implementation record、URL 責任表、原始規格 checksum、133 tests 與四種手機寬度驗收結果。
 - 收錄最新盤面／尋星精修的可攜式 implementation record、原始規格 checksum、四種手機寬度與 131 tests 驗收結果。
 - 將 V2.1 規格與 `fdee2e7` read-only review 原文收進 `docs/`，並更新 HANDOFF 的實際 code checkpoint，移除不可攜的本機 truth-source 路徑。

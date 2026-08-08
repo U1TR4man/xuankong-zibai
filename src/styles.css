@@ -202,9 +202,7 @@ button, select, input { font: inherit; color: inherit; }
 
 /* ---------- 尋星 ---------- */
 .search-view { display: flex; flex-direction: column; gap: var(--s6); }
-.search-view__head { display: flex; flex-direction: column; gap: var(--s1); }
-.search-view__head h1 { margin: 0; font-family: var(--font-display); font-size: 28px; font-weight: 500; }
-.search-view__head > p:last-child { margin: 0; font-size: 14px; color: var(--ink-secondary); }
+.search-view__helper { margin: 0; font-size: 14px; color: var(--ink-secondary); }
 .search-form { display: flex; flex-direction: column; gap: var(--s5); }
 .search-date-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
 .search-field { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
@@ -576,12 +574,12 @@ button, select, input { font: inherit; color: inherit; }
 }
 .overlay-cell.cell--center:hover { background: rgb(166 64 53 / 8%); }
 .overlay-cell:focus-visible { position: relative; z-index: 1; outline-offset: -3px; }
+.overlay-cell .cell__star { color: var(--ink); }
 .overlay-cell.is-selected {
   background: var(--cinnabar-soft);
   box-shadow: inset 0 0 0 2px var(--cinnabar);
 }
-.overlay-cell.is-selected .cell__palace,
-.overlay-cell.is-selected .cell__star { color: var(--cinnabar); }
+.overlay-cell.is-selected .cell__palace { color: var(--cinnabar); }
 .overlay-cell__layers {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -596,6 +594,7 @@ button, select, input { font: inherit; color: inherit; }
   color: var(--ink-secondary);
   font-variant-numeric: tabular-nums;
 }
+.overlay-cell__layer.is-primary .overlay-cell__value { color: var(--cinnabar); }
 .overlay-cell__layer.is-search-match .overlay-cell__value { color: var(--cinnabar); }
 .overlay-cell__match { margin-left: 1px; color: var(--cinnabar); font-size: 9px; }
 

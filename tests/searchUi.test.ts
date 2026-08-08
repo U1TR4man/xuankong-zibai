@@ -40,7 +40,11 @@ describe('Phase 3 尋星 A UI', () => {
     expect(params.has('overlayPrimary')).toBe(false);
     expect(params.has('selectedPalace')).toBe(false);
     expect($('.workspace-nav__item[aria-current="page"]')?.textContent).toBe('尋星');
-    expect($('.search-view__head h1')?.textContent).toBe('尋星');
+    expect($('.search-view h1')).toBeNull();
+    expect($('.search-view')?.firstElementChild?.classList.contains('search-view__helper')).toBe(true);
+    expect($('.search-view__helper')?.textContent).toBe(
+      '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。',
+    );
     expect($('.search-mode')).toBeNull();
     expect($('.search-advanced-toggle')?.textContent).toContain('進階條件');
     expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('false');
@@ -157,7 +161,10 @@ describe('Phase 3 尋星 A UI', () => {
     advanced.click();
 
     expect(new URLSearchParams(location.search).has('from')).toBe(false);
-    expect($('.search-view__head h1')?.textContent).toBe('尋星');
+    expect($('.search-view h1')).toBeNull();
+    expect($('.search-view__helper')?.textContent).toBe(
+      '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。',
+    );
     expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('true');
     expect($('.search-advanced__rule')?.textContent).toContain('同層選多星代表任一符合');
     expect(document.querySelectorAll('.search-advanced__level')).toHaveLength(3);

@@ -322,12 +322,9 @@ export function SearchView(state: AppState): HTMLElement {
     setView('search');
   };
   return el('main', { class: 'search-view', 'aria-busy': String(Boolean(model.searching)) },
-    el('header', { class: 'search-view__head' },
-      el('h1', {}, '尋星'),
-      el('p', {}, mode === 'simple'
-        ? '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。'
-        : '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。'),
-    ),
+    el('p', { class: 'search-view__helper' }, mode === 'simple'
+      ? '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。'
+      : '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。'),
     SearchForm(state, model, () => switchMode(mode === 'simple' ? 'advanced' : 'simple')),
     model.searching
       ? el('div', { class: 'search-status', role: 'status', 'aria-live': 'polite' },
