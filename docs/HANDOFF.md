@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup，以及疊盤配色／尋星重複標題補丁均已完成。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup、疊盤配色／尋星重複標題補丁，以及紫白擇吉方向 V1 **Phase 1–4** 均已完成。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -18,6 +18,10 @@
 - Chart／Search URL state cleanup checkpoint：`d2e74cf`
 - 本輪文件／QA closeout：`7a10d83`
 - 疊盤配色／尋星標題修正 checkpoint：`a1bbb00`
+- 擇吉 Phase 1 data / engine checkpoint：`cb9759a`
+- 擇吉 Phase 2 主盤 checkpoint：`9fb4eb0`
+- 擇吉 Phase 3 有序雙星搜尋 checkpoint：`bed1d46`
+- 擇吉 Phase 4 學習／用途搜尋 checkpoint：`abffa42`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -25,8 +29,9 @@
 - 最新盤面／尋星精修紀錄：`docs/ui-search-polish-short.md`
 - UI／Search URL cleanup 紀錄：`docs/ui-search-url-cleanup-short.md`
 - 疊盤配色／尋星標題修正紀錄：`docs/overlay-color-search-heading-patch.md`
+- 紫白擇吉方向 V1 實作紀錄：`docs/purple-white-selection-v1.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup 已完成；下一步不是再擴功能，而是 review 本輪 checkpoint 後才決定 push／deploy。
+P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4 已完成；下一步應先 review checkpoint 與補齊可追溯古籍來源，再決定 push／deploy。
 
 ---
 
@@ -148,6 +153,17 @@ tests/fixtures/chart-snapshot.json
 - Search Result → Chart deep-link refresh 可還原時間、層級、疊盤及 selected palace
 - 舊 `primary`／`palace` 仍可讀取，載入後會正規化成 `overlayPrimary`／`selectedPalace`
 
+### 紫白擇吉方向 V1 Phase 1–4
+
+- 新功能全部位於 `src/selection/` 及對應 UI，只消費正式 `FullChart`；沒有修改 `src/engine/**`、`src/data/**` 或 snapshot fixture
+- 11–99 共 81 個 ordered pair 均有穩定 schema；`68 !== 86`、`37 !== 73`，不得將 reverse pair 合併
+- 擇吉盤組裝年／月／日／時四星，每方向建立 YM／YD／YH／MD／MH／DH 六個 pair；中宮保留顯示但不搜尋、不排序
+- 原盤／疊盤／擇吉為互斥模式；擇吉用途、方向、pair 與 layer 可由 URL 還原
+- 方向判讀只顯示可解釋的「優先／可用／普通／吉凶並見／慎用」與 `TOOL_HEURISTIC`，不顯示數值分數
+- 尋組合支援有序／不分次序、六種 layer、日期 preset、一年上限、50 筆分批、deep-link 高亮，以及按用途 tags 反向搜尋
+- Pair 學習卡分開來源 A／B／C、review、五行結構、適用條件與 reverse pair；無逐字引文時必須明示「尚未收錄可核對的逐字引文」
+- 81 組是「結構完整」，不是「古訣全部已驗證」；未取得可追溯版本、頁碼／章節與逐字引文前，必須保持 `pending` / `needs-review`
+
 #### Reserved future capability — 最佳時窗
 
 尋星模組的長期目標包含「最佳時窗」搜尋與排序。
@@ -165,12 +181,12 @@ tests/fixtures/chart-snapshot.json
 ## 驗證結果
 
 ```text
-test files  19 passed
-tests       133 passed
+test files  24 passed
+tests       165 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（199.72 KiB）success
-single file 玄空紫白.html（約 211 KB；font data URI）success
+PWA precache 11 entries（237.62 KiB）success
+single file 玄空紫白.html（約 249 KB；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -207,6 +223,9 @@ single file 玄空紫白.html（約 211 KB；font data URI）success
 - 簡易 Search URL 與 Chart deep-link 均實測 reload 後完整還原；Search URL 無 Chart-only params
 - production 320／375／390／430px：疊盤大星為墨色、目前層小值為朱紅、其他層小值為墨灰，排盤與尋星均無 horizontal overflow
 - 簡易／進階尋星內容區均沒有重複 `h1`；導覽「尋星」、首段 helper 與 CTA「開始尋星」正常
+- production 320／375／390／430px：擇吉盤與尋組合皆無 horizontal overflow，每個寬度均有 8 個可選及 8 個排序方向，中宮不參與
+- 320px 方向詳情完整顯示 6 個 pair；68／86 有序學習卡、無引文警示及 reverse 切換正常
+- 實搜有序 14 可命中 `2026-08-07 07:00`東方 MH，點結果後 selection／purpose／palace／pair／layer URL 均正確；console 無 warning／error
 
 ---
 
@@ -235,5 +254,6 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - 刻盤目前仍只有「八刻十五分鐘制」一種策略。
 - Dark Mode 明確留待 V3。
 - IndexedDB 目前沒有必要，設定繼續使用 localStorage。
-- D 類最佳時窗 Ranking、吉凶評分與 Future filters 尚未實作；只能消費 `SearchMatch[]`，不得污染 deterministic SearchEngine。
+- 跨時段最佳時窗、個人化吉凶評分與 Future filters 尚未實作；現有擇吉方向排序只是 `TOOL_HEURISTIC`，不得冒充古法定論。
 - 進階搜尋 URL serialization、recent search、多宮／任一宮與入中星搜尋均未實作；簡易搜尋 URL restore 已完成。
+- 雙星古訣尚未完成 81 組的可追溯來源校對；下一位 agent 不可以命理推斷補文字、極性或引文。

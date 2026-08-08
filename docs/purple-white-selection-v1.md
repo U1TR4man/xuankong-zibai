@@ -54,3 +54,32 @@
 - 有序組合明示 `68 ≠ 86`，反向按鈕會載入獨立規則與不同象義。
 - 尋組合可切為「適合用途」，只匹配 rule tags；排序依 A／B／C、同方向警示及紫白集中，不顯示分數。
 - Vitest：24 files、165 tests 全數通過；TypeScript 通過。
+
+## Final verification
+
+```text
+test files   24 passed
+tests        165 passed
+TypeScript   passed
+production   passed（71 modules；CSS 34.71 kB；JS 133.43 kB）
+PWA precache passed（11 entries；237.62 KiB）
+single file  passed（玄空紫白.html 約 249 KB）
+```
+
+真實 production 瀏覽器驗收：
+
+| viewport | 擇吉頁 overflow | 尋組合 overflow | 可選／排序方向 | 中宮 |
+|---:|---:|---:|---:|---|
+| 320 | 0 | 0 | 8 / 8 | 不參與 |
+| 375 | 0 | 0 | 8 / 8 | 不參與 |
+| 390 | 0 | 0 | 8 / 8 | 不參與 |
+| 430 | 0 | 0 | 8 / 8 | 不參與 |
+
+- 320px 方向詳情無水平 overflow，六個 pair 完整顯示，並明示 `TOOL_HEURISTIC`。
+- 68 學習卡顯示來源 A、需要覆核、無逐字引文警示與 `68 ≠ 86`；反向按鈕正確開啟 86 的獨立象義。
+- 以一日範圍搜尋有序 14，結果可跳至 `2026-08-07 07:00`、東方、MH，URL 還原擇吉模式及命中標記。
+- 瀏覽器 console 無 warning / error。
+
+## 資料校對債
+
+V1 的「完成」指功能、架構、資料安全標記與驗收完成，不代表 81 組古訣全部已有來源佐證。後續補資料時必須逐條提供可追溯版本、頁碼或章節與逐字引文；在此之前，未核對條目不得從 `pending` / `needs-review` 擅自提升為已驗證規則。
