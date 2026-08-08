@@ -11,6 +11,7 @@ import './styles.css';
 import { computeFullChart, type FullChart } from './engine/flyingStar';
 import type { StarResult } from './engine/flyingStar/types';
 import { buildPalaceOverlay } from './overlay/buildPalaceOverlay';
+import { evaluateDirections } from './selection/evaluateDirection';
 import {
   getState, migrateLegacyHome, refreshFollowedNow, restoreFromUrl, setDateTime, subscribe,
   type AppState, type Level,
@@ -18,12 +19,15 @@ import {
 import { ContextAction } from './ui/ContextAction';
 import { ChartHeader } from './ui/ChartHeader';
 import { DateTimeContext } from './ui/DateTimeContext';
+import { DirectionRanking } from './ui/DirectionRanking';
 import { ExplainTrigger } from './ui/ExplainSheet';
 import { LevelSegment } from './ui/LevelSegment';
 import { NinePalaceGrid } from './ui/NinePalaceGrid';
 import { NinePalaceOverlayGrid } from './ui/NinePalaceOverlayGrid';
+import { NinePalaceSelectionGrid } from './ui/NinePalaceSelectionGrid';
 import { PrimaryNavigation } from './ui/PrimaryNavigation';
 import { SearchView } from './ui/SearchView';
+import { SelectionPurposeControl } from './ui/SelectionPurposeControl';
 import { TimeNavigator, shiftByLevel } from './ui/TimeNavigator';
 import { TopBar } from './ui/TopBar';
 import { StudyPanel } from './ui/StudyPanel';
@@ -37,16 +41,27 @@ function resultFor(chart: FullChart, level: Level): StarResult {
 }
 
 function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLElement {
+  const directionEvaluations = state.selectionMode
+    ? evaluateDirections(chart, state.selectionPurpose)
+    : undefined;
   const card = el('section', {
     class: 'card', id: 'current-chart', role: 'tabpanel',
     'aria-labelledby': `level-tab-${state.level}`, 'data-swipe-zone': 'chart',
   },
     ChartHeader(result, state.level, state),
-    state.overlayMode
+    state.selectionMode && directionEvaluations
+      ? SelectionPurposeControl(state)
+      : null,
+    state.selectionMode && directionEvaluations
+      ? NinePalaceSelectionGrid(chart, directionEvaluations, state)
+      : state.overlayMode
       ? NinePalaceOverlayGrid(
         buildPalaceOverlay(chart), state.level, state.selectedPalace,
         state.searchMatchedLevels)
       : NinePalaceGrid(result, state.settings),
+    state.selectionMode && directionEvaluations
+      ? DirectionRanking(directionEvaluations, state)
+      : null,
   );
 
   let touchX = 0;

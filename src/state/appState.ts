@@ -8,11 +8,13 @@
 
 import { formatUtc8Date, formatUtc8Time, nowUtc8, parseUtc8 } from '../engine/time/utc8';
 import { PALACE_KEYS, type PalaceKey } from '../engine/flyingStar/types';
+import type { PairKey, PairLayer, SelectionPurpose } from '../selection/types';
 import { loadSettings, saveSettings, type Settings } from './settings';
 
 export type Level = 'year' | 'month' | 'day' | 'hour' | 'ke';
 export type AppView = 'chart' | 'search';
 export type SearchPrecision = 'day' | 'hour' | 'ke';
+export type ChartMode = 'plain' | 'overlay' | 'selection';
 
 export const LEVELS: readonly Level[] = ['year', 'month', 'day', 'hour', 'ke'];
 
@@ -21,6 +23,10 @@ export const LEVEL_LABEL: Record<Level, string> = {
 };
 
 const SEARCH_PRECISIONS: readonly SearchPrecision[] = ['day', 'hour', 'ke'];
+const SELECTION_PURPOSES: readonly SelectionPurpose[] = [
+  'general', 'writing', 'wealth', 'negotiation', 'fame', 'celebration', 'travel',
+];
+const PAIR_LAYERS: readonly PairLayer[] = ['YM', 'YD', 'YH', 'MD', 'MH', 'DH'];
 
 /** 第一輪只序列化 A 類簡易尋星；進階條件仍留在頁面生命週期內。 */
 export interface SimpleSearchUrlState {
@@ -42,7 +48,13 @@ export interface AppState {
   home: boolean;
   /** 疊盤只改變資訊呈現，不建立另一份盤面 truth source。 */
   overlayMode: boolean;
+  /** 擇吉只消費正式年月日時盤，不建立另一份飛星計算。 */
+  selectionMode: boolean;
+  selectionPurpose: SelectionPurpose;
   selectedPalace?: PalaceKey;
+  /** 尋組合跳盤時只供 UI 高亮；時間／模式／方向改變即清除。 */
+  selectedPair?: PairKey;
+  selectedPairLayer?: PairLayer;
   /** 疊盤的大字主顯示層；目前主畫面不另設控制，跟隨 `level`。 */
   overlayPrimaryLevel: Level;
   /** Search → Chart 時命中的層，只供 selected palace 的輕量 UI 標示。 */
@@ -64,7 +76,11 @@ const state: AppState = {
   followNow: true,
   home: true,
   overlayMode: false,
+  selectionMode: false,
+  selectionPurpose: 'general',
   selectedPalace: undefined,
+  selectedPair: undefined,
+  selectedPairLayer: undefined,
   overlayPrimaryLevel: 'hour',
   searchMatchedLevels: [],
   simpleSearch: undefined,
@@ -90,6 +106,8 @@ export function setDateTime(
 ): void {
   state.selectedDateTime = d;
   state.searchMatchedLevels = [];
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
   state.followNow = opts.followNow ?? false;
   state.home = false;
   syncUrl(opts.push);
@@ -100,6 +118,8 @@ export function setLevel(level: Level, opts: { push?: boolean } = {}): void {
   state.level = level;
   state.overlayPrimaryLevel = level;
   state.searchMatchedLevels = [];
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
   state.home = false;
   syncUrl(opts.push);
   emit();
@@ -111,6 +131,8 @@ export function setDateTimeAndLevel(d: Date, level: Level): void {
   state.level = level;
   state.overlayPrimaryLevel = level;
   state.searchMatchedLevels = [];
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
   state.followNow = false;
   state.home = false;
   syncUrl(true);
@@ -136,7 +158,11 @@ export function goHome(): void {
   state.followNow = true;
   state.home = true;
   state.overlayMode = false;
+  state.selectionMode = false;
+  state.selectionPurpose = 'general';
   state.selectedPalace = undefined;
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
   state.overlayPrimaryLevel = 'hour';
   state.searchMatchedLevels = [];
   try {
@@ -187,8 +213,11 @@ export function showOverlayChart(
   state.selectedDateTime = d;
   state.level = level;
   state.overlayMode = true;
+  state.selectionMode = false;
   state.overlayPrimaryLevel = level;
   state.selectedPalace = palace;
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
   state.searchMatchedLevels = [...matchedLevels];
   state.followNow = false;
   state.home = false;
@@ -199,10 +228,56 @@ export function showOverlayChart(
 export function setOverlayMode(enabled: boolean, opts: { push?: boolean } = {}): void {
   if (enabled && !state.overlayMode) state.overlayPrimaryLevel = state.level;
   state.overlayMode = enabled;
+  if (enabled) state.selectionMode = false;
   if (!enabled) state.selectedPalace = undefined;
   if (!enabled) state.searchMatchedLevels = [];
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
   state.home = false;
   syncUrl(opts.push);
+  emit();
+}
+
+export function setSelectionMode(enabled: boolean, opts: { push?: boolean } = {}): void {
+  state.selectionMode = enabled;
+  if (enabled) {
+    state.overlayMode = false;
+    state.searchMatchedLevels = [];
+  } else {
+    state.selectedPalace = undefined;
+  }
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
+  state.home = false;
+  syncUrl(opts.push);
+  emit();
+}
+
+export function setChartMode(mode: ChartMode, opts: { push?: boolean } = {}): void {
+  if (mode === 'overlay') {
+    setOverlayMode(true, opts);
+    return;
+  }
+  if (mode === 'selection') {
+    setSelectionMode(true, opts);
+    return;
+  }
+  state.overlayMode = false;
+  state.selectionMode = false;
+  state.selectedPalace = undefined;
+  state.searchMatchedLevels = [];
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
+  state.home = false;
+  syncUrl(opts.push);
+  emit();
+}
+
+export function setSelectionPurpose(purpose: SelectionPurpose): void {
+  state.selectionPurpose = purpose;
+  state.selectedPair = undefined;
+  state.selectedPairLayer = undefined;
+  syncUrl();
   emit();
 }
 
@@ -213,7 +288,11 @@ export function setOverlayPrimaryLevel(level: Level, opts: { push?: boolean } = 
 }
 
 export function selectPalace(palace: PalaceKey | undefined, opts: { push?: boolean } = {}): void {
-  if (palace !== state.selectedPalace) state.searchMatchedLevels = [];
+  if (palace !== state.selectedPalace) {
+    state.searchMatchedLevels = [];
+    state.selectedPair = undefined;
+    state.selectedPairLayer = undefined;
+  }
   state.selectedPalace = palace;
   syncUrl(opts.push);
   emit();
@@ -231,7 +310,13 @@ function syncUrl(push = false): void {
     appendSimpleSearchUrlState(p, state.simpleSearch);
   } else {
     p.set('level', state.level);
-    if (state.overlayMode) {
+    if (state.selectionMode) {
+      p.set('selection', '1');
+      if (state.selectionPurpose !== 'general') p.set('purpose', state.selectionPurpose);
+      if (state.selectedPalace) p.set('selectedPalace', state.selectedPalace);
+      if (state.selectedPair) p.set('selectedPair', state.selectedPair);
+      if (state.selectedPairLayer) p.set('selectedPairLayer', state.selectedPairLayer);
+    } else if (state.overlayMode) {
       p.set('overlay', '1');
       p.set('overlayPrimary', state.overlayPrimaryLevel);
       if (state.selectedPalace) p.set('selectedPalace', state.selectedPalace);
@@ -289,11 +374,21 @@ export function restoreFromUrl(): boolean {
     const level = p.get('level') as Level | null;
     if (level && LEVELS.includes(level)) state.level = level;
     state.overlayPrimaryLevel = state.level;
-    state.overlayMode = p.get('overlay') === '1';
+    state.selectionMode = p.get('selection') === '1';
+    state.overlayMode = !state.selectionMode && p.get('overlay') === '1';
+    const purpose = p.get('purpose') as SelectionPurpose | null;
+    state.selectionPurpose = purpose && SELECTION_PURPOSES.includes(purpose) ? purpose : 'general';
     const palace = (p.get('selectedPalace') ?? p.get('palace')) as PalaceKey | null;
-    state.selectedPalace = state.overlayMode && palace && PALACE_KEYS.includes(palace)
+    state.selectedPalace = (state.overlayMode || state.selectionMode) && palace && PALACE_KEYS.includes(palace)
       ? palace
       : undefined;
+    const selectedPair = p.get('selectedPair');
+    state.selectedPair = state.selectionMode && selectedPair && /^[1-9]{2}$/.test(selectedPair)
+      ? selectedPair as PairKey
+      : undefined;
+    const selectedPairLayer = p.get('selectedPairLayer') as PairLayer | null;
+    state.selectedPairLayer = state.selectionMode && selectedPairLayer
+      && PAIR_LAYERS.includes(selectedPairLayer) ? selectedPairLayer : undefined;
   }
   state.searchMatchedLevels = [];
   state.followNow = false;

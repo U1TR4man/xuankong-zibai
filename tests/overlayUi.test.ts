@@ -88,7 +88,7 @@ describe('Phase 2 疊盤 UI', () => {
 
   it('關閉疊盤會清除選宮並回到原有九宮', async () => {
     $<HTMLButtonElement>('dialog .sheet__close')!.click();
-    $<HTMLButtonElement>('.overlay-toggle')!.click();
+    $<HTMLButtonElement>('.plain-toggle')!.click();
     const { getState } = await import('../src/state/appState');
 
     expect(getState().overlayMode).toBe(false);

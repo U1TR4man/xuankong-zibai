@@ -26,6 +26,14 @@
 
 ## 後續 Phase
 
-- [ ] Phase 2：主盤擇吉模式、八方結果、方向詳情與排序。
+- [x] Phase 2：原盤／疊盤／擇吉三段模式、八方四星、文字 verdict、主要 pair、方向詳情、可解釋原因、用途與無分數排序。
 - [ ] Phase 3：尋組合、結果與跳回擇吉高亮。
 - [ ] Phase 4：Pair 學習卡、來源、reverse pair 與用途 tags。
+
+### Phase 2 驗證
+
+- 中宮保留顯示，但八方盤只有 8 個可選方向，排序也只有 8 個方向。
+- 同一時間的擇吉年月日時星逐一等於正式 `FullChart`。
+- 點方向可查看四星、狀態、主要組合、判斷原因、全部六組、五行關係與 TOOL_HEURISTIC 聲明。
+- 原盤／疊盤／擇吉互斥；`selection=1`、用途與選中方向可由 URL 還原。
+- Vitest：21 files、149 tests 全數通過；TypeScript 通過。
