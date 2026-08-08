@@ -17,6 +17,7 @@
 - 唯一層級列／洛書選星 cleanup checkpoint：`3bcd1d0`
 - Chart／Search URL state cleanup checkpoint：`d2e74cf`
 - 本輪文件／QA closeout：`7a10d83`
+- 疊盤配色／尋星標題修正 checkpoint：`a1bbb00`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
