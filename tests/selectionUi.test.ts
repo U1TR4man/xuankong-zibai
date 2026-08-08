@@ -79,6 +79,11 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-reasons')?.textContent?.length).toBeGreaterThan(0);
     expect($('.direction-elements')?.textContent).toContain('年月');
     expect($('.direction-detail__disclaimer')?.textContent).toContain('TOOL_HEURISTIC');
+    const pairButton = $<HTMLButtonElement>('.direction-pairs .direction-pair')!;
+    expect(pairButton.tagName).toBe('BUTTON');
+    pairButton.click();
+    expect($<HTMLDialogElement>('dialog.sheet-dialog--pair-rule')?.open).toBe(true);
+    expect($('.pair-rule__section')?.textContent).toContain('五行關係');
   });
 
   it('用途只更新高亮／排序 context，並保留在擇吉 URL', async () => {

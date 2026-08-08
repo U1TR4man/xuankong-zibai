@@ -28,7 +28,7 @@
 
 - [x] Phase 2：原盤／疊盤／擇吉三段模式、八方四星、文字 verdict、主要 pair、方向詳情、可解釋原因、用途與無分數排序。
 - [x] Phase 3：尋星頁加入尋組合；支援指定／不分次序、六種 Pair Layer、日期 presets、分批結果、跳回擇吉與可 refresh 高亮 deep-link。
-- [ ] Phase 4：Pair 學習卡、來源、reverse pair 與用途 tags。
+- [x] Phase 4：Pair 學習卡、來源／review／適用條件、reverse pair、用途 tags 與按用途反向搜尋。
 
 ### Phase 2 驗證
 
@@ -46,3 +46,11 @@
 - 點結果後以正式 Engine 重算，開啟擇吉並高亮方向、pair 與 layer；deep-link refresh 可還原。
 - 搜尋範圍最多 366 日，超出時明確拒絕。
 - Vitest：23 files、161 tests 全數通過；TypeScript 通過。
+
+### Phase 4 驗證
+
+- 方向詳情的六個 pair 均可開啟學習卡，查看核心、五行、來源等級、review 狀態、適用條件與用途 tags。
+- 沒有可核對逐字引文時，卡片明示「尚未收錄」，不生成古訣文字。
+- 有序組合明示 `68 ≠ 86`，反向按鈕會載入獨立規則與不同象義。
+- 尋組合可切為「適合用途」，只匹配 rule tags；排序依 A／B／C、同方向警示及紫白集中，不顯示分數。
+- Vitest：24 files、165 tests 全數通過；TypeScript 通過。

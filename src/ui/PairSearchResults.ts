@@ -2,6 +2,7 @@ import {
   formatUtc8Date, formatUtc8Time, MS_PER_DAY, parseUtc8, toUtc8Parts,
 } from '../engine/time/utc8';
 import { getPairRule } from '../selection/pairRules';
+import { purposeLabel } from '../selection/purpose';
 import type { PairSearchMatch, PairSearchQuery } from '../selection/searchPairOccurrences';
 import { showSelectionChart } from '../state/appState';
 import { el } from './dom';
@@ -40,6 +41,11 @@ function PairResultCard(match: PairSearchMatch): HTMLElement {
   ),
   el('span', { class: 'pair-search-result__context' },
     `年${snapshot.yearStar} · 月${snapshot.monthStar} · 日${snapshot.dayStar} · 時${snapshot.hourStar}`),
+  match.purposeContext
+    ? el('span', { class: 'pair-search-result__quality' },
+      `來源 ${hit.rule.sourceLevel} · 紫白集中 ${match.purposeContext.purpleWhiteCount}`,
+      match.purposeContext.otherCautionCount > 0 ? ' · 同方向另有警示' : '')
+    : null,
   el('span', { class: 'pair-search-result__arrow', 'aria-hidden': 'true' }, '›'),
   );
 }
@@ -104,9 +110,11 @@ export function PairSearchResults(
   });
   renderVisible();
 
-  const heading = query.ordered
-    ? `${pair} ${rule.title}`
-    : `${pair}／${reverse} · 不分次序`;
+  const heading = query.purpose
+    ? `適合用途：${purposeLabel(query.purpose)}`
+    : query.ordered
+      ? `${pair} ${rule.title}`
+      : `${pair}／${reverse} · 不分次序`;
   return el('section', { class: 'pair-search-results', 'aria-labelledby': 'pair-search-results-title' },
     el('header', { class: 'search-results__summary' },
       el('div', {},

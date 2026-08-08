@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { purposeHits } from '../src/selection/purpose';
 import { searchPairOccurrences, type PairSearchQuery } from '../src/selection/searchPairOccurrences';
 
 const BASE: PairSearchQuery = {
@@ -36,6 +37,15 @@ describe('紫白擇吉 Phase 3 尋組合 Engine', () => {
 
   it('同一 query 重跑完全 deterministic', () => {
     expect(searchPairOccurrences(BASE)).toEqual(searchPairOccurrences(BASE));
+  });
+
+  it('按用途搜尋只命中對應 tags，並附上無分數排序 context', () => {
+    const matches = searchPairOccurrences({ ...BASE, purpose: 'writing' });
+    expect(matches.length).toBeGreaterThan(0);
+    expect(matches.every((match) => purposeHits([match.hit], 'writing').length === 1)).toBe(true);
+    expect(matches.every((match) => match.purposeContext?.purpose === 'writing')).toBe(true);
+    expect(matches.every((match) => !('score' in match))).toBe(true);
+    expect(matches[0]?.hit.rule.sourceLevel).toBe('A');
   });
 
   it('拒絕空 layer 與重複 layer', () => {

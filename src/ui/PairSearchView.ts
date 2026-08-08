@@ -5,7 +5,10 @@ import { parseCandidateRange } from '../search/candidateIterator';
 import {
   searchPairOccurrences, type PairSearchMatch, type PairSearchQuery,
 } from '../selection/searchPairOccurrences';
-import { PAIR_LAYERS, type PairLayer } from '../selection/types';
+import { PURPOSE_OPTIONS } from '../selection/purpose';
+import {
+  PAIR_LAYERS, type PairLayer, type SelectionPurpose,
+} from '../selection/types';
 import { getState, setView, type AppState } from '../state/appState';
 import { el } from './dom';
 import { PairSearchResults } from './PairSearchResults';
@@ -13,6 +16,8 @@ import { PairSearchResults } from './PairSearchResults';
 type RangePreset = 'today' | '7days' | '30days' | 'custom';
 
 interface PairSearchDraft {
+  searchBy: 'pair' | 'purpose';
+  purpose: SelectionPurpose;
   rangePreset: RangePreset;
   startDate: string;
   endDate: string;
@@ -37,6 +42,8 @@ function defaults(): PairSearchModel {
   const today = nowUtc8();
   return {
     draft: {
+      searchBy: 'pair',
+      purpose: 'writing',
       rangePreset: '7days',
       startDate: formatUtc8Date(today),
       endDate: formatUtc8Date(addDays(today, 6)),
@@ -82,7 +89,47 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
     option('30days', '未來 30 日（含今天）', draft.rangePreset === '30days'),
     option('custom', '自訂日期', draft.rangePreset === 'custom'),
   );
+  const searchBy = el('fieldset', { class: 'search-choice-group' },
+    el('legend', { class: 'search-field__label' }, '搜尋方式'),
+    el('div', { class: 'search-levels pair-search-form__kind' },
+      el('label', { class: `search-choice${draft.searchBy === 'pair' ? ' is-selected' : ''}` },
+        el('input', {
+          type: 'radio', name: 'pairSearchBy', value: 'pair', checked: draft.searchBy === 'pair',
+        }),
+        el('span', {}, '指定雙星')),
+      el('label', { class: `search-choice${draft.searchBy === 'purpose' ? ' is-selected' : ''}` },
+        el('input', {
+          type: 'radio', name: 'pairSearchBy', value: 'purpose', checked: draft.searchBy === 'purpose',
+        }),
+        el('span', {}, '適合用途')),
+    ),
+  );
+  const pairCriteria = [
+    el('div', { class: 'pair-search-form__stars' },
+      starSelect('firstStar', draft.firstStar, '第一星'),
+      starSelect('secondStar', draft.secondStar, '第二星')),
+    el('fieldset', { class: 'search-choice-group' },
+      el('legend', { class: 'search-field__label' }, '次序'),
+      el('div', { class: 'search-levels pair-search-form__order' },
+        el('label', { class: `search-choice${draft.ordered ? ' is-selected' : ''}` },
+          el('input', { type: 'radio', name: 'pairOrder', value: 'ordered', checked: draft.ordered }),
+          el('span', {}, `指定次序：${draft.firstStar}${draft.secondStar}`)),
+        el('label', { class: `search-choice${!draft.ordered ? ' is-selected' : ''}` },
+          el('input', { type: 'radio', name: 'pairOrder', value: 'unordered', checked: !draft.ordered }),
+          el('span', {}, `不分次序：${draft.firstStar}${draft.secondStar}／${draft.secondStar}${draft.firstStar}`)),
+      ),
+    ),
+  ];
+  const purposeCriteria = el('label', { class: 'search-field' },
+    el('span', { class: 'search-field__label' }, '用途'),
+    el('select', { class: 'search-select', name: 'pairPurpose' },
+      ...PURPOSE_OPTIONS.filter((purpose) => purpose.value !== 'general').map((purpose) => option(
+        purpose.value, purpose.label, draft.purpose === purpose.value,
+      )),
+    ),
+  );
   form.append(
+    searchBy,
     el('label', { class: 'search-field' },
       el('span', { class: 'search-field__label' }, '日期範圍'), rangePreset),
     el('div', { class: 'search-date-range' },
@@ -101,21 +148,7 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
         })),
       ),
     ),
-    el('div', { class: 'pair-search-form__stars' },
-      starSelect('firstStar', draft.firstStar, '第一星'),
-      starSelect('secondStar', draft.secondStar, '第二星'),
-    ),
-    el('fieldset', { class: 'search-choice-group' },
-      el('legend', { class: 'search-field__label' }, '次序'),
-      el('div', { class: 'search-levels pair-search-form__order' },
-        el('label', { class: `search-choice${draft.ordered ? ' is-selected' : ''}` },
-          el('input', { type: 'radio', name: 'pairOrder', value: 'ordered', checked: draft.ordered }),
-          el('span', {}, `指定次序：${draft.firstStar}${draft.secondStar}`)),
-        el('label', { class: `search-choice${!draft.ordered ? ' is-selected' : ''}` },
-          el('input', { type: 'radio', name: 'pairOrder', value: 'unordered', checked: !draft.ordered }),
-          el('span', {}, `不分次序：${draft.firstStar}${draft.secondStar}／${draft.secondStar}${draft.firstStar}`)),
-      ),
-    ),
+    ...(draft.searchBy === 'pair' ? pairCriteria : [purposeCriteria]),
     el('fieldset', { class: 'search-choice-group pair-search-form__layers' },
       el('legend', { class: 'search-field__label' }, 'Pair Layer'),
       el('div', { class: 'pair-layer-choices' }, ...PAIR_LAYERS.map((layer) => {
@@ -129,13 +162,22 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
   if (model.error) form.append(el('p', { class: 'search-form__error', role: 'alert' }, model.error));
   form.append(el('button', {
     class: 'btn btn--primary pair-search-form__submit', type: 'submit', disabled: model.searching,
-  }, model.searching ? '尋組合中…' : '開始尋組合'));
+  }, model.searching
+    ? draft.searchBy === 'purpose' ? '尋用途中…' : '尋組合中…'
+    : draft.searchBy === 'purpose' ? '開始尋用途' : '開始尋組合'));
 
   if (model.searching) form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')
     .forEach((control) => { control.disabled = true; });
 
   form.addEventListener('change', (event) => {
     const input = event.target as HTMLInputElement | HTMLSelectElement;
+    if (input.name === 'pairSearchBy') {
+      draft.searchBy = input.value as PairSearchDraft['searchBy'];
+      pairModel = { draft: { ...draft, layers: [...draft.layers] } };
+      setView('search');
+      return;
+    }
+    if (input.name === 'pairPurpose') draft.purpose = input.value as SelectionPurpose;
     if (input.name === 'pairRangePreset') {
       draft.rangePreset = input.value as RangePreset;
       applyPreset(form, draft, draft.rangePreset);
@@ -156,11 +198,13 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
     event.preventDefault();
     const data = new FormData(form);
     const nextDraft: PairSearchDraft = {
+      searchBy: String(data.get('pairSearchBy') ?? draft.searchBy) as PairSearchDraft['searchBy'],
+      purpose: String(data.get('pairPurpose') ?? draft.purpose) as SelectionPurpose,
       rangePreset: String(data.get('pairRangePreset') ?? draft.rangePreset) as RangePreset,
       startDate: String(data.get('pairStartDate') ?? ''),
       endDate: String(data.get('pairEndDate') ?? ''),
-      firstStar: String(data.get('firstStar') ?? ''),
-      secondStar: String(data.get('secondStar') ?? ''),
+      firstStar: String(data.get('firstStar') ?? draft.firstStar),
+      secondStar: String(data.get('secondStar') ?? draft.secondStar),
       ordered: data.get('pairOrder') !== 'unordered',
       layers: data.getAll('pairLayers').map((value) => String(value) as PairLayer),
     };
@@ -173,6 +217,7 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
         secondStar: asStarNumber(Number(nextDraft.secondStar)),
         ordered: nextDraft.ordered,
         layers: nextDraft.layers,
+        purpose: nextDraft.searchBy === 'purpose' ? nextDraft.purpose : undefined,
       };
       const range = parseCandidateRange(query.startDate, query.endDate);
       const rangeDays = Math.floor(

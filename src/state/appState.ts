@@ -402,7 +402,9 @@ export function restoreFromUrl(): boolean {
     const purpose = p.get('purpose') as SelectionPurpose | null;
     state.selectionPurpose = purpose && SELECTION_PURPOSES.includes(purpose) ? purpose : 'general';
     const palace = (p.get('selectedPalace') ?? p.get('palace')) as PalaceKey | null;
-    state.selectedPalace = (state.overlayMode || state.selectionMode) && palace && PALACE_KEYS.includes(palace)
+    const validSelectedPalace = palace && PALACE_KEYS.includes(palace)
+      && (!state.selectionMode || palace !== 'center');
+    state.selectedPalace = (state.overlayMode || state.selectionMode) && validSelectedPalace
       ? palace
       : undefined;
     const selectedPair = p.get('selectedPair');

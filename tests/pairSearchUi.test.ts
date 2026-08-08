@@ -118,6 +118,27 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
       .every((result) => ['14', '41'].includes(result.getAttribute('data-pair') ?? ''))).toBe(true);
   });
 
+  it('可以按用途 tags 反向搜尋，結果明示來源與紫白集中', async () => {
+    $<HTMLInputElement>('input[name="pairSearchBy"][value="purpose"]')!.click();
+    expect($('.pair-search-form__submit')?.textContent).toBe('開始尋用途');
+    expect($<HTMLSelectElement>('select[name="pairPurpose"]')?.value).toBe('writing');
+    for (const input of Array.from(
+      document.querySelectorAll<HTMLInputElement>('input[name="pairLayers"]'),
+    )) input.checked = true;
+    $<HTMLFormElement>('.pair-search-form')!.dispatchEvent(new Event('submit', {
+      bubbles: true, cancelable: true,
+    }));
+    await waitForPairSearch();
+
+    expect($('.pair-search-results .search-results__summary')?.textContent)
+      .toContain('適合用途：文書／考試');
+    expect(document.querySelectorAll('.pair-search-result').length).toBeGreaterThan(0);
+    expect(Array.from(document.querySelectorAll('.pair-search-result'))
+      .every((result) => result.getAttribute('data-pair') === '14')).toBe(true);
+    expect($('.pair-search-result__quality')?.textContent).toContain('來源 A');
+    expect($('.pair-search-result__quality')?.textContent).toContain('紫白集中');
+  });
+
   it('超過一年會明確拒絕，不啟動背景搜尋', () => {
     $<HTMLInputElement>('input[name="pairStartDate"]')!.value = '2026-01-01';
     $<HTMLInputElement>('input[name="pairEndDate"]')!.value = '2027-01-02';

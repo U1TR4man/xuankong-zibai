@@ -4,6 +4,7 @@ import {
 } from '../selection/types';
 import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
+import { openPairRuleSheet } from './PairRuleSheet';
 
 const SOURCE_LABEL: Record<SourceLevel, string> = {
   A: 'A · 古訣直述', B: 'B · 古訣旁證', C: 'C · 推演／結構',
@@ -14,11 +15,15 @@ function starItem(label: string, value: number): HTMLElement {
     el('small', {}, label), el('strong', {}, String(value)));
 }
 
-function pairRow(hit: PairHit, matched = false): HTMLElement {
-  return el('div', {
+function pairRow(hit: PairHit, matched = false, returnFocusSelector?: string): HTMLElement {
+  return el('button', {
     class: `direction-pair${matched ? ' is-match' : ''}`,
+    type: 'button',
     'data-pair': hit.pair,
     'data-pair-layer': hit.layer,
+    onclick: (event: Event) => openPairRuleSheet(
+      event.currentTarget as HTMLElement, hit.rule, returnFocusSelector,
+    ),
   },
   el('span', { class: 'direction-pair__layer' }, hit.layerLabel),
   el('strong', { class: 'direction-pair__key' }, hit.pair),
@@ -42,24 +47,28 @@ export function openDirectionDetailSheet(
   matchedLayer?: string,
 ): void {
   const { snapshot } = evaluation;
+  const returnSelector = `[data-selection-palace="${snapshot.palace}"]`;
   const reasons = el('ul', { class: 'direction-reasons' },
     ...evaluation.reasons.map((reason) => el('li', {}, reason)));
   const pairList = el('div', { class: 'direction-pairs' },
     ...evaluation.hits.map((hit) => pairRow(
       hit, hit.pair === matchedPair && (!matchedLayer || hit.layer === matchedLayer),
+      returnSelector,
     )),
   );
   const elementList = el('ul', { class: 'direction-elements' },
     ...evaluation.hits.map((hit) => el('li', {}, `${hit.layerLabel} ${hit.pair}｜${hit.rule.elementRelation}`)),
   );
   const main = el('div', { class: 'direction-main-pairs' },
-    ...mainHits(evaluation).map((hit) => pairRow(hit, hit.pair === matchedPair)));
+    ...mainHits(evaluation).map((hit) => pairRow(
+      hit, hit.pair === matchedPair, returnSelector,
+    )));
 
   openBottomSheet({
     title: `${snapshot.name} · ${snapshot.bearing}`,
     trigger,
     className: 'sheet-dialog--direction',
-    returnFocusSelector: `[data-selection-palace="${snapshot.palace}"]`,
+    returnFocusSelector: returnSelector,
     content: el('div', { class: 'direction-detail' },
       el('div', { class: 'direction-detail__stars', 'aria-label': '年月日時四星' },
         starItem('年', snapshot.yearStar), starItem('月', snapshot.monthStar),

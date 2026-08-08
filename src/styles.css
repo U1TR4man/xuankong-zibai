@@ -354,6 +354,7 @@ button, select, input { font: inherit; color: inherit; }
 
 /* ---------- 尋組合 ---------- */
 .pair-search-view { display: flex; flex-direction: column; gap: var(--s6); }
+.pair-search-form__kind { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pair-search-form__stars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
 .pair-search-form__order { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pair-search-form__order .search-choice { padding: var(--s2); font-size: 12px; text-align: center; }
@@ -400,6 +401,7 @@ button, select, input { font: inherit; color: inherit; }
 .pair-search-result__match strong { color: var(--cinnabar); font-family: var(--font-display); font-size: 18px; font-weight: 500; }
 .pair-search-result__match span { min-width: 0; font-size: 13px; }
 .pair-search-result__context { grid-column: 1; color: var(--ink-tertiary); font-size: 12px; }
+.pair-search-result__quality { grid-column: 1; color: var(--ink-secondary); font-size: 11px; }
 .pair-search-result__arrow { position: absolute; top: 50%; right: 0; transform: translateY(-50%); color: var(--ink-tertiary); font-size: 22px; }
 
 /* ---------- 日期時間 context ---------- */
@@ -788,14 +790,21 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
 .direction-main-pairs,
 .direction-pairs { display: flex; flex-direction: column; }
 .direction-pair {
+  width: 100%;
   display: grid;
   grid-template-columns: 40px 30px minmax(0, 1fr);
   align-items: center;
   gap: var(--s2);
   min-height: 48px;
   padding: var(--s1) 0;
+  border: 0;
   border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
 }
+.direction-pair:hover { background: rgb(122 34 32 / 3%); }
 .direction-pair.is-match { box-shadow: inset 2px 0 0 var(--cinnabar); padding-left: var(--s2); }
 .direction-pair__layer { font-size: 12px; color: var(--ink-tertiary); }
 .direction-pair__key { font-family: var(--font-display); font-size: 17px; font-weight: 500; }
@@ -804,6 +813,31 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
 .direction-reasons,
 .direction-elements { margin: 0; padding-left: 1.25rem; color: var(--ink-secondary); font-size: 13px; line-height: 1.7; }
 .direction-detail__disclaimer { font-size: 11px; line-height: 1.6; color: var(--ink-tertiary); }
+
+/* ---------- Pair 學習卡 ---------- */
+.pair-rule { display: flex; flex-direction: column; gap: var(--s5); }
+.pair-rule__meaning { margin: 0; font-family: var(--font-display); font-size: 19px; }
+.pair-rule__badges { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.pair-rule__badges span,
+.pair-rule__tags span {
+  padding: var(--s1) var(--s2);
+  border-radius: 999px;
+  background: var(--paper-muted);
+  color: var(--ink-secondary);
+  font-size: 11px;
+}
+.pair-rule__section { display: flex; flex-direction: column; gap: var(--s2); }
+.pair-rule__section h3 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 500; }
+.pair-rule__section p { margin: 0; color: var(--ink-secondary); font-size: 13px; line-height: 1.6; }
+.pair-rule__tags { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.pair-rule__sources { display: flex; flex-direction: column; gap: var(--s3); }
+.pair-rule__source { padding: var(--s3); background: var(--paper-muted); }
+.pair-rule__source h4 { margin: 0 0 var(--s2); font-size: 13px; font-weight: 600; }
+.pair-rule__source blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--line-strong); color: var(--ink-secondary); }
+.pair-rule__empty { color: var(--ink-tertiary) !important; }
+.pair-rule__direction { padding-top: var(--s3); border-top: 1px solid var(--line); }
+.pair-rule__reverse { width: 100%; }
+.pair-rule__disclaimer { margin: 0; color: var(--ink-tertiary); font-size: 11px; line-height: 1.6; }
 
 /* ---------- 宮位疊盤詳情 ---------- */
 .palace-detail { display: flex; flex-direction: column; gap: var(--s5); }
