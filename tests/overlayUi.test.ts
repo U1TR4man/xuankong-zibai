@@ -45,7 +45,7 @@ describe('Phase 2 疊盤 UI', () => {
     expect(getState().overlayMode).toBe(true);
     expect(getState().overlayPrimaryLevel).toBe('hour');
     expect(location.search).toContain('overlay=1');
-    expect(location.search).toContain('primary=hour');
+    expect(location.search).toContain('overlayPrimary=hour');
     expect(document.querySelectorAll('.overlay-cell')).toHaveLength(9);
     expect(document.querySelectorAll('.overlay-cell__layers')).toHaveLength(9);
     expect(document.querySelectorAll('.overlay-cell:first-child .overlay-cell__layer')).toHaveLength(5);
@@ -93,5 +93,22 @@ describe('Phase 2 疊盤 UI', () => {
     expect($('.overlay-grid')).toBeNull();
     expect(document.querySelectorAll('.grid:not(.overlay-grid) .cell')).toHaveLength(9);
     expect(location.search).not.toContain('overlay=1');
+  });
+
+  it('舊 primary／palace URL 仍可讀取並正規化成明確 key', async () => {
+    history.replaceState(null, '',
+      '/?t=2026-08-07T11:38&level=day&overlay=1&primary=ke&palace=li');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    const { getState } = await import('../src/state/appState');
+    const params = new URLSearchParams(location.search);
+
+    expect(getState().level).toBe('day');
+    expect(getState().overlayPrimaryLevel).toBe('day');
+    expect(getState().selectedPalace).toBe('li');
+    expect(params.get('view')).toBe('chart');
+    expect(params.get('overlayPrimary')).toBe('day');
+    expect(params.get('selectedPalace')).toBe('li');
+    expect(params.has('primary')).toBe(false);
+    expect(params.has('palace')).toBe(false);
   });
 });

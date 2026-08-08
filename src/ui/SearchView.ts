@@ -4,7 +4,9 @@ import { asStarNumber } from '../overlay/types';
 import { parseCandidateRange } from '../search/candidateIterator';
 import { searchStars } from '../search/StarSearchEngine';
 import type { SearchLevel, SearchMatch, StarSearchQuery } from '../search/types';
-import { getState, setView, type AppState } from '../state/appState';
+import {
+  getState, setSimpleSearchUrlState, setView, type AppState, type SimpleSearchUrlState,
+} from '../state/appState';
 import { el } from './dom';
 import { SearchResults } from './SearchResults';
 
@@ -30,6 +32,7 @@ interface SearchViewModel {
 
 let model: SearchViewModel | undefined;
 let searchRunId = 0;
+let appliedSearchRestoreVersion = -1;
 
 const SEARCH_LEVELS: readonly SearchLevel[] = ['day', 'hour', 'ke'];
 const LUOSHU_STARS = [
@@ -46,18 +49,34 @@ function sortStarValues(values: string[]): string[] {
   return values.sort((a, b) => Number(a) - Number(b));
 }
 
-function defaults(): SearchViewModel {
+function defaults(state: AppState): SearchViewModel {
   const today = nowUtc8();
+  const restored = state.simpleSearch;
   return {
     draft: {
       mode: 'simple',
-      startDate: formatUtc8Date(today),
-      endDate: formatUtc8Date(addDays(today, 30)),
-      palace: '',
-      level: 'hour',
-      star: '',
+      startDate: restored?.from ?? formatUtc8Date(today),
+      endDate: restored?.to ?? formatUtc8Date(addDays(today, 30)),
+      palace: restored?.searchPalace ?? '',
+      level: restored?.precision ?? 'hour',
+      star: restored ? String(restored.star) : '',
       advancedStars: { day: [], hour: [], ke: [] },
     },
+  };
+}
+
+function simpleUrlState(draft: SearchDraft): SimpleSearchUrlState | undefined {
+  if (draft.mode !== 'simple') return undefined;
+  const palace = PALACES.find((item) => item.key === draft.palace)?.key;
+  const star = Number(draft.star);
+  if (!draft.startDate || !draft.endDate || !palace) return undefined;
+  if (!Number.isInteger(star) || star < 1 || star > 9) return undefined;
+  return {
+    from: draft.startDate,
+    to: draft.endDate,
+    searchPalace: palace,
+    precision: draft.level,
+    star,
   };
 }
 
@@ -203,6 +222,7 @@ function SearchForm(
     } else if (input instanceof HTMLInputElement && input.type === 'checkbox') {
       input.closest('label')?.classList.toggle('is-selected', input.checked);
     }
+    setSimpleSearchUrlState(simpleUrlState(draft));
   });
 
   form.addEventListener('submit', (event) => {
@@ -224,6 +244,7 @@ function SearchForm(
           ? sortStarValues(data.getAll('keStars').map(String)) : draft.advancedStars.ke,
       },
     };
+    setSimpleSearchUrlState(simpleUrlState(nextDraft));
     let query: StarSearchQuery;
     try {
       if (!nextDraft.palace) throw new RangeError('請選擇宮位');
@@ -288,11 +309,16 @@ function SearchForm(
 }
 
 export function SearchView(state: AppState): HTMLElement {
-  model ??= defaults();
+  if (!model || appliedSearchRestoreVersion !== state.searchRestoreVersion) {
+    model = defaults(state);
+    appliedSearchRestoreVersion = state.searchRestoreVersion;
+  }
   const mode = model.draft.mode;
   const switchMode = (nextMode: SearchMode) => {
     searchRunId += 1;
-    model = { draft: { ...model!.draft, mode: nextMode } };
+    const nextDraft = { ...model!.draft, mode: nextMode };
+    model = { draft: nextDraft };
+    setSimpleSearchUrlState(simpleUrlState(nextDraft));
     setView('search');
   };
   return el('main', { class: 'search-view', 'aria-busy': String(Boolean(model.searching)) },

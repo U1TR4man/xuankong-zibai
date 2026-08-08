@@ -12,12 +12,24 @@ import { loadSettings, saveSettings, type Settings } from './settings';
 
 export type Level = 'year' | 'month' | 'day' | 'hour' | 'ke';
 export type AppView = 'chart' | 'search';
+export type SearchPrecision = 'day' | 'hour' | 'ke';
 
 export const LEVELS: readonly Level[] = ['year', 'month', 'day', 'hour', 'ke'];
 
 export const LEVEL_LABEL: Record<Level, string> = {
   year: '年', month: '月', day: '日', hour: '時', ke: '刻',
 };
+
+const SEARCH_PRECISIONS: readonly SearchPrecision[] = ['day', 'hour', 'ke'];
+
+/** 第一輪只序列化 A 類簡易尋星；進階條件仍留在頁面生命週期內。 */
+export interface SimpleSearchUrlState {
+  from: string;
+  to: string;
+  searchPalace: PalaceKey;
+  precision: SearchPrecision;
+  star: number;
+}
 
 export interface AppState {
   view: AppView;
@@ -35,6 +47,9 @@ export interface AppState {
   overlayPrimaryLevel: Level;
   /** Search → Chart 時命中的層，只供 selected palace 的輕量 UI 標示。 */
   searchMatchedLevels: Level[];
+  simpleSearch?: SimpleSearchUrlState;
+  /** 只在 URL restore 時遞增，讓 SearchView 可辨識 refresh／back。 */
+  searchRestoreVersion: number;
 }
 
 type Listener = (s: AppState) => void;
@@ -52,6 +67,8 @@ const state: AppState = {
   selectedPalace: undefined,
   overlayPrimaryLevel: 'hour',
   searchMatchedLevels: [],
+  simpleSearch: undefined,
+  searchRestoreVersion: 0,
 };
 
 export function getState(): AppState {
@@ -153,6 +170,12 @@ export function setView(view: AppView, opts: { push?: boolean } = {}): void {
   emit();
 }
 
+/** 更新簡易尋星 URL，不觸發整頁重繪，避免輸入欄位失去焦點。 */
+export function setSimpleSearchUrlState(value: SimpleSearchUrlState | undefined): void {
+  state.simpleSearch = value;
+  if (state.view === 'search') syncUrl();
+}
+
 /** Search → Chart 的單一 transition；盤面會由 app.ts 使用正式 Engine 重新計算。 */
 export function showOverlayChart(
   d: Date,
@@ -203,12 +226,16 @@ export function selectPalace(palace: PalaceKey | undefined, opts: { push?: boole
 function syncUrl(push = false): void {
   const p = new URLSearchParams();
   p.set('t', `${formatUtc8Date(state.selectedDateTime)}T${formatUtc8Time(state.selectedDateTime)}`);
-  p.set('level', state.level);
-  if (state.view === 'search') p.set('view', 'search');
-  if (state.overlayMode) {
-    p.set('overlay', '1');
-    p.set('primary', state.overlayPrimaryLevel);
-    if (state.selectedPalace) p.set('palace', state.selectedPalace);
+  p.set('view', state.view);
+  if (state.view === 'search') {
+    appendSimpleSearchUrlState(p, state.simpleSearch);
+  } else {
+    p.set('level', state.level);
+    if (state.overlayMode) {
+      p.set('overlay', '1');
+      p.set('overlayPrimary', state.overlayPrimaryLevel);
+      if (state.selectedPalace) p.set('selectedPalace', state.selectedPalace);
+    }
   }
   const url = `${location.pathname}?${p.toString()}`;
   try {
@@ -219,26 +246,59 @@ function syncUrl(push = false): void {
   }
 }
 
+export function appendSimpleSearchUrlState(
+  params: URLSearchParams,
+  value: SimpleSearchUrlState | undefined,
+): void {
+  if (!value) return;
+  params.set('from', value.from);
+  params.set('to', value.to);
+  params.set('searchPalace', value.searchPalace);
+  params.set('precision', value.precision);
+  params.set('star', String(value.star));
+}
+
+export function parseSimpleSearchUrlState(
+  params: URLSearchParams,
+): SimpleSearchUrlState | undefined {
+  const from = params.get('from');
+  const to = params.get('to');
+  const searchPalace = params.get('searchPalace') as PalaceKey | null;
+  const precision = params.get('precision') as SearchPrecision | null;
+  const star = Number(params.get('star'));
+  if (!from || !to || !parseUtc8(from) || !parseUtc8(to)) return undefined;
+  if (!searchPalace || !PALACE_KEYS.includes(searchPalace)) return undefined;
+  if (!precision || !SEARCH_PRECISIONS.includes(precision)) return undefined;
+  if (!Number.isInteger(star) || star < 1 || star > 9) return undefined;
+  return { from, to, searchPalace, precision, star };
+}
+
 /** 由 URL 還原狀態。回傳是否成功還原。 */
 export function restoreFromUrl(): boolean {
   const p = new URLSearchParams(location.search);
   const t = p.get('t');
-  const level = p.get('level') as Level | null;
   const d = t ? parseUtc8(t) : null;
-  if (!d) return false;
-  state.selectedDateTime = d;
-  state.view = p.get('view') === 'search' ? 'search' : 'chart';
-  if (level && LEVELS.includes(level)) state.level = level;
-  state.overlayMode = p.get('overlay') === '1';
-  const primary = p.get('primary') as Level | null;
-  state.overlayPrimaryLevel = primary && LEVELS.includes(primary) ? primary : state.level;
-  const palace = p.get('palace') as PalaceKey | null;
-  state.selectedPalace = state.overlayMode && palace && PALACE_KEYS.includes(palace)
-    ? palace
-    : undefined;
+  const searchView = p.get('view') === 'search';
+  if (!d && !searchView) return false;
+  if (d) state.selectedDateTime = d;
+  state.view = searchView ? 'search' : 'chart';
+  if (searchView) {
+    state.simpleSearch = parseSimpleSearchUrlState(p);
+    state.searchRestoreVersion += 1;
+  } else {
+    const level = p.get('level') as Level | null;
+    if (level && LEVELS.includes(level)) state.level = level;
+    state.overlayPrimaryLevel = state.level;
+    state.overlayMode = p.get('overlay') === '1';
+    const palace = (p.get('selectedPalace') ?? p.get('palace')) as PalaceKey | null;
+    state.selectedPalace = state.overlayMode && palace && PALACE_KEYS.includes(palace)
+      ? palace
+      : undefined;
+  }
   state.searchMatchedLevels = [];
   state.followNow = false;
   state.home = false;
+  syncUrl();
   return true;
 }
 

@@ -28,10 +28,17 @@ describe('Phase 3 尋星 A UI', () => {
   });
 
   it('簡易搜尋提供日期、宮位、日／時／刻與單星條件', () => {
+    $<HTMLButtonElement>('.overlay-toggle')!.click();
     const searchButton = Array.from(document.querySelectorAll<HTMLButtonElement>('.workspace-nav__item'))
       .find((button) => button.textContent === '尋星')!;
     searchButton.click();
 
+    const params = new URLSearchParams(location.search);
+    expect(params.get('view')).toBe('search');
+    expect(params.has('level')).toBe(false);
+    expect(params.has('overlay')).toBe(false);
+    expect(params.has('overlayPrimary')).toBe(false);
+    expect(params.has('selectedPalace')).toBe(false);
     expect($('.workspace-nav__item[aria-current="page"]')?.textContent).toBe('尋星');
     expect($('.search-view__head h1')?.textContent).toBe('尋星');
     expect($('.search-mode')).toBeNull();
@@ -70,6 +77,14 @@ describe('Phase 3 尋星 A UI', () => {
     expect(firstResult.querySelectorAll('.search-result__layer.is-match')).toHaveLength(1);
     expect($('.search-results__summary')?.textContent).toContain('離 · 南 · 流時 九紫');
     expect(document.querySelectorAll('.search-result-group').length).toBeGreaterThan(0);
+    const params = new URLSearchParams(location.search);
+    expect(params.get('view')).toBe('search');
+    expect(params.get('from')).toBe('2026-09-01');
+    expect(params.get('to')).toBe('2026-09-03');
+    expect(params.get('searchPalace')).toBe('li');
+    expect(params.get('precision')).toBe('hour');
+    expect(params.get('star')).toBe('9');
+    expect(params.has('level')).toBe(false);
   });
 
   it('查看結果會由正式盤面重算，開啟疊盤並高亮離宮', async () => {
@@ -91,8 +106,22 @@ describe('Phase 3 尋星 A UI', () => {
     expect(document.querySelectorAll(
       '.overlay-cell:not([data-palace="li"]) .overlay-cell__layer.is-search-match',
     )).toHaveLength(0);
-    expect(location.search).toContain('overlay=1');
-    expect(location.search).toContain('palace=li');
+    const params = new URLSearchParams(location.search);
+    expect(params.get('view')).toBe('chart');
+    expect(params.get('level')).toBe('hour');
+    expect(params.get('overlay')).toBe('1');
+    expect(params.get('overlayPrimary')).toBe('hour');
+    expect(params.get('selectedPalace')).toBe('li');
+    expect(params.has('primary')).toBe(false);
+    expect(params.has('palace')).toBe(false);
+    expect(params.has('searchPalace')).toBe(false);
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    expect(getState().view).toBe('chart');
+    expect(getState().level).toBe('hour');
+    expect(getState().overlayMode).toBe(true);
+    expect(getState().selectedPalace).toBe('li');
+    expect($('[data-palace="li"]')?.classList.contains('is-selected')).toBe(true);
   });
 
   it('回到尋星會保留上一輪條件與結果', () => {
@@ -103,12 +132,31 @@ describe('Phase 3 尋星 A UI', () => {
     expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');
     expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
     expect(document.querySelectorAll('.search-result').length).toBeGreaterThan(0);
+    expect(new URLSearchParams(location.search).get('searchPalace')).toBe('li');
+  });
+
+  it('簡易尋星 URL refresh 可還原日期、宮位、層級與飛星', async () => {
+    const savedUrl = location.href;
+    history.replaceState(null, '', savedUrl);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    const { getState } = await import('../src/state/appState');
+
+    expect(getState().view).toBe('search');
+    expect(getState().simpleSearch).toEqual({
+      from: '2026-09-01', to: '2026-09-03', searchPalace: 'li', precision: 'hour', star: 9,
+    });
+    expect($<HTMLInputElement>('input[name="startDate"]')?.value).toBe('2026-09-01');
+    expect($<HTMLInputElement>('input[name="endDate"]')?.value).toBe('2026-09-03');
+    expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');
+    expect($<HTMLInputElement>('input[name="level"][value="hour"]')?.checked).toBe(true);
+    expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
   });
 
   it('進階搜尋支援同層多星 OR、跨層 AND 與組合摘要', async () => {
     const advanced = $<HTMLButtonElement>('.search-advanced-toggle')!;
     advanced.click();
 
+    expect(new URLSearchParams(location.search).has('from')).toBe(false);
     expect($('.search-view__head h1')?.textContent).toBe('尋星');
     expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('true');
     expect($('.search-advanced__rule')?.textContent).toContain('同層選多星代表任一符合');
@@ -142,6 +190,7 @@ describe('Phase 3 尋星 A UI', () => {
     $<HTMLButtonElement>('.search-advanced-toggle')!.click();
 
     expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('false');
+    expect(new URLSearchParams(location.search).get('searchPalace')).toBe('li');
     expect($<HTMLInputElement>('input[name="level"][value="hour"]')?.checked).toBe(true);
     expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
 
