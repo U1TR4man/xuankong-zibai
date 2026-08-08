@@ -30,7 +30,7 @@ export function NinePalaceOverlayGrid(
   selectedPalace?: PalaceKey,
 ): HTMLElement {
   const grid = el('div', {
-    class: 'grid overlay-grid',
+    class: `grid overlay-grid${selectedPalace ? ' has-selection' : ''}`,
     role: 'grid',
     'aria-label': `九宮疊盤，主顯示流${LEVEL_LABEL[primaryLevel]}`,
   });

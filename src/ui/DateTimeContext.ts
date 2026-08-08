@@ -23,11 +23,11 @@ export function DateTimeContext(state: AppState): HTMLElement {
     { class: 'date-context', 'aria-label': '目前排盤時間' },
     el('button', {
       class: 'date-context__select', type: 'button', 'data-sheet-trigger': 'time',
-      'aria-label': `選擇日期時間，目前為 ${dateTime}`,
+      'aria-label': `選擇日期時間，目前為 ${dateTime}，${term.name}後`,
       onclick: (event) => openTimePickerSheet(event.currentTarget as HTMLElement, d),
     },
-      el('div', { class: 'date-context__value' }, dateTime),
-      el('div', { class: 'date-context__meta' }, `${term.name}後`),
+      el('span', { class: 'date-context__value' }, dateTime),
+      el('span', { class: 'date-context__meta' }, `${term.name}後`),
     ),
     current
       ? el('span', { class: 'badge badge--now', 'aria-label': '現在' }, '今')

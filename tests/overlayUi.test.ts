@@ -31,7 +31,9 @@ beforeAll(async () => {
 
 describe('Phase 2 疊盤 UI', () => {
   it('預設關閉並完整保留原有單層九宮', () => {
-    expect($('.overlay-toggle')?.getAttribute('aria-pressed')).toBe('false');
+    expect($('.overlay-toggle')?.getAttribute('aria-checked')).toBe('false');
+    expect($('.card__head .overlay-toggle')).not.toBeNull();
+    expect($('.overlay-controls')).toBeNull();
     expect(document.querySelectorAll('.grid:not(.overlay-grid) .cell')).toHaveLength(9);
     expect($('.overlay-grid')).toBeNull();
   });
@@ -50,10 +52,15 @@ describe('Phase 2 疊盤 UI', () => {
     expect($('.overlay-grid')?.getAttribute('aria-label')).toContain('主顯示流時');
   });
 
-  it('層級列會同步切換疊盤主顯示層', async () => {
+  it('導覽層級與疊盤主顯示層可分開切換', async () => {
     $<HTMLButtonElement>('#level-tab-ke')!.click();
     const { getState } = await import('../src/state/appState');
 
+    expect(getState().level).toBe('ke');
+    expect(getState().overlayPrimaryLevel).toBe('hour');
+    expect(document.querySelectorAll('.overlay-cell__layer[data-layer="hour"].is-primary')).toHaveLength(9);
+
+    $<HTMLButtonElement>('[data-overlay-primary="ke"]')!.click();
     expect(getState().level).toBe('ke');
     expect(getState().overlayPrimaryLevel).toBe('ke');
     expect(document.querySelectorAll('.overlay-cell__layer[data-layer="ke"].is-primary')).toHaveLength(9);
@@ -66,6 +73,8 @@ describe('Phase 2 疊盤 UI', () => {
     const { getState } = await import('../src/state/appState');
 
     expect(getState().selectedPalace).toBe('li');
+    expect($('.overlay-grid')?.classList.contains('has-selection')).toBe(true);
+    expect(document.querySelectorAll('.overlay-cell.is-selected')).toHaveLength(1);
     expect($('[data-palace="li"]')?.classList.contains('is-selected')).toBe(true);
     expect($('[data-palace="li"]')?.getAttribute('aria-pressed')).toBe('true');
     expect($<HTMLDialogElement>('dialog.sheet-dialog--palace')?.open).toBe(true);

@@ -117,7 +117,7 @@ describe('V1 端到端下鑽', () => {
     const items = $$('.ke-pick');
     click(items[2]);
     expect(text('.card__title')).toContain('第三刻');
-    expect(text('.card__sub')).toContain('11:30–11:44');
+    expect(text('.card__title-line')).toContain('11:30–11:44');
     const ke = computeFullChart(fromUtc8(2026, 8, 7, 11, 30)).ke;
     expect(text('.card__sub')).toContain(starName(ke.centerStar));
     const cells = $$('.cell');

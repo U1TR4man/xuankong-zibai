@@ -22,7 +22,6 @@ import { ExplainTrigger } from './ui/ExplainSheet';
 import { LevelSegment } from './ui/LevelSegment';
 import { NinePalaceGrid } from './ui/NinePalaceGrid';
 import { NinePalaceOverlayGrid } from './ui/NinePalaceOverlayGrid';
-import { OverlayControls } from './ui/OverlayControls';
 import { PrimaryNavigation } from './ui/PrimaryNavigation';
 import { SearchView } from './ui/SearchView';
 import { TimeNavigator, shiftByLevel } from './ui/TimeNavigator';
@@ -42,7 +41,7 @@ function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLE
     class: 'card', id: 'current-chart', role: 'tabpanel',
     'aria-labelledby': `level-tab-${state.level}`, 'data-swipe-zone': 'chart',
   },
-    ChartHeader(result, state.level),
+    ChartHeader(result, state.overlayMode ? state.overlayPrimaryLevel : state.level, state),
     state.overlayMode
       ? NinePalaceOverlayGrid(
         buildPalaceOverlay(chart), state.overlayPrimaryLevel, state.selectedPalace)
@@ -101,7 +100,6 @@ function render(state: AppState): void {
   root.append(
     DateTimeContext(state),
     LevelSegment(state.level),
-    OverlayControls(state),
     ChartCard(result, state, chart),
     TimeNavigator(state.selectedDateTime, state.level),
     ContextAction(state, chart),

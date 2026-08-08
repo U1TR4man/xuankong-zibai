@@ -31,7 +31,7 @@ export interface AppState {
   /** 疊盤只改變資訊呈現，不建立另一份盤面 truth source。 */
   overlayMode: boolean;
   selectedPalace?: PalaceKey;
-  /** 與 chart level 分開保存，V1 UI 切層時會同步兩者。 */
+  /** 疊盤的大字主顯示層；開啟後與導覽精度 `level` 各自獨立。 */
   overlayPrimaryLevel: Level;
 }
 
@@ -77,7 +77,6 @@ export function setDateTime(
 
 export function setLevel(level: Level, opts: { push?: boolean } = {}): void {
   state.level = level;
-  if (state.overlayMode) state.overlayPrimaryLevel = level;
   state.home = false;
   syncUrl(opts.push);
   emit();
@@ -87,7 +86,6 @@ export function setDateTimeAndLevel(d: Date, level: Level): void {
   state.view = 'chart';
   state.selectedDateTime = d;
   state.level = level;
-  if (state.overlayMode) state.overlayPrimaryLevel = level;
   state.followNow = false;
   state.home = false;
   syncUrl(true);
@@ -160,8 +158,8 @@ export function showOverlayChart(d: Date, level: Level, palace: PalaceKey): void
 }
 
 export function setOverlayMode(enabled: boolean, opts: { push?: boolean } = {}): void {
+  if (enabled && !state.overlayMode) state.overlayPrimaryLevel = state.level;
   state.overlayMode = enabled;
-  state.overlayPrimaryLevel = state.level;
   if (!enabled) state.selectedPalace = undefined;
   state.home = false;
   syncUrl(opts.push);

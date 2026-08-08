@@ -321,8 +321,8 @@ button, select, input { font: inherit; color: inherit; }
   min-height: var(--tap);
   flex: 1 1 auto;
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: baseline;
+  gap: var(--s2);
   padding: 0;
   border: none;
   background: transparent;
@@ -336,7 +336,13 @@ button, select, input { font: inherit; color: inherit; }
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.date-context__meta { font-size: 13px; line-height: 1.4; color: var(--ink-tertiary); }
+.date-context__meta {
+  flex: 0 0 auto;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-tertiary);
+  white-space: nowrap;
+}
 .date-context__now {
   flex: 0 0 auto;
   min-height: var(--tap);
@@ -357,6 +363,8 @@ button, select, input { font: inherit; color: inherit; }
   overflow: visible;
   background: transparent;
 }
+.date-context + .level-segment { margin-top: calc(var(--s5) * -1); }
+.level-segment + .card { margin-top: calc(var(--s3) * -1); }
 .level-segment__item {
   position: relative;
   min-height: var(--tap);
@@ -383,34 +391,74 @@ button, select, input { font: inherit; color: inherit; }
   background: var(--cinnabar);
 }
 
-/* ---------- 疊盤控制 ---------- */
-.overlay-controls {
+/* ---------- 盤頭內的輕量疊盤控制 ---------- */
+.overlay-toggle-control {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--s3);
-  min-height: 52px;
-  padding-block: var(--s1);
-  border-bottom: 1px solid var(--line);
+  gap: var(--s2);
+  flex: 0 0 auto;
 }
-.overlay-controls__copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.overlay-controls__title { font-family: var(--font-display); font-size: 15px; color: var(--ink); }
-.overlay-controls__hint { font-size: 12px; line-height: 1.35; color: var(--ink-tertiary); }
+.overlay-toggle-control__label { font-size: 13px; color: var(--ink-secondary); }
 .overlay-toggle {
-  flex: none;
-  min-height: 44px;
-  padding: 0 var(--s3);
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.overlay-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 8px 0;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
+  background: var(--paper-muted);
+}
+.overlay-toggle.is-active::before {
+  border-color: var(--cinnabar);
+  background: var(--cinnabar);
+}
+.overlay-toggle__thumb {
+  position: absolute;
+  top: 12px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--paper-raised);
+  box-shadow: 0 1px 2px rgb(40 36 31 / 20%);
+  transition: transform 160ms ease;
+}
+.overlay-toggle.is-active .overlay-toggle__thumb { transform: translateX(16px); }
+.overlay-primary {
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: auto repeat(5, minmax(36px, 1fr));
+  align-items: center;
+  gap: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.overlay-primary__label {
+  padding-right: var(--s2);
+  color: var(--ink-tertiary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.overlay-primary__item {
+  min-width: 0;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
   background: transparent;
   color: var(--ink-secondary);
-  font: inherit;
-  font-size: 13px;
+  cursor: pointer;
 }
-.overlay-toggle.is-active {
-  border-color: var(--cinnabar);
-  background: var(--cinnabar-soft);
-  color: var(--cinnabar);
+.overlay-primary__item.is-active { color: var(--cinnabar); font-weight: 600; }
+.overlay-primary__item.is-active::after { content: '✓'; margin-left: 2px; font-size: 10px; }
 }
 
 /* ---------- 盤 ---------- */
@@ -432,14 +480,30 @@ button, select, input { font: inherit; color: inherit; }
   font-weight: 500;
   line-height: 1.25;
 }
+.card__main-row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+}
+.card__title-line {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+}
 .card__sub {
   margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
   font-size: 14px;
 }
-.card__range { color: var(--ink-tertiary); font-variant-numeric: tabular-nums; }
+.card__range {
+  min-width: 0;
+  color: var(--ink-tertiary);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 .card__result { color: var(--ink-secondary); }
 
 /* 九宮：一個完整方盤，共用細線，不是九張卡 */
@@ -505,22 +569,38 @@ button, select, input { font: inherit; color: inherit; }
   color: inherit;
 }
 .overlay-cell:hover { background: rgb(122 34 32 / 4%); }
-.cell--center.overlay-cell:hover { background: var(--cinnabar-soft); }
+.overlay-cell.cell--center {
+  background: rgb(166 64 53 / 5%);
+  box-shadow: inset 0 0 0 1px rgb(166 64 53 / 18%);
+}
+.overlay-cell.cell--center .cell__palace,
+.overlay-cell.cell--center .cell__star { color: var(--ink-secondary); }
+.overlay-grid.has-selection .overlay-cell.cell--center {
+  background: rgb(166 64 53 / 3%);
+  box-shadow: none;
+}
+.overlay-cell.cell--center:hover { background: rgb(166 64 53 / 8%); }
 .overlay-cell:focus-visible { position: relative; z-index: 1; outline-offset: -3px; }
 .overlay-cell.is-selected {
   background: var(--cinnabar-soft);
   box-shadow: inset 0 0 0 2px var(--cinnabar);
 }
+.overlay-cell.is-selected .cell__palace,
+.overlay-cell.is-selected .cell__star { color: var(--cinnabar); }
 .overlay-cell__layers {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   width: 100%;
-  color: var(--ink-tertiary);
 }
 .overlay-cell__layer { display: flex; flex-direction: column; gap: 1px; align-items: center; }
-.overlay-cell__layer.is-primary { color: var(--cinnabar); }
-.overlay-cell__label { font-size: 10px; line-height: 1; }
-.overlay-cell__value { font-size: 12px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.overlay-cell__layer.is-primary { font-weight: 600; }
+.overlay-cell__label { font-size: 10px; line-height: 1; color: var(--ink-tertiary); }
+.overlay-cell__value {
+  font-size: 12px;
+  line-height: 1.1;
+  color: var(--ink-secondary);
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------- 宮位疊盤詳情 ---------- */
 .palace-detail { display: flex; flex-direction: column; gap: var(--s5); }
@@ -992,7 +1072,15 @@ button, select, input { font: inherit; color: inherit; }
   #app { padding-left: var(--s3); padding-right: var(--s3); gap: var(--s4); }
   .topbar__brand { font-size: 17px; letter-spacing: .12em; }
   .date-context__value { font-size: 16px; }
+  .date-context { gap: var(--s2); }
+  .date-context__select { gap: var(--s1); }
+  .date-context__meta { font-size: 12px; }
   .level-segment__item { font-size: 15px; }
+  .card__title { font-size: 25px; }
+  .card__range { font-size: 12px; }
+  .overlay-toggle-control { gap: var(--s1); }
+  .overlay-toggle-control__label { font-size: 12px; }
+  .overlay-primary { grid-template-columns: auto repeat(5, minmax(0, 1fr)); }
   .cell { padding: var(--s1); }
   .cell__palace { font-size: 11px; }
   .cell__meta { font-size: 10px; }
