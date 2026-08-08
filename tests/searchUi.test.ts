@@ -27,7 +27,10 @@ describe('Phase 3 尋星 A UI', () => {
     searchButton.click();
 
     expect($('.workspace-nav__item[aria-current="page"]')?.textContent).toBe('尋星');
-    expect($('.search-view__head')?.textContent).toContain('尋星 · 簡易');
+    expect($('.search-view__eyebrow')?.textContent).toBe('尋星');
+    expect($('.search-mode')).toBeNull();
+    expect($('.search-advanced-toggle')?.textContent).toContain('進階條件');
+    expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('false');
     expect(document.querySelectorAll('.search-date-range input[type="date"]')).toHaveLength(2);
     expect(document.querySelectorAll('select[name="palace"] option')).toHaveLength(10);
     expect(document.querySelectorAll('input[name="level"]')).toHaveLength(3);
@@ -61,7 +64,8 @@ describe('Phase 3 尋星 A UI', () => {
   });
 
   it('查看結果會由正式盤面重算，開啟疊盤並高亮離宮', async () => {
-    $<HTMLButtonElement>('.search-result__open')!.click();
+    expect($('.search-result__open')).toBeNull();
+    $<HTMLButtonElement>('.search-result')!.click();
     const { getState } = await import('../src/state/appState');
 
     expect(getState().view).toBe('chart');
@@ -85,11 +89,11 @@ describe('Phase 3 尋星 A UI', () => {
   });
 
   it('進階搜尋支援同層多星 OR、跨層 AND 與組合摘要', async () => {
-    const advanced = Array.from(document.querySelectorAll<HTMLButtonElement>('.search-mode__item'))
-      .find((button) => button.textContent === '進階')!;
+    const advanced = $<HTMLButtonElement>('.search-advanced-toggle')!;
     advanced.click();
 
-    expect($('.search-view__eyebrow')?.textContent).toBe('尋星 · 進階');
+    expect($('.search-view__eyebrow')?.textContent).toBe('尋星');
+    expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('true');
     expect($('.search-advanced__rule')?.textContent).toContain('同層選多星代表任一符合');
     expect(document.querySelectorAll('.search-advanced__level')).toHaveLength(3);
     for (const selector of [
@@ -114,13 +118,16 @@ describe('Phase 3 尋星 A UI', () => {
   });
 
   it('切回簡易模式不會遺失原有單星條件', () => {
-    const simple = Array.from(document.querySelectorAll<HTMLButtonElement>('.search-mode__item'))
-      .find((button) => button.textContent === '簡易')!;
-    simple.click();
+    $<HTMLButtonElement>('.search-advanced-toggle')!.click();
 
-    expect($('.search-view__eyebrow')?.textContent).toBe('尋星 · 簡易');
+    expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('false');
     expect($<HTMLInputElement>('input[name="level"][value="hour"]')?.checked).toBe(true);
     expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
+
+    $<HTMLButtonElement>('.search-advanced-toggle')!.click();
+    expect($<HTMLInputElement>('input[name="hourStars"][value="8"]')?.checked).toBe(true);
+    expect($<HTMLInputElement>('input[name="keStars"][value="9"]')?.checked).toBe(true);
+    $<HTMLButtonElement>('.search-advanced-toggle')!.click();
   });
 
   it('超過一年會明確拒絕，不會在背景無限掃描', () => {

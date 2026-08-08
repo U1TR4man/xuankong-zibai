@@ -11,7 +11,7 @@ const LEVEL_LABEL: Record<StarLevel, string> = {
   year: '年', month: '月', day: '日', hour: '時', ke: '刻',
 };
 
-const RESULT_PAGE_SIZE = 200;
+const RESULT_PAGE_SIZE = 50;
 
 function palaceLabel(key: SearchMatch['palace']): string {
   const palace = PALACES.find((item) => item.key === key)!;
@@ -31,10 +31,10 @@ function resultTime(match: SearchMatch): { date: string; time: string } {
 function ResultCard(match: SearchMatch): HTMLElement {
   const time = resultTime(match);
   const matchedLevels = new Set(match.matchedConditions.map((condition) => condition.level));
-  const layers = el('div', { class: 'search-result__layers', 'aria-label': '命中時的上層疊盤' });
+  const layers = el('span', { class: 'search-result__layers', 'aria-label': '命中時的上層疊盤' });
   for (const level of overlayLevelsThrough(match.precision)) {
     const star = match.palaceStars[level];
-    layers.append(el('div', {
+    layers.append(el('span', {
       class: `search-result__layer${matchedLevels.has(level as SearchMatch['precision']) ? ' is-match' : ''}`,
       'data-layer': level,
     },
@@ -54,26 +54,26 @@ function ResultCard(match: SearchMatch): HTMLElement {
     combinations.push(el('span', {}, `時刻 ${match.palaceStars.hour}${match.palaceStars.ke}`));
   }
 
-  return el('article', { class: 'search-result' },
-    el('header', { class: 'search-result__head' },
-      el('div', {},
-        el('div', { class: 'search-result__date' }, time.date),
-        el('div', { class: 'search-result__time' }, time.time),
-      ),
+  return el('button', {
+    class: 'search-result',
+    type: 'button',
+    'aria-label': `${time.date} ${time.time}，${palaceLabel(match.palace)}，查看此盤`,
+    onclick: () => {
+      const date = parseUtc8(match.startDateTime);
+      if (date) showOverlayChart(date, match.precision, match.palace);
+    },
+  },
+    el('span', { class: 'search-result__head' },
+      el('span', { class: 'search-result__time' }, time.time),
       el('span', { class: 'search-result__palace' }, palaceLabel(match.palace)),
     ),
     layers,
-    combinations.length > 0
-      ? el('div', { class: 'search-result__combinations', 'aria-label': '組合摘要' }, ...combinations)
-      : null,
-    el('button', {
-      class: 'btn btn--ghost search-result__open',
-      type: 'button',
-      onclick: () => {
-        const date = parseUtc8(match.startDateTime);
-        if (date) showOverlayChart(date, match.precision, match.palace);
-      },
-    }, '查看此盤'),
+    el('span', { class: 'search-result__footer' },
+      combinations.length > 0
+        ? el('span', { class: 'search-result__combinations', 'aria-label': '組合摘要' }, ...combinations)
+        : el('span', {}),
+      el('span', { class: 'search-result__arrow', 'aria-hidden': 'true' }, '›'),
+    ),
   );
 }
 
@@ -118,7 +118,7 @@ export function SearchResults(query: StarSearchQuery, matches: readonly SearchMa
     notices.push(el('p', { class: 'search-results__notice' },
       `本次搜尋 ${rangeDays} 日；長範圍可能需要較多計算時間。`));
   }
-  if (matches.length > 200) {
+  if (matches.length > RESULT_PAGE_SIZE) {
     notices.push(el('p', { class: 'search-results__notice' },
       '結果較多，可縮短日期或增加條件；列表會分批顯示，總結果不會被截斷。'));
   }

@@ -73,7 +73,11 @@ function option(value: string, label: string, selected: boolean): HTMLOptionElem
   return el('option', { value, selected }, label);
 }
 
-function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElement {
+function SearchForm(
+  state: AppState,
+  viewModel: SearchViewModel,
+  toggleAdvanced: () => void,
+): HTMLFormElement {
   const form = el('form', { class: 'search-form' });
   const draft = viewModel.draft;
 
@@ -124,7 +128,9 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
     starChoices('star', draft.star ? [draft.star] : [], false),
   );
 
-  const advanced = el('section', { class: 'search-advanced', 'aria-label': '進階多層條件' },
+  const advanced = el('section', {
+    class: 'search-advanced', id: 'search-advanced-fields', 'aria-label': '進階多層條件',
+  },
     el('p', { class: 'search-advanced__rule' },
       '同層選多星代表任一符合；跨層條件必須同時成立。'),
     ...SEARCH_LEVELS.map((searchLevel) => el('fieldset', {
@@ -152,6 +158,14 @@ function SearchForm(state: AppState, viewModel: SearchViewModel): HTMLFormElemen
     class: 'btn btn--primary search-form__submit', type: 'submit',
     disabled: viewModel.searching,
   }, viewModel.searching ? '搜尋中…' : '尋找'));
+  form.append(el('button', {
+    class: 'search-advanced-toggle',
+    type: 'button',
+    disabled: viewModel.searching,
+    'aria-expanded': String(draft.mode === 'advanced'),
+    'aria-controls': 'search-advanced-fields',
+    onclick: toggleAdvanced,
+  }, draft.mode === 'advanced' ? '− 收起進階條件' : '＋ 進階條件'));
   if (viewModel.searching) {
     form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')
       .forEach((control) => { control.disabled = true; });
@@ -269,25 +283,13 @@ export function SearchView(state: AppState): HTMLElement {
   };
   return el('main', { class: 'search-view', 'aria-busy': String(Boolean(model.searching)) },
     el('header', { class: 'search-view__head' },
-      el('p', { class: 'search-view__eyebrow' }, `尋星 · ${mode === 'simple' ? '簡易' : '進階'}`),
+      el('p', { class: 'search-view__eyebrow' }, '尋星'),
       el('h1', {}, '尋找宮內飛星'),
       el('p', {}, mode === 'simple'
         ? '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。'
         : '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。'),
     ),
-    el('div', { class: 'search-mode', role: 'group', 'aria-label': '搜尋模式' },
-      el('button', {
-        class: `search-mode__item${mode === 'simple' ? ' is-active' : ''}`,
-        type: 'button', 'aria-pressed': String(mode === 'simple'),
-        onclick: () => switchMode('simple'),
-      }, '簡易'),
-      el('button', {
-        class: `search-mode__item${mode === 'advanced' ? ' is-active' : ''}`,
-        type: 'button', 'aria-pressed': String(mode === 'advanced'),
-        onclick: () => switchMode('advanced'),
-      }, '進階'),
-    ),
-    SearchForm(state, model),
+    SearchForm(state, model, () => switchMode(mode === 'simple' ? 'advanced' : 'simple')),
     model.searching
       ? el('div', { class: 'search-status', role: 'status', 'aria-live': 'polite' },
         el('span', { class: 'search-status__mark', 'aria-hidden': 'true' }),
