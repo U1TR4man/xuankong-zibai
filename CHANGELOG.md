@@ -17,6 +17,7 @@
 
 ### Fixed
 
+- 修正盤頭精修時的一個多餘 CSS 結尾括號；production／PWA build 再次通過。
 - 壓縮日期／時間、節氣、層級列與盤頭的垂直距離；盤名與時段改為同列，並讓疊盤在選宮後只有命中宮維持強焦點。
 - 疊盤九宮五層資料維持單列、標籤與數值分級；主顯示層不再誤用朱砂色，避免與真正命中標記混淆。
 - 搜尋結果改為整列可點的精簡列表，移除大型「查看此盤」按鈕；保留時段、宮位、各層、命中勾號、組合摘要及方向箭頭。
@@ -26,6 +27,7 @@
 
 ### Documentation
 
+- 收錄最新盤面／尋星精修的可攜式 implementation record、原始規格 checksum、四種手機寬度與 131 tests 驗收結果。
 - 將 V2.1 規格與 `fdee2e7` read-only review 原文收進 `docs/`，並更新 HANDOFF 的實際 code checkpoint，移除不可攜的本機 truth-source 路徑。
 - 收錄「疊盤模式＋尋星 A/B」功能規格；最佳時窗 Ranking 明確保留為未來 D 類能力，本輪不實作。
 - 更新 README、使用說明、HANDOFF 與功能規格的 implementation status，記錄 Phase 0–6 checkpoint、131 tests 與 production／PWA／單檔驗證結果。

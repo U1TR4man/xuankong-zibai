@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**，以及疊盤／尋星 implementation **Phase 0–6 均已完成**。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**，以及下一輪盤面／尋星精修均已完成。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -10,12 +10,15 @@
 - V2.1 implementation checkpoint：`fdee2e7`
 - read-only review 修正後 code checkpoint：`333f7e1`（P1：`14fdc40`）
 - 疊盤／尋星 code checkpoint：`609e941`
+- 盤面工具列／疊盤精修 checkpoint：`0e99b49`
+- 尋星漸進展開／結果列精修 checkpoint：`0429c4f`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
 - 疊盤／尋星規格：`docs/xuankong_zibai_overlay_star_search_feature_plan.md`
+- 最新盤面／尋星精修紀錄：`docs/ui-search-polish-short.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤與尋星 A/B 已完成；下一步不是再擴功能，而是 review 本輪 checkpoint 後才決定 push／deploy。
+P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B 與本輪 UI 精修已完成；下一步不是再擴功能，而是 review 本輪 checkpoint 後才決定 push／deploy。
 
 ---
 
@@ -109,11 +112,21 @@ tests/fixtures/chart-snapshot.json
 - Phase 3：`fd3303f` 完成尋星 A、UTC+8 日／時／刻枚舉、結果列表與 Search → Chart → Overlay
 - Phase 4：`387dd2a` 完成尋星 B；同層 stars＝OR、跨層 conditions＝AND，沒有任意 Boolean
 - Phase 5：`662de72` 完成日期分組、loading／empty state、長範圍／大量結果提示與一年上限
-- Phase 5 safeguard：`609e941` 保留完整總數並每次顯示 200 筆，避免一次建立數萬個 mobile DOM nodes
+- Phase 5 safeguard：`609e941` 原先每次顯示 200 筆；本輪精修改為首批及每次增量 50 筆，完整總數仍保留
 - 搜尋正式語義固定為「指定層級、指定宮位格內的飛星值」；不把入中星、洛書數或其他宮誤作命中
 - 日候選以 UTC+8 正午代表；時與刻使用正式時窗起點，全部呼叫現有 Engine
 - 搜尋結果只保存命中與上層 context；點入後仍由正式 Engine 依時間重算盤面
 - 320px／390px production 驗證無水平 overflow；疊盤小值有文字 layer label，controls 最低 44px
+
+### 盤面／尋星 UI 精修
+
+- 日期／時間、節氣與 now action 同列；層級列和盤頭的垂直間距縮短
+- 盤名與時段同列；疊盤改為盤頭右側 switch，不再有獨立大型控制區
+- 導覽層級 `level` 與疊盤 `overlayPrimaryLevel` 開啟後完全獨立，URL 仍各自保存
+- 疊盤未選宮時中心只作淡焦點；選宮後只有命中宮使用強朱砂框
+- 疊盤主顯示層不再使用朱砂，朱砂只保留給搜尋真正命中層及選宮
+- 尋星取消等權重的簡易／進階 tabs，改由「＋ 進階條件」漸進展開，收合不丟條件
+- 結果改為精簡整列可點，移除大型「查看此盤」按鈕；每批顯示 50 筆
 
 #### Reserved future capability — 最佳時窗
 
@@ -136,8 +149,8 @@ test files  19 passed
 tests       131 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（196.63 KiB）success
-single file 玄空紫白.html（約 208 KB；font data URI）success
+PWA precache 11 entries（198.82 KiB）success
+single file 玄空紫白.html（約 210 KB；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -167,6 +180,9 @@ single file 玄空紫白.html（約 208 KB；font data URI）success
 - 疊盤 OFF 保留原 NinePalaceGrid；ON 顯示 9 宮 × 5 層，選宮與詳情 Sheet 正常
 - 尋星 A/B、同層 OR／跨層 AND、上層顯示、日期分組、loading／empty state 與跳盤正常
 - production 320／390px 疊盤及尋星無 horizontal overflow；主要 touch target ≥ 44px
+- production 320／375／390／430px 的排盤、疊盤、簡易搜尋均無 horizontal overflow
+- 320px 疊盤 9 宮 × 5 層維持單列；主顯示層與導覽層級獨立，選宮後只有一個強焦點
+- 320px 進階條件可展開／收合並保留設定；結果整列可點，命中層以朱砂＋✓ 表示
 
 ---
 
