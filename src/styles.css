@@ -484,7 +484,6 @@ button, select, input { font: inherit; color: inherit; }
 }
 .overlay-primary__item.is-active { color: var(--cinnabar); font-weight: 600; }
 .overlay-primary__item.is-active::after { content: '✓'; margin-left: 2px; font-size: 10px; }
-}
 
 /* ---------- 盤 ---------- */
 .card { display: flex; flex-direction: column; gap: var(--s3); }
