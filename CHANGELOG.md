@@ -6,10 +6,11 @@
 
 ### Added
 
+- 收錄雙星 81 組研究版的現代精簡摘要與 A／A/B／B／B/C／C 級別；每條均保留 `needs-review`、`verified=false`、`temporalUse=reference_only` 與 `rankingWeight=0`。
 - 新增可逐組開啟的 Pair 學習卡，分開顯示古訣來源、五行結構、review 狀態、適用條件、用途 tags 與 reverse pair；尋組合亦可按「文書／考試、求財、商談、求名、喜慶、出行」反向搜尋。
 - 尋星頁新增「尋組合」：可指定 `14` 或不分次序 `14／41`、篩選 YM／YD／YH／MD／MH／DH、使用日期 presets、查看分批結果，並跳回擇吉盤高亮方向及命中 pair。
 - 主盤新增互斥的「原盤／疊盤／擇吉」模式；擇吉盤保留中宮但只排名八方，顯示年月日時四星、文字狀態、主要 pair、用途與無分數方向排序，點方向可查看完整原因。
-- 新增紫白擇吉方向 V1 的 Phase 1 純資料／判讀層：81 個有序雙星規則、八方年月日時快照、每方六組 pair、用途 tag 與無分數的可解釋 heuristic；未校對古訣維持 neutral／pending。
+- 新增紫白擇吉方向 V1 的 Phase 1 純資料／判讀層：81 個有序雙星規則、八方年月日時快照、每方六組 pair、用途 tag 與無分數的可解釋 heuristic；未校對研究摘要維持 neutral／needs-review／rankingWeight 0。
 - 盤頭加入輕量「疊盤」switch；疊盤主星直接跟隨既有年／月／日／時／刻層級列。
 - 尋星改為漸進式進階條件：預設只顯示簡易搜尋，按「＋ 進階條件」才展開多層／多星設定；收起再展開仍保留設定。
 - Search → Chart 會把既有命中層帶到命中宮的五層註記，以朱砂＋✓ 輕量標示；切換時間、導覽層級或宮位後即清除過期標示。
@@ -24,6 +25,7 @@
 ### Fixed
 
 - 非疊盤九宮的九個中央大星名改回墨色，中宮亦不再將大星轉為朱紅；中宮背景／輔助標示及疊盤目前層小值配色保持不變。
+- 將雙星 81 組從擇吉方向 verdict 與 ranking 完全解耦；切換雙星用途參考不再改變八方排序，古賦與年月日時實驗性 pair 不會被當成已證實的加減分規則。
 - 移除疊盤開啟後重複的第二套「主顯示」五欄控制；主畫面永遠只保留一套層級列。
 - 尋星導覽與 CTA 維持「尋星／開始尋星」，移除內容區重複的 `h1`，讓 helper paragraph 成為首個內容元素；簡易與進階選星繼續共用洛書九宮順序。
 - 疊盤中央大星使用墨色，只有目前層級的小值使用朱紅，中宮與 selected palace 繼續以底色／框表達 focus。
@@ -40,6 +42,7 @@
 
 ### Documentation
 
+- 新增雙星 81 組考源 implementation record，記錄原始研究版 checksum、級別分佈、有序 convention、ranking 解耦與 320px production 驗收。
 - 完成紫白擇吉方向 V1 Phase 1–4 封版文件：記錄 165 tests、production／PWA／單檔 build、四種 iPhone 寬度與實際有序 14 deep-link 驗收，並明示 81 組古訣的來源校對債。
 - 收錄紫白擇吉方向 V1 的原始規格 checksum、資料安全邊界與逐 Phase implementation status。
 - 收錄疊盤配色／尋星重複標題修正的可攜式 implementation record、原始規格 checksum、133 tests 與四種手機寬度驗收結果。

@@ -77,11 +77,13 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 | 1 | 81 個有序 pair、八方快照、六種 Pair Layer 與無分數 heuristic | ✅ |
 | 2 | 原盤／疊盤／擇吉、八方排序、方向詳情與用途 | ✅ |
 | 3 | 尋組合、有序／不分次序、Layer filter、分批結果與 deep-link | ✅ |
-| 4 | Pair 學習卡、來源／review、reverse pair 與按用途反向搜尋 | ✅ |
+| 4 | Pair 學習卡、來源／review、reverse pair 與按用途參考搜尋 | ✅ |
 
-擇吉盤顯示每個方向的年／月／日／時四星，並建立 YM、YD、YH、MD、MH、DH 六個有序組合；中宮只保留參考，不參與八方搜尋或排序。狀態只顯示「優先／可用／普通／吉凶並見／慎用」與可讀原因，不顯示虛構的 0–100 分或星級。
+擇吉盤顯示每個方向的年／月／日／時四星，並建立 YM、YD、YH、MD、MH、DH 六個有序組合；中宮只保留參考，不參與八方搜尋或排序。方向狀態屬 `TOOL_HEURISTIC`，不顯示虛構的 0–100 分或星級。
 
-81 個 ordered pair 在結構上完整，但原規格沒有提供可核對古籍引文的項目，仍會顯示「資料待校對」或「需要覆核」；工具不會自行生成古訣、吉凶極性或逐字引文。
+`docs/purple-white-pair-research-v1.md` 已將研究版 81 組現代摘要收入資料庫，並保留 A、A/B、B、B/C、C 來源級別。25／52、37／73、68／86 明確保留次序差異。
+
+這 81 組全部是「雙星參考」：`needs-review`、`verified=false`、`rankingWeight=0`。研究版沒有附古籍版本頁碼與逐字引文，工具不會把摘要假裝成原文，也不會讓 pair 斷語或用途 tags 直接改變八方排序。
 
 ## 架構
 
@@ -171,7 +173,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
 - 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前的方向排序只是不顯示分數的 `TOOL_HEURISTIC`。
-- 雙星古訣資料仍需以可追溯版本與逐字引文逐條校對；未核對條目必須繼續保持 `pending` / `needs-review`，不可因 UI 已完成而改成已驗證。
+- 雙星古訣資料仍需以可追溯版本、頁碼／章節與逐字引文逐條校對；未核對條目必須繼續保持 `needs-review`、`verified=false`、`rankingWeight=0`。
 - 進階搜尋條件尚未序列化到 URL，也未加入 recent search；簡易搜尋已支援 URL restore，切回尋星仍會保留本次頁面生命週期內的上一輪結果。
 - 已用真實 production 瀏覽器驗證 320 / 375 / 390 / 430 / 768，iPhone 實機使用亦回報無問題；如需 release-grade 證據，可再補 Safari／PWA standalone／iOS Chrome 分項紀錄。
 - 未做 IndexedDB（目前資料量小，設定用 localStorage 已足夠）。
