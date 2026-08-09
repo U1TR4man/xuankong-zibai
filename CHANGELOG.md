@@ -6,6 +6,9 @@
 
 ### Added
 
+- 新增擇吉時間層唯一的 `TemporalPillars`：年月日時完整干支共用既有年界、節氣月、換日及中國時辰 boundary；selection 判讀與 UI 顯示由同一 context 取值。
+- 擇吉 ChartHeader 新增單行干支 metadata；mobile 顯示日時、wide 顯示四柱，點擊可開「時間干支」Bottom Sheet。
+- 新增年界、節氣月、兩種換日、子午時及 UTC+8 跨日／跨年的四柱 boundary tests。
 - 新增第四輪 co-arrival 與 Direction status V4：raw 紫白到方與合格紫白分開記錄，月／日為主要層，年為背景／大型修作參考，時為細選。
 - 新增月暗建 `centerStar -> forbiddenPalaces` 表、classical 受剋殺表及獨立的宮星五行關係；只月層套用暗建，五黃入中禁乾坤艮巽。
 - 新增第三輪白中殺／時間狀態引擎：暗建、受剋、穿心、交劍、鬥牛以星乘固定宮位判定；六捷墓、臨絕及 1／6／8／9 支序有氣以年月日時各層地支判定。
@@ -30,14 +33,19 @@
 
 ### Changed
 
+- Direction Detail 四欄加入干支；首屏改為 verdict、紫白主幹及「雙星參考」，「為甚麼」依紫白主幹、時序條件、白中殺、其他理由的因果順序顯示。
+- 頂層「尋星」改名「搜尋」；內層尋星／尋組合移到 helper 前並改為完整 keyboard tabs，支援左右鍵、Home／End、roving tabindex 及 tabpanel 關聯。
+- 新增 4.5:1 以上的 `--ink-muted`，提升日期節氣、干支、picker hint、來源與研究 metadata 等小字可讀性；裝飾箭頭仍使用 tertiary。
 - 紫白擇吉移除「至少兩層才成立」的硬門檻；一個主要層合格紫白已可成為正面訊號，多層同到再增強。「紫白一時加／二時加」同時保存為異文。
 - Direction status 依合格主要層、墓絕、classical killers 及黃黑疊到重算；81 組 pair 仍為 `reference_only`、`rankingWeight=0`，不影響 status 或方向排序。
 - 擇吉方向判定依序納入紫白集中、白中殺、墓絕、支序有氣與黃黑值令；維持純文字分級及可解釋條件，不建立 0–100 或固定權重。
-- 擇吉宮格優先顯示白中殺／墓絕提醒；方向詳情將「時氣與白中殺」排在主要雙星參考之前，並於「為甚麼」逐層顯示地支、月令及可重疊條件。
+- 擇吉宮格優先顯示白中殺／墓絕提醒；方向詳情將時序與白中殺移入「為甚麼」，逐層顯示干支、月令及可重疊條件。
 - 81 組雙星仍是獨立參考知識庫，`rankingWeight=0`、用途選擇與 pair 摘要不參與方向判定或排序。
 
 ### Fixed
 
+- 重建 `Zibai Serif` 離線字體子集至 895 個 UI 字元／896 glyphs；新增干支與搜尋 UI 字元已進 preload、PWA precache 與單檔 data URI。
+- 雙星來源級別在一般 UI 改用「古法規則／研究整理／研究中」等自然中文，不再顯示 `研究簡寫 A／A/B` schema token；底層 source grade 保持不變。
 - 修正第三輪暗建過度簡化：不再把飛星回本宮視為暗建，改依月白入中星反推禁修方。
 - 修正受剋殺命名：古表定局與一般「宮五行剋星五行」分開，一白落艮只顯示五行相剋，不冒稱古法受剋殺。
 - 重建 `Zibai Serif` 離線字體子集至 892 個 UI 字元；新增第四輪說明字元已進 preload、PWA precache 與單檔 data URI。
@@ -54,7 +62,7 @@
 - 非疊盤九宮的九個中央大星名改回墨色，中宮亦不再將大星轉為朱紅；中宮背景／輔助標示及疊盤目前層小值配色保持不變。
 - 將雙星 81 組從擇吉方向 verdict 與 ranking 完全解耦；切換雙星用途參考不再改變八方排序，古賦與年月日時實驗性 pair 不會被當成已證實的加減分規則。
 - 移除疊盤開啟後重複的第二套「主顯示」五欄控制；主畫面永遠只保留一套層級列。
-- 尋星導覽與 CTA 維持「尋星／開始尋星」，移除內容區重複的 `h1`，讓 helper paragraph 成為首個內容元素；簡易與進階選星繼續共用洛書九宮順序。
+- 搜尋內容區維持內層「尋星／開始尋星」並移除重複 `h1`；頂層 workspace 為「搜尋」，tool tabs 位於 helper 前，簡易與進階選星繼續共用洛書九宮順序。
 - 疊盤中央大星使用墨色，只有目前層級的小值使用朱紅，中宮與 selected palace 繼續以底色／框表達 focus。
 - Search URL 不再夾帶隱藏的 `level/overlay/overlayPrimary/selectedPalace`；Chart deep-link 則完整保留時間、層級、疊盤與選宮。
 - Chart URL 將模糊的 `primary/palace` 正規化為 `overlayPrimary/selectedPalace`，同時保留舊 key 的讀取相容。
@@ -69,6 +77,7 @@
 
 ### Documentation
 
+- 收錄干支加入與 UI/UX refinement V2 implementation record、原始規格 checksum、188 tests、PWA／單檔 build、五種寬度及 keyboard／focus／font 驗收證據。
 - 更新 `docs/HANDOFF.md` 的第四輪 checkpoint、現行 truth source、字體雜湊、179 tests、PWA／單檔 build 及四種 iPhone 寬度 Browser 驗收證據。
 - 收錄紫白擇吉第四輪實作紀錄、原始研究 checksum、被修正的第三輪規則、179 tests、PWA／單檔 build 與四種 iPhone 寬度 Browser 驗收。
 - 收錄紫白擇吉第三輪考源 implementation record、原始研究 checksum、白中殺／墓絕／支序有氣／月令的實際公式、178 tests、build 及四種手機寬度驗收；未有原頁的來源狀態仍保持待覆核。
