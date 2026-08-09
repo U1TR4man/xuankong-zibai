@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup、疊盤配色／尋星重複標題補丁，以及紫白擇吉方向 V1 **Phase 1–4** 均已完成。雙星 81 組第一、第二輪考源已入庫並與方向 ranking 解耦；擇吉九宮四星橫排 UI 修正亦已完成。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup、疊盤配色／尋星重複標題補丁，以及紫白擇吉方向 V1 **Phase 1–4** 均已完成。雙星 81 組第一、第二輪考源已入庫並與方向 ranking 解耦；擇吉九宮四星橫排 UI 修正亦已完成。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -106,7 +106,7 @@ tests/fixtures/chart-snapshot.json
 ### V2.1 Phase A–D — Visual refinement + iOS date/time
 
 - 原生 date/time input 改為 `sheet-input-shell` 負責 border／focus，input 本身保持 `appearance:auto`、零 border／outline；320–430px 無 clipping 或雙框
-- 自帶 `public/fonts/zibai-serif-medium.woff2`（Noto Serif CJK TC Medium 2.003；859 個 UI 字元／860 glyph，約 221 KB）與 OFL；preload、PWA precache、單檔 data URI 均完成
+- 自帶 `public/fonts/zibai-serif-medium.woff2`（Noto Serif CJK TC Medium 2.003；862 個 UI 字元／863 glyph，約 222 KB）與 OFL；preload、PWA precache、單檔 data URI 均完成
 - `scripts/build-font-subset.py` 掃描 `src/**/*.ts(x)`、`index.html` 與其他直接顯示的靜態文字後重建子集；來源 OTF checksum、產物 coverage 與 glyph inventory 均可重跑檢查
 - TopBar 兩個 emoji 改成 `currentColor`、1.5px stroke inline SVG
 - LevelSegment 保留 tablist／tab／aria-selected，只移除外框、divider 與 active 色塊，改為 22×2px 朱砂底線
@@ -117,6 +117,16 @@ tests/fixtures/chart-snapshot.json
 #### iOS 問題 root cause
 
 舊版由 WebKit 原生 date/time input 同時負責內容、border 與 focus outline；iOS 的 native appearance 在開關 picker 前後可能採用不同的內部尺寸，造成 border 走位或雙框。V2.1 把可控視覺責任移到固定尺寸的外層 shell，以 `:focus-within` 畫唯一 focus；原生 input 只保留值與系統 picker 行為。
+
+### Professional UI/UX refinement Phase A–D
+
+- 擇吉九宮移除紫白集中數，保留方向、四星、狀態及主要組合；320px 的年月日時及 pair 摘要維持 10px，不再降到 8px
+- 重要 label、時間範圍、宮位方向與 pair context 使用 `--ink-secondary`；`--ink-tertiary` 只留給可忽略 metadata
+- 方向詳情首屏只顯示四星、狀態與主要參考；理由、六組、五行及研究說明使用預設收合的 native `details`
+- 無指定 autofocus 的 Bottom Sheet 初始焦點落在 `.sheet__surface`；close button 使用 20px、1.5px stroke inline SVG，仍保留 44px touch target、keyboard focus 與 focus return
+- Workspace／time axis／chart mode 分別使用 32×3、22×2、16×1px active underline，並以 UI sans／display serif、字重及尺寸分級
+- Pair 學習卡及尋組合不再顯示 `rankingWeight`、`reference_only`、`convention`、`context`、`tags` 等內部字串；研究 metadata 與 ranking 邏輯未改
+- 可攜式紀錄及原始規格 checksum 見 `docs/professional-uiux-refinement.md`
 
 ### `fdee2e7` read-only review 收尾
 
@@ -202,8 +212,8 @@ test files  24 passed
 tests       172 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（414.43 KiB）success
-single file 玄空紫白.html（約 479 KB；font data URI）success
+PWA precache 11 entries（416.71 KiB）success
+single file 玄空紫白.html（約 482 KB；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -221,7 +231,7 @@ single file 玄空紫白.html（約 479 KB；font data URI）success
 - 日期 Sheet apply、Esc、focus return
 - 320 / 375 / 390 / 430 native date/time shell 無 clipping；兩個 input 都維持 `appearance:auto`
 - date/time focus：shell 1px border + 2px outline；input 0 border + no outline
-- 品牌字體 `document.fonts.check()` 對「雙星參考／回到今／全部六組」等新增字串命中；production font 與 public font SHA-256 均為 `1270b60fba30c0d0dbc0642bbb85298ad53287a13cac6a54557489755cd659b9`
+- 品牌字體 `document.fonts.check()` 對「主要參考／研究說明／僅供研究參考」等新增字串命中；production font 與 public font SHA-256 均為 `659dcbc9acd25342239d144f5da494154c5585b6dcb8e8599c72fc6558e227a8`
 - 日期時間列在 320／375／390／430px 均無 overflow；右側「今／回到今」維持 64px 並以 baseline 對齊，左側日期位置不因文案長度跳動
 - TopBar 兩個 SVG 均為 1.5px stroke
 - 主頁一個「今」、無常駐 UTC+8；TimePicker／Settings 仍顯示 UTC+8
@@ -244,11 +254,14 @@ single file 玄空紫白.html（約 479 KB；font data URI）success
 - 簡易／進階尋星內容區均沒有重複 `h1`；導覽「尋星」、首段 helper 與 CTA「開始尋星」正常
 - production 320／375／390／430px：擇吉盤與尋組合皆無 horizontal overflow，每個寬度均有 8 個可選及 8 個排序方向，中宮不參與
 - production 320／375／390／430／768px：擇吉九宮 9 組年／月／日／時均保持四欄橫排；八方與中宮全部 value 維持墨灰，長 pair title 無 horizontal overflow，點擊方向詳情正常
-- production 320／375／390／430／768px：八方紫白集中訊號完整留在 cell 內；方向詳情、68 source audit 卡與 37 異文卡無 horizontal overflow，console 無 warning／error
+- production 320／375／390／430px：擇吉 cell 不再顯示紫白集中數，九宮在四種寬度均保持正方；320px 為 296×296、每宮 98×98
+- production 320px：方向詳情四個 disclosure 預設收起，首屏無需捲動；展開全部六組後才產生 sheet 內部捲動，研究內容仍完整
+- production 320px：Bottom Sheet 初始焦點位於 surface，close button 無初始 focus ring；SVG 為 20px／1.5px stroke，Pair 學習卡無 internal terminology
+- production 原盤／疊盤／擇吉／尋星在 320／375／390／430px 共 16 組均無 horizontal overflow；console 無 warning／error
 - 320px 方向詳情完整顯示 6 個 pair；68／86 有序學習卡、無引文警示及 reverse 切換正常
 - 實搜有序 14 可命中 `2026-08-07 07:00`東方 MH，點結果後 selection／purpose／palace／pair／layer URL 均正確；console 無 warning／error
-- 320px 考源研究版 UI 無 horizontal overflow；68 學習卡顯示 A 級、待逐條覆核、無引文警示、`rankingWeight=0` 及 `68 ≠ 86`
-- 雙星用途從文書／考試切到喜慶後，八方排序完全不變；尋組合快慢層 convention 可見，console 無 warning／error
+- 320px 考源研究版 UI 無 horizontal overflow；68 學習卡以自然中文顯示 A 級、待逐條覆核、無引文警示及 `68 ≠ 86`，底層 `rankingWeight=0` 仍由 engine test 鎖定
+- 雙星用途從文書／考試切到喜慶後，八方排序完全不變；尋組合快慢層次序規則可見，console 無 warning／error
 
 ---
 
@@ -279,4 +292,5 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - IndexedDB 目前沒有必要，設定繼續使用 localStorage。
 - 跨時段最佳時窗、個人化吉凶評分與 Future filters 尚未實作；現有擇吉方向排序只是 `TOOL_HEURISTIC`，不得冒充古法定論。
 - 進階搜尋 URL serialization、recent search、多宮／任一宮與入中星搜尋均未實作；簡易搜尋 URL restore 已完成。
+- 頂層「尋星」改名「搜尋」與九宮式宮位 selector 只記錄為 P2 構想，本輪未實作。
 - 雙星 81 組第二輪 source audit 已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。

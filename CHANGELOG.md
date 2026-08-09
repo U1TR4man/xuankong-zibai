@@ -26,8 +26,13 @@
 
 ### Fixed
 
+- 擇吉九宮不再以 8px 顯示年月日時與 pair 摘要，也不再把紫白集中數塞入宮格；重要資訊改用 secondary ink，320px 九宮維持 296×296 正方。
+- 方向詳情改為 progressive disclosure：首屏只留四星、狀態與主要參考，「為甚麼／全部六組／五行關係／研究說明」預設收起。
+- Bottom Sheet 初始焦點改到 sheet surface，避免開啟即在 X 顯示朱紅焦點框；關閉圖示統一為 1.5px inline SVG，keyboard focus 與焦點返回保持不變。
+- Workspace、時間軸、盤面模式以字體、字重與 32×3／22×2／16×1px 底線分級，不再呈現三組同等重量的文字 tabs。
+- Pair 學習卡與尋組合說明改用「原始使用情境／用途標籤／次序規則」等自然中文，不再把 `rankingWeight`、`reference_only`、`convention` 等內部欄位顯示給使用者。
 - 移除擇吉主盤「TOOL_HEURISTIC · 紫白集中 · 雙星不入排序」內部術語列；方向詳情只以自然中文保留「雙星組合僅供參考，不參與方向排序」，底層 provenance 與 ranking 邏輯不變。
-- 重建 `Zibai Serif` 離線子集，將實際 UI 字元覆蓋由 374 擴至目前 859 個；「雙星參考」「回到今」「全部六組」等後加文字不再於 iOS 逐字 fallback，preload、PWA 快取與單檔內嵌路徑保持不變。
+- 重建 `Zibai Serif` 離線子集，將實際 UI 字元覆蓋由 374 擴至目前 862 個；「雙星參考」「回到今」「全部六組」等後加文字不再於 iOS 逐字 fallback，preload、PWA 快取與單檔內嵌路徑保持不變。
 - 日期時間列改用 baseline 對齊；「今／回到今」共用固定 64px 右欄並靠右顯示，320／375／390／430px 不溢出且切換文案不會推動左側日期。
 - 28／29／31 不再被考源資料結構誤作無條件 pure pair；48／98 明示為反向推建，68／86 明示古證據是宮星＋流年，37 的疑似 36 轉錄只存為異文而不覆寫規則。
 - 擇吉九宮的年／月／日／時四星由 2×2 改為由左至右的四欄橫排；八方與中宮共用同一版式，維持墨灰且不加入流刻或目前層朱紅高亮。
@@ -49,6 +54,7 @@
 
 ### Documentation
 
+- 收錄 professional UI/UX refinement 的原始規格 checksum、Phase A–D implementation record、172 tests、production／PWA／單檔 build 與四種手機寬度驗收。
 - 收錄紫白擇吉第二輪考源 implementation record、原始研究 checksum、171 tests、production／PWA／單檔 build 與五種寬度驗收，並鎖定有氣／白中殺／81 組仍不可評分的邊界。
 - 收錄擇吉盤四星橫排 UI 修正的原始規格 checksum、166 tests、production／PWA／單檔 build，以及 320／375／390／430／768px responsive 驗收結果。
 - 新增雙星 81 組考源 implementation record，記錄原始研究版 checksum、級別分佈、有序 convention、ranking 解耦與 320px production 驗收。

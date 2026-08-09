@@ -43,12 +43,20 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 ### V2.1 視覺精修與 iOS 日期時間修正
 
 - 日期／時間仍使用原生 `<input type="date">`、`<input type="time">`；外層 shell 統一繪製 border 與 focus，避免 iOS WebKit 原生控件內外框尺寸不同步。
-- 自帶約 221 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、859 個 UI 字元子集，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
+- 自帶約 222 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、862 個 UI 字元子集，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
 - 頂欄 info／settings 改為同一套 1.5px inline SVG，不再依賴平台 emoji。
 - 層級列改為無外框 tab + 朱砂短底線；主畫面只保留一個「今」，UTC+8 說明留在選時與設定 Sheet。
 - 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
 - Chart Header、前後導覽與 contextual CTA 減少外框及大色塊；九宮 geometry 與算法完全不變。
 - 日期時間與節氣改為同列，盤名與時段同列；疊盤 switch 移入盤頭，疊盤主星跟隨唯一的排盤層級列。
+
+### Professional UI/UX refinement
+
+- 擇吉九宮移除低價值的紫白集中數，保留方向、四星、狀態及主要組合；320px 資訊字不再縮至 8px。
+- 方向詳情首屏只顯示結果與主要參考；理由、六組、五行及研究說明預設收起，按需展開。
+- Bottom Sheet 初始焦點改到 sheet surface，關閉按鈕統一為 1.5px inline SVG 並保留 keyboard focus。
+- Workspace、時間軸及盤面模式以 sans／serif、字重及不同底線尺寸拉開三層 hierarchy；routing／state 不變。
+- 詳見 [專業 UI/UX refinement 紀錄](docs/professional-uiux-refinement.md)。
 
 ## 疊盤與尋星
 

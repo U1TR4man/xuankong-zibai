@@ -27,7 +27,7 @@ beforeAll(() => {
 });
 
 describe('紫白擇吉 Phase 4 Pair 學習卡', () => {
-  it('清楚分開核心、五行、來源、review、tags 與適用範圍', () => {
+  it('清楚分開核心、五行、來源、校對、標籤與適用範圍', () => {
     const trigger = $<HTMLButtonElement>('#pair-trigger')!;
     openPairRuleSheet(trigger, getPairRule('68'));
 
@@ -38,15 +38,17 @@ describe('紫白擇吉 Phase 4 Pair 學習卡', () => {
     expect($('.pair-rule__badges')?.textContent).toContain('待逐條覆核');
     expect($('.pair-rule__badges')?.textContent).toContain('待核原頁影像');
     expect($('.pair-rule')?.textContent).toContain('五行關係');
-    expect($('.pair-rule__audit')?.textContent).toContain('直接有序 pair');
+    expect($('.pair-rule__audit')?.textContent).toContain('直接有序組合');
     expect($('.pair-rule__audit')?.textContent).toContain('古句明確有次序');
     expect($('.pair-rule__audit')?.textContent).toContain('原始來源直接核對：否');
     expect($('.pair-rule')?.textContent).toContain('宮／宅基礎星＋流年星');
-    expect($('.pair-rule')?.textContent).toContain('用途 tags');
+    expect($('.pair-rule')?.textContent).toContain('用途標籤');
     expect($('.pair-rule__tags')?.textContent).toContain('韜略');
     expect($('.pair-rule__source')?.textContent).toContain('尚未收錄可核對版本／頁碼的逐字引文');
-    expect($('.pair-rule')?.textContent).toContain('rankingWeight：0');
-    expect($('.pair-rule__disclaimer')?.textContent).toContain('不參與擇吉排序');
+    expect($('.pair-rule__disclaimer')?.textContent).toContain('僅供研究參考，不參與擇吉排序');
+    expect($('.pair-rule')?.textContent).not.toContain('rankingWeight');
+    expect($('.pair-rule')?.textContent).not.toContain('reference_only');
+    expect($('.pair-rule')?.textContent).not.toContain('convention');
   });
 
   it('有序 pair 明示 68 ≠ 86，反向按鈕會開啟不同資料', () => {

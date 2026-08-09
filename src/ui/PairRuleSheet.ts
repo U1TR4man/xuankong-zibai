@@ -19,10 +19,10 @@ const TEMPORAL_LABEL = {
   reference: '只供參考，不進入工具吉凶判定',
 } as const;
 const EVIDENCE_FORM_LABEL: Record<EvidenceForm, string> = {
-  direct_ordered_pair: '直接有序 pair',
-  direct_same_palace_pair: '直接同宮 pair',
+  direct_ordered_pair: '直接有序組合',
+  direct_same_palace_pair: '直接同宮組合',
   named_pattern: '傳統名目',
-  classic_trigram_pair: '古典卦象 pair',
+  classic_trigram_pair: '古典卦象組合',
   palace_conditioned: '宮位條件句',
   shape_conditioned: '形勢條件句',
   single_star_repeated: '單星重疊推演',
@@ -33,7 +33,7 @@ const USE_CONTEXT_LABEL: Record<UseContext, string> = {
   base_plus_flow: '宮／宅基礎星＋流年星',
   house_double_star: '宅盤山星×向星',
   palace_specific: '指定宮位／方位',
-  temporal_pair_reference: '本工具年月日時 pair 參考',
+  temporal_pair_reference: '本工具年月日時雙星參考',
 };
 const DIRECTIONALITY_LABEL: Record<PairDirectionality, string> = {
   explicit_order: '古句明確有次序',
@@ -106,12 +106,11 @@ export function openPairRuleSheet(
       el('section', { class: 'pair-rule__section' },
         el('h3', {}, '適用範圍'),
         el('p', {}, TEMPORAL_LABEL[rule.applicability.temporalSelection]),
-        el('p', {}, `原始 context：${rule.sourceAudit.useContexts.map((context) => USE_CONTEXT_LABEL[context]).join('、')}`),
-        el('p', {}, `rankingWeight：${rule.rankingWeight}`),
+        el('p', {}, `原始使用情境：${rule.sourceAudit.useContexts.map((context) => USE_CONTEXT_LABEL[context]).join('、')}`),
         rule.applicability.requiresPalaceContext
-          ? el('p', {}, '需要宮位 context，不直接用於時間排序。') : null,
+          ? el('p', {}, '需要配合宮位，不直接用於時間排序。') : null,
         rule.applicability.requiresProsperityContext
-          ? el('p', {}, '需要旺衰 context，不直接用於時間排序。') : null),
+          ? el('p', {}, '需要配合旺衰，不直接用於時間排序。') : null),
       el('section', { class: 'pair-rule__section pair-rule__audit' },
         el('h3', {}, '證據審核'),
         el('p', {}, `證據形式：${EVIDENCE_FORM_LABEL[rule.sourceAudit.evidenceForm]}`),
@@ -119,10 +118,10 @@ export function openPairRuleSheet(
         el('p', {}, `原始來源直接核對：${rule.sourceAudit.primarySourceVerified ? '是' : '否'}`),
         conditions(rule)),
       el('section', { class: 'pair-rule__section' },
-        el('h3', {}, '用途 tags'),
+        el('h3', {}, '用途標籤'),
         rule.tags.length > 0
           ? el('div', { class: 'pair-rule__tags' }, ...rule.tags.map((tag) => el('span', {}, tag)))
-          : el('p', { class: 'pair-rule__empty' }, '尚未校對用途 tags。')),
+          : el('p', { class: 'pair-rule__empty' }, '尚未校對用途標籤。')),
       el('section', { class: 'pair-rule__section' },
         el('h3', {}, '來源'), sourceList(rule)),
       rule.sourceAudit.variants && rule.sourceAudit.variants.length > 0
@@ -141,7 +140,7 @@ export function openPairRuleSheet(
           reverseButton)
         : null,
       el('p', { class: 'pair-rule__disclaimer' },
-        '雙星證據多源自宮星＋流年、宅盤或古賦同宮組合；年月日時的第一／第二碼只是本工具的快慢層 convention。所有 temporal pair 仍是 reference_only，不參與擇吉排序。'),
+        '雙星證據多源自宮星加流年、宅盤或古賦同宮組合；年月日時的第一、第二碼只是本工具的快慢層次記法。所有年月日時雙星組合僅供研究參考，不參與擇吉排序。'),
     ),
   });
 }

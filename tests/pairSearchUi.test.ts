@@ -47,6 +47,7 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
     expect(document.querySelectorAll('input[name="pairLayers"]')).toHaveLength(6);
     expect(document.querySelectorAll('input[name="pairLayers"]:checked')).toHaveLength(6);
     expect($('.pair-search-form__convention')?.textContent).toContain('較慢層為第一碼');
+    expect($('.pair-search-form__convention')?.textContent).not.toContain('convention');
   });
 
   it('指定次序搜尋 14，結果顯示日期、時段、方向、layer 與四星 context', async () => {

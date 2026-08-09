@@ -49,7 +49,7 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect(location.search).toContain('selection=1');
     expect(document.querySelectorAll('.selection-grid .selection-cell')).toHaveLength(9);
     expect(document.querySelectorAll('.selection-grid button.selection-cell')).toHaveLength(8);
-    expect(document.querySelectorAll('.selection-cell__concentration')).toHaveLength(8);
+    expect(document.querySelectorAll('.selection-cell__concentration')).toHaveLength(0);
     expect($('.selection-cell--center')?.textContent).toContain('不參與排序');
     expect(document.querySelectorAll('.selection-ranking__direction')).toHaveLength(8);
   });
@@ -80,7 +80,7 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.selection-grid')?.textContent).not.toContain('刻');
   });
 
-  it('點方向可查看 verdict 原因、六組參考 pair、五行與方法聲明', async () => {
+  it('方向詳情首屏只顯示結果，研究內容預設收起且仍可完整展開', async () => {
     $<HTMLButtonElement>('[data-selection-palace="xun"]')!.click();
     await Promise.resolve();
     const { getState } = await import('../src/state/appState');
@@ -89,19 +89,28 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($<HTMLDialogElement>('dialog.sheet-dialog--direction')?.open).toBe(true);
     expect($('.sheet__title')?.textContent).toBe('巽 · 東南');
     expect(document.querySelectorAll('.direction-detail__star')).toHaveLength(4);
+    expect($('.direction-detail__verdict')?.textContent).toBe('可用');
+    expect($('.direction-primary-reference')?.textContent).toContain('主要參考');
+    const disclosures = Array.from(document.querySelectorAll<HTMLDetailsElement>('.direction-disclosure'));
+    expect(disclosures).toHaveLength(4);
+    expect(disclosures.every((item) => !item.open)).toBe(true);
+    expect(disclosures.map((item) => item.querySelector('summary')?.textContent))
+      .toEqual(['為甚麼', '全部六組', '五行關係', '研究說明']);
     expect($('.direction-temporal')?.textContent).toContain('三時紫白集中');
-    expect($('.direction-temporal')?.textContent).toContain('有氣／墓絕：尚未判定');
-    expect($('.direction-temporal')?.textContent).toContain('白中殺：尚未判定');
     expect(document.querySelectorAll('.direction-pairs .direction-pair')).toHaveLength(6);
-    expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('雙星參考');
+    expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('主要參考');
     expect($('.direction-reasons')?.textContent?.length).toBeGreaterThan(0);
     expect($('.direction-elements')?.textContent).toContain('年月');
     expect($('.selection-ranking__head')?.textContent).toBe('方向排序');
     expect($('.selection-ranking')?.textContent).not.toContain('TOOL_HEURISTIC');
     expect($('.selection-ranking')?.textContent).not.toContain('雙星不入排序');
-    expect($('.direction-detail__disclaimer')?.textContent)
-      .toBe('雙星組合僅供參考，不參與方向排序。');
+    expect($('.direction-research')?.textContent)
+      .toContain('雙星組合僅供研究參考，不參與方向排序。');
+    expect($('.direction-research')?.textContent)
+      .toContain('有氣、墓絕及白中殺目前尚未納入判定。');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('TOOL_HEURISTIC');
+    expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('unknown');
+    expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('rankingWeight');
     const pairButton = $<HTMLButtonElement>('.direction-pairs .direction-pair')!;
     expect(pairButton.tagName).toBe('BUTTON');
     pairButton.click();

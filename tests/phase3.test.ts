@@ -96,6 +96,16 @@ describe('Phase 3 Bottom Sheet', () => {
 
     expect(document.querySelectorAll('dialog')).toHaveLength(1);
     expect($<HTMLDialogElement>('dialog.sheet-dialog--settings')?.open).toBe(true);
+    expect(document.activeElement).toBe($('.sheet__surface'));
+    expect($('.sheet__surface')?.getAttribute('tabindex')).toBe('-1');
+    const closeIcon = $('.sheet__close svg');
+    expect(closeIcon?.getAttribute('stroke')).toBe('currentColor');
+    expect(closeIcon?.getAttribute('stroke-width')).toBe('1.5');
+    expect(closeIcon?.getAttribute('stroke-linecap')).toBe('round');
+    const closeButton = $<HTMLButtonElement>('.sheet__close')!;
+    expect(closeButton.tabIndex).toBe(0);
+    closeButton.focus();
+    expect(document.activeElement).toBe(closeButton);
     expect(document.body.textContent).toContain('日柱換日');
     expect(document.body.textContent).toContain('節氣資料');
   });

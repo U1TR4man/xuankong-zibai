@@ -1,7 +1,6 @@
 import type { FullChart } from '../engine/flyingStar';
 import { PALACES, type PalaceMeta } from '../engine/flyingStar/types';
-import { PURPLE_WHITE_SIGNAL_LABEL } from '../selection/researchEvidence';
-import type { DirectionEvaluation, PairHit } from '../selection/types';
+import { VERDICT_LABEL, type DirectionEvaluation, type PairHit } from '../selection/types';
 import { selectPalace, type AppState } from '../state/appState';
 import { openDirectionDetailSheet } from './DirectionDetailSheet';
 import { el } from './dom';
@@ -85,13 +84,11 @@ export function NinePalaceSelectionGrid(
       type: 'button', role: 'gridcell',
       'data-selection-palace': palace.key,
       'aria-pressed': String(selected),
-      'aria-label': `${evaluation.snapshot.bearing}，年${evaluation.snapshot.yearStar}，月${evaluation.snapshot.monthStar}，日${evaluation.snapshot.dayStar}，時${evaluation.snapshot.hourStar}，${PURPLE_WHITE_SIGNAL_LABEL[evaluation.purpleWhiteSignal]}${evaluation.purpleWhiteCount}/4，${evaluation.verdict}，雙星參考${shownHit.pair}${shownHit.rule.title}`,
+      'aria-label': `${evaluation.snapshot.bearing}，年${evaluation.snapshot.yearStar}，月${evaluation.snapshot.monthStar}，日${evaluation.snapshot.dayStar}，時${evaluation.snapshot.hourStar}，狀態${VERDICT_LABEL[evaluation.verdict]}，雙星參考${shownHit.pair}${shownHit.rule.title}`,
       onclick: (event: Event) => openDirection(event.currentTarget as HTMLElement, evaluation, state),
     },
     el('span', { class: 'cell__palace' }, evaluation.snapshot.bearing),
     layerStars(evaluation),
-    el('span', { class: 'selection-cell__concentration' },
-      `${evaluation.purpleWhiteCount}/4 ${PURPLE_WHITE_SIGNAL_LABEL[evaluation.purpleWhiteSignal]}`),
     el('span', { class: `selection-verdict verdict--${evaluation.verdict}` },
       evaluation.verdict === 'priority' ? '優先' : evaluation.verdict === 'usable' ? '可用'
         : evaluation.verdict === 'mixed' ? '吉凶並見'

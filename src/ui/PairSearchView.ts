@@ -120,7 +120,7 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
       ),
     ),
     el('p', { class: 'pair-search-form__convention' },
-      '有序搜尋以較慢層為第一碼、較快層為第二碼；這是本工具的時間疊盤 convention。'),
+      '有序搜尋以較慢層為第一碼、較快層為第二碼；這是本工具的時間疊盤次序規則。'),
   ];
   const purposeCriteria = el('label', { class: 'search-field' },
     el('span', { class: 'search-field__label' }, '用途'),

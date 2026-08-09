@@ -46,6 +46,12 @@ function mainHits(evaluation: DirectionEvaluation): PairHit[] {
   return (explicit.length > 0 ? explicit : [evaluation.topHit]).slice(0, 2);
 }
 
+function disclosure(title: string, ...content: HTMLElement[]): HTMLElement {
+  return el('details', { class: 'direction-disclosure' },
+    el('summary', {}, title),
+    el('div', { class: 'direction-disclosure__body' }, ...content));
+}
+
 export function openDirectionDetailSheet(
   trigger: HTMLElement,
   evaluation: DirectionEvaluation,
@@ -83,30 +89,30 @@ export function openDirectionDetailSheet(
       el('div', { class: 'direction-detail__stars', 'aria-label': '年月日時四星' },
         starItem('年', snapshot.yearStar), starItem('月', snapshot.monthStar),
         starItem('日', snapshot.dayStar), starItem('時', snapshot.hourStar)),
-      el('section', { class: 'direction-section direction-temporal' },
-        el('h3', {}, '紫白擇方主幹'),
-        el('p', { class: 'direction-temporal__signal' },
-          `${evaluation.purpleWhiteCount}/4 · ${PURPLE_WHITE_SIGNAL_LABEL[evaluation.purpleWhiteSignal]}`),
-        el('p', {}, purpleWhiteLayers.length > 0
-          ? `命中層：${purpleWhiteLayers.join('、')}` : '命中層：無'),
-        el('p', {}, '有氣／墓絕：尚未判定（時間五行套用方法待考）'),
-        el('p', {}, `白中殺：尚未判定（${evaluation.temporalProfile.whiteKillerAssessment.note}）`)),
       el('p', { class: `direction-detail__verdict verdict--${evaluation.verdict}` },
-        `狀態：${VERDICT_LABEL[evaluation.verdict]}`),
+        VERDICT_LABEL[evaluation.verdict]),
       evaluation.purpose !== 'general'
         ? el('p', { class: 'direction-detail__purpose' },
           `雙星用途參考：${purposeLabel(evaluation.purpose)} · 命中 ${evaluation.purposeHits.length} 組`)
         : null,
-      el('section', { class: 'direction-section' },
-        el('h3', {}, '雙星參考'), main),
-      el('section', { class: 'direction-section' },
-        el('h3', {}, '為甚麼'), reasons),
-      el('section', { class: 'direction-section' },
-        el('h3', {}, '全部六組'), pairList),
-      el('section', { class: 'direction-section' },
-        el('h3', {}, '五行關係'), elementList),
-      el('p', { class: 'direction-detail__disclaimer' },
-        '雙星組合僅供參考，不參與方向排序。'),
+      el('section', { class: 'direction-section direction-primary-reference' },
+        el('h3', {}, '主要參考'), main),
+      el('div', { class: 'direction-disclosures' },
+        disclosure('為甚麼',
+          el('section', { class: 'direction-section direction-temporal' },
+            el('h3', {}, '紫白擇方主幹'),
+            el('p', { class: 'direction-temporal__signal' },
+              `${evaluation.purpleWhiteCount}/4 · ${PURPLE_WHITE_SIGNAL_LABEL[evaluation.purpleWhiteSignal]}`),
+            el('p', {}, purpleWhiteLayers.length > 0
+              ? `命中層：${purpleWhiteLayers.join('、')}` : '命中層：無')),
+          reasons),
+        disclosure('全部六組', pairList),
+        disclosure('五行關係', elementList),
+        disclosure('研究說明',
+          el('div', { class: 'direction-research' },
+            el('p', {}, '雙星組合僅供研究參考，不參與方向排序。'),
+            el('p', {}, '有氣、墓絕及白中殺目前尚未納入判定。'))),
+      ),
     ),
   });
 }

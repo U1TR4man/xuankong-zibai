@@ -6,6 +6,21 @@
 
 import { el } from './dom';
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function closeIcon(): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  for (const [name, value] of Object.entries({
+    viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+    'stroke-width': '1.5', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+    'aria-hidden': 'true', focusable: 'false',
+  })) svg.setAttribute(name, value);
+  const path = document.createElementNS(SVG_NS, 'path');
+  path.setAttribute('d', 'M6 6l12 12M18 6L6 18');
+  svg.append(path);
+  return svg;
+}
+
 export interface BottomSheetOptions {
   title: string;
   content: HTMLElement | HTMLElement[];
@@ -32,10 +47,13 @@ export function openBottomSheet(options: BottomSheetOptions): BottomSheetHandle 
   const id = `sheet-title-${++sheetId}`;
   const body = el('div', { class: 'sheet__body' },
     ...(Array.isArray(options.content) ? options.content : [options.content]));
+  const autofocus = body.querySelector<HTMLElement>('[data-autofocus="true"]');
   const closeButton = el('button', {
     class: 'sheet__close', type: 'button', 'aria-label': '關閉',
-  }, '×');
-  const surface = el('div', { class: 'sheet__surface' },
+  }, closeIcon());
+  const surface = el('div', {
+    class: 'sheet__surface', tabindex: '-1', autofocus: autofocus ? undefined : true,
+  },
     el('div', { class: 'sheet__grabber', 'aria-hidden': 'true' }),
     el('header', { class: 'sheet__head' },
       el('h2', { class: 'sheet__title', id }, options.title),
@@ -101,8 +119,7 @@ export function openBottomSheet(options: BottomSheetOptions): BottomSheetHandle 
   document.body.classList.add('has-open-sheet');
   dialog.showModal();
   queueMicrotask(() => {
-    const autofocus = dialog.querySelector<HTMLElement>('[data-autofocus="true"]');
-    (autofocus ?? closeButton).focus({ preventScroll: true });
+    (autofocus ?? surface).focus({ preventScroll: true });
   });
 
   return { dialog, close };
