@@ -106,7 +106,8 @@ tests/fixtures/chart-snapshot.json
 ### V2.1 Phase A–D — Visual refinement + iOS date/time
 
 - 原生 date/time input 改為 `sheet-input-shell` 負責 border／focus，input 本身保持 `appearance:auto`、零 border／outline；320–430px 無 clipping 或雙框
-- 自帶 `public/fonts/zibai-serif-medium.woff2`（Noto Serif CJK TC Medium 2.003 的 374-glyph 子集，59 KB）與 OFL；preload、PWA precache、單檔 data URI 均完成
+- 自帶 `public/fonts/zibai-serif-medium.woff2`（Noto Serif CJK TC Medium 2.003；860 個 UI 字元／861 glyph，約 221 KB）與 OFL；preload、PWA precache、單檔 data URI 均完成
+- `scripts/build-font-subset.py` 掃描 `src/**/*.ts(x)`、`index.html` 與其他直接顯示的靜態文字後重建子集；來源 OTF checksum、產物 coverage 與 glyph inventory 均可重跑檢查
 - TopBar 兩個 emoji 改成 `currentColor`、1.5px stroke inline SVG
 - LevelSegment 保留 tablist／tab／aria-selected，只移除外框、divider 與 active 色塊，改為 22×2px 朱砂底線
 - 主畫面只留 DateTimeContext 的一個「今」；主頁不常駐顯示 UTC+8，TimePicker／Settings 仍明示 UTC+8
@@ -198,11 +199,11 @@ tests/fixtures/chart-snapshot.json
 
 ```text
 test files  24 passed
-tests       171 passed
+tests       172 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（252.82 KiB）success
-single file 玄空紫白.html（約 264 KB；font data URI）success
+PWA precache 11 entries（415.05 KiB）success
+single file 玄空紫白.html（約 480 KB；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -220,7 +221,9 @@ single file 玄空紫白.html（約 264 KB；font data URI）success
 - 日期 Sheet apply、Esc、focus return
 - 320 / 375 / 390 / 430 native date/time shell 無 clipping；兩個 input 都維持 `appearance:auto`
 - date/time focus：shell 1px border + 2px outline；input 0 border + no outline
-- 品牌字體 `document.fonts.check()` 命中；TopBar 兩個 SVG 均為 1.5px stroke
+- 品牌字體 `document.fonts.check()` 對「雙星參考／回到今／全部六組」等新增字串命中；production font 與 public font SHA-256 均為 `ae32ca6c89e7a62acdb7a325cfe52c23487235c5ea84207f087854524ffd3c8f`
+- 日期時間列在 320／375／390／430px 均無 overflow；右側「今／回到今」維持 64px 並以 baseline 對齊，左側日期位置不因文案長度跳動
+- TopBar 兩個 SVG 均為 1.5px stroke
 - 主頁一個「今」、無常駐 UTC+8；TimePicker／Settings 仍顯示 UTC+8
 - LevelSegment tab 語意、完整鍵盤操作、八刻 8-item Sheet 與 contextual CTA 流程正常
 - Settings Sheet 80dvh + 內部 scroll

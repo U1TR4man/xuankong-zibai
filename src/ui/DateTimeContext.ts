@@ -30,7 +30,8 @@ export function DateTimeContext(state: AppState): HTMLElement {
       el('span', { class: 'date-context__meta' }, `${term.name}後`),
     ),
     current
-      ? el('span', { class: 'badge badge--now', 'aria-label': '現在' }, '今')
+      ? el('span', { class: 'date-context__now', 'aria-label': '現在' },
+        el('span', { class: 'badge badge--now' }, '今'))
       : el('button', {
         class: 'date-context__now', type: 'button',
         onclick: returnToNow,

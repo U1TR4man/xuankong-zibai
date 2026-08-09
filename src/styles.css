@@ -408,7 +408,7 @@ button, select, input { font: inherit; color: inherit; }
 .date-context {
   min-height: 56px;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   gap: var(--s3);
   padding: var(--s2) 0;
@@ -442,14 +442,23 @@ button, select, input { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 .date-context__now {
-  flex: 0 0 auto;
+  flex: 0 0 64px;
+  min-width: 64px;
   min-height: var(--tap);
-  padding: var(--s1) var(--s2);
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  padding: 0;
   border: none;
   background: transparent;
   color: var(--cinnabar);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
   cursor: pointer;
 }
+.date-context__now .badge--now { vertical-align: 0; }
 
 /* ---------- 層級：無外框，以短底線表示 active ---------- */
 .level-segment {

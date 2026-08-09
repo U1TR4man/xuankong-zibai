@@ -36,7 +36,7 @@ describe('Phase 6 polish', () => {
   });
 
   it('主畫面只顯示一個「今」，且 UTC+8 留在設定／選時脈絡', () => {
-    expect(document.querySelectorAll('.date-context > .badge--now')).toHaveLength(1);
+    expect(document.querySelectorAll('.date-context__now .badge--now')).toHaveLength(1);
     expect($('.card__head .badge--now')).toBeNull();
     expect($('.date-context__meta')?.textContent).not.toContain('UTC+8');
     expect($('#app')?.textContent).not.toContain('UTC+8');
