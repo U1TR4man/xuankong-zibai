@@ -42,7 +42,10 @@ function resultFor(chart: FullChart, level: Level): StarResult {
 
 function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLElement {
   const directionEvaluations = state.selectionMode
-    ? evaluateDirections(chart, state.selectionPurpose)
+    ? evaluateDirections(chart, state.selectionPurpose, {
+      dayChangeMode: state.settings.dayChangeMode,
+      yearBoundary: state.settings.yearBoundary,
+    })
     : undefined;
   const card = el('section', {
     class: 'card', id: 'current-chart', role: 'tabpanel',

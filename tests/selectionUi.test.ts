@@ -89,14 +89,25 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($<HTMLDialogElement>('dialog.sheet-dialog--direction')?.open).toBe(true);
     expect($('.sheet__title')?.textContent).toBe('巽 · 東南');
     expect(document.querySelectorAll('.direction-detail__star')).toHaveLength(4);
-    expect($('.direction-detail__verdict')?.textContent).toBe('可用');
+    expect($('.direction-detail__verdict')?.textContent).toBe('慎用');
+    expect($('.direction-primary-conditions')?.textContent).toContain('時氣與白中殺');
+    expect($('.direction-primary-conditions')?.textContent).toContain('白中殺');
+    const conditionOrder = $('.direction-primary-conditions')?.compareDocumentPosition(
+      $('.direction-primary-reference')!,
+    ) ?? 0;
+    expect(conditionOrder & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect($('.direction-primary-reference')?.textContent).toContain('主要參考');
+    expect($('[data-selection-palace="xun"] .selection-cell__condition')?.textContent)
+      .toContain('鬥牛');
     const disclosures = Array.from(document.querySelectorAll<HTMLDetailsElement>('.direction-disclosure'));
     expect(disclosures).toHaveLength(4);
     expect(disclosures.every((item) => !item.open)).toBe(true);
     expect(disclosures.map((item) => item.querySelector('summary')?.textContent))
       .toEqual(['為甚麼', '全部六組', '五行關係', '研究說明']);
     expect($('.direction-temporal')?.textContent).toContain('三時紫白集中');
+    expect(document.querySelectorAll('.direction-condition-list li')).toHaveLength(4);
+    expect($('.direction-branch-conditions')?.textContent).toContain('有氣、墓絕與月令');
+    expect($('.direction-killers')?.textContent).toContain('鬥牛殺');
     expect(document.querySelectorAll('.direction-pairs .direction-pair')).toHaveLength(6);
     expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('主要參考');
     expect($('.direction-reasons')?.textContent?.length).toBeGreaterThan(0);
@@ -107,7 +118,9 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-research')?.textContent)
       .toContain('雙星組合僅供研究參考，不參與方向排序。');
     expect($('.direction-research')?.textContent)
-      .toContain('有氣、墓絕及白中殺目前尚未納入判定。');
+      .toContain('白中殺依星與固定宮位判定');
+    expect($('.direction-research')?.textContent)
+      .toContain('刑宮、害宮、四空亡、納音及固定數值權重尚未納入');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('TOOL_HEURISTIC');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('unknown');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('rankingWeight');

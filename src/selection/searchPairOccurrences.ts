@@ -6,6 +6,7 @@ import { buildDirectionSnapshots } from './buildDirectionSnapshots';
 import { buildPairHits } from './buildPairHits';
 import { evaluateDirection } from './evaluateDirection';
 import { PURPOSE_OPTIONS } from './purpose';
+import { buildTemporalBranchContext } from './temporalRules';
 import {
   PAIR_LAYERS, type DirectionSnapshot, type PairHit, type PairLayer, type SelectionPurpose,
 } from './types';
@@ -70,8 +71,11 @@ export function searchPairOccurrences(
     query.startDate, query.endDate, 'hour', options.keStrategyId,
   )) {
     const chart = computeFullChart(candidate.start, options);
+    const temporalContext = buildTemporalBranchContext(candidate.start, options);
     for (const snapshot of buildDirectionSnapshots(chart)) {
-      const evaluation = query.purpose ? evaluateDirection(snapshot, query.purpose) : undefined;
+      const evaluation = query.purpose
+        ? evaluateDirection(snapshot, temporalContext, query.purpose)
+        : undefined;
       const hits = evaluation?.hits ?? buildPairHits(snapshot);
       for (const hit of hits) {
         const purposeMatch = evaluation?.purposeHits.includes(hit) ?? false;

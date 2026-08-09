@@ -1,4 +1,5 @@
 import type { PalaceKey } from '../engine/flyingStar/types';
+import type { Branch } from '../engine/time/ganzhi';
 import type { StarNumber } from '../overlay/types';
 
 export type DirectionCode = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
@@ -64,27 +65,47 @@ export interface DirectionSnapshot {
 export type PurpleWhiteCount = 0 | 1 | 2 | 3 | 4;
 export type PurpleWhiteSignal =
   | 'none' | 'single_arrival' | 'two_coarrival' | 'three_concentration' | 'four_coarrival';
-export type StarQiState = 'unknown' | 'has_qi' | 'lacks_qi';
-export type StarPhaseState = 'unknown' | 'prosperous' | 'resting' | 'imprisoned' | 'dead';
-export type TombState = 'unknown' | 'in_tomb' | 'not_in_tomb';
-export type AbsoluteState = 'unknown' | 'absolute' | 'not_absolute';
+export type BranchQiState = 'active' | 'inactive' | 'unknown';
+export type SeasonalState = 'command' | 'support' | 'rest' | 'imprisoned' | 'controlled';
+export type TemporalEvidenceLevel = 'A' | 'B';
 export type WhiteKiller =
   | 'ru_mu' | 'an_jian' | 'shou_ke' | 'chuan_xin' | 'jiao_jian'
   | 'dou_niu' | 'xing_gong' | 'hai_gong' | 'kong_wang';
+export type PalaceKiller = Extract<
+  WhiteKiller,
+  'an_jian' | 'shou_ke' | 'chuan_xin' | 'jiao_jian' | 'dou_niu'
+>;
 
-export interface TemporalStarState {
+export interface TemporalStarAssessment {
   level: DirectionLevel;
   star: StarNumber;
-  qi: StarQiState;
-  phase: StarPhaseState;
-  tomb: TombState;
-  absolute: AbsoluteState;
+  palace: PalaceKey;
+  periodBranch: Branch;
+  isPurpleWhite: boolean;
+  palaceKillers: PalaceKiller[];
+  temporalState: {
+    liuJieTomb: boolean;
+    absolute: boolean;
+    branchQi: BranchQiState;
+    qiEvidence: TemporalEvidenceLevel;
+  };
+  seasonalState: SeasonalState;
 }
 
 export interface WhiteKillerAssessment {
-  status: 'unknown' | 'clear' | 'present';
-  killers: WhiteKiller[];
+  status: 'clear' | 'present';
+  hits: {
+    level: DirectionLevel;
+    star: StarNumber;
+    killers: PalaceKiller[];
+  }[];
   note: string;
+}
+
+export interface TemporalBranchContext {
+  branches: Record<DirectionLevel, Branch>;
+  evidence: Record<DirectionLevel, TemporalEvidenceLevel>;
+  monthSeason: 'spring' | 'summer' | 'autumn' | 'winter' | 'earth_transition';
 }
 
 export interface DirectionTemporalProfile {
@@ -92,8 +113,10 @@ export interface DirectionTemporalProfile {
   purpleWhiteHits: DirectionLevel[];
   purpleWhiteCount: PurpleWhiteCount;
   purpleWhiteSignal: PurpleWhiteSignal;
-  starStates: TemporalStarState[];
+  starStates: TemporalStarAssessment[];
   whiteKillerAssessment: WhiteKillerAssessment;
+  yellowBlackLayers: DirectionLevel[];
+  yellowBlackThriving: boolean;
 }
 
 export interface PairEvidenceCondition {

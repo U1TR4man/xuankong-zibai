@@ -1,8 +1,9 @@
 import { starName } from '../engine/flyingStar/types';
 import { purposeLabel } from '../selection/purpose';
-import { PURPLE_WHITE_SIGNAL_LABEL } from '../selection/researchEvidence';
+import { PURPLE_WHITE_SIGNAL_LABEL, WHITE_KILLER_LABEL } from '../selection/researchEvidence';
 import {
-  VERDICT_LABEL, type DirectionEvaluation, type DirectionLevel, type PairHit, type SourceGrade,
+  VERDICT_LABEL, type BranchQiState, type DirectionEvaluation, type DirectionLevel,
+  type PairHit, type SeasonalState, type SourceGrade, type TemporalStarAssessment,
 } from '../selection/types';
 import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
@@ -14,6 +15,12 @@ const SOURCE_LABEL: Record<SourceGrade, string> = {
 };
 const LEVEL_LABEL: Record<DirectionLevel, string> = {
   year: '年', month: '月', day: '日', hour: '時',
+};
+const SEASONAL_LABEL: Record<SeasonalState, string> = {
+  command: '得令', support: '得生', rest: '休', imprisoned: '囚', controlled: '受制',
+};
+const QI_LABEL: Record<BranchQiState, string> = {
+  active: '支序有氣', inactive: '支序未列有氣', unknown: '支序有氣未建表',
 };
 
 function starItem(label: string, value: number): HTMLElement {
@@ -50,6 +57,52 @@ function disclosure(title: string, ...content: HTMLElement[]): HTMLElement {
   return el('details', { class: 'direction-disclosure' },
     el('summary', {}, title),
     el('div', { class: 'direction-disclosure__body' }, ...content));
+}
+
+function layerName(state: TemporalStarAssessment): string {
+  return `${LEVEL_LABEL[state.level]}${starName(state.star)}`;
+}
+
+function temporalConditions(evaluation: DirectionEvaluation): HTMLElement {
+  return el('ul', { class: 'direction-condition-list' },
+    ...evaluation.temporalProfile.starStates.map((state) => {
+      const conditions = [
+        `${state.periodBranch}支`,
+        QI_LABEL[state.temporalState.branchQi],
+        state.temporalState.liuJieTomb ? '入墓' : '',
+        state.temporalState.absolute ? '臨絕' : '',
+        `月令${SEASONAL_LABEL[state.seasonalState]}`,
+      ].filter(Boolean);
+      return el('li', {},
+        el('strong', {}, layerName(state)),
+        el('span', {}, conditions.join(' · ')),
+        el('small', {}, `時層套用 ${state.temporalState.qiEvidence} 級`));
+    }));
+}
+
+function killerConditions(evaluation: DirectionEvaluation): HTMLElement {
+  const hits = evaluation.temporalProfile.whiteKillerAssessment.hits;
+  if (hits.length === 0) {
+    return el('p', { class: 'direction-condition-empty' }, '本方四層未命中白中殺定局');
+  }
+  return el('ul', { class: 'direction-killer-list' },
+    ...hits.map((hit) => el('li', {},
+      el('strong', {}, `${LEVEL_LABEL[hit.level]}${starName(hit.star)}`),
+      el('span', {}, hit.killers.map((killer) => WHITE_KILLER_LABEL[killer]).join('、')))));
+}
+
+function conditionSummary(evaluation: DirectionEvaluation): string {
+  const states = evaluation.temporalProfile.starStates;
+  const active = states.filter((state) => state.temporalState.branchQi === 'active').length;
+  const tomb = states.filter((state) => state.temporalState.liuJieTomb).length;
+  const absolute = states.filter((state) => state.temporalState.absolute).length;
+  const killers = evaluation.temporalProfile.whiteKillerAssessment.hits.length;
+  return [
+    `白中殺 ${killers > 0 ? `${killers} 層` : '未命中'}`,
+    `支序有氣 ${active} 層`,
+    tomb > 0 ? `入墓 ${tomb} 層` : '',
+    absolute > 0 ? `臨絕 ${absolute} 層` : '',
+  ].filter(Boolean).join(' · ');
 }
 
 export function openDirectionDetailSheet(
@@ -95,6 +148,9 @@ export function openDirectionDetailSheet(
         ? el('p', { class: 'direction-detail__purpose' },
           `雙星用途參考：${purposeLabel(evaluation.purpose)} · 命中 ${evaluation.purposeHits.length} 組`)
         : null,
+      el('section', { class: 'direction-section direction-primary-conditions' },
+        el('h3', {}, '時氣與白中殺'),
+        el('p', {}, conditionSummary(evaluation))),
       el('section', { class: 'direction-section direction-primary-reference' },
         el('h3', {}, '主要參考'), main),
       el('div', { class: 'direction-disclosures' },
@@ -105,13 +161,21 @@ export function openDirectionDetailSheet(
               `${evaluation.purpleWhiteCount}/4 · ${PURPLE_WHITE_SIGNAL_LABEL[evaluation.purpleWhiteSignal]}`),
             el('p', {}, purpleWhiteLayers.length > 0
               ? `命中層：${purpleWhiteLayers.join('、')}` : '命中層：無')),
+          el('section', { class: 'direction-section direction-branch-conditions' },
+            el('h3', {}, '有氣、墓絕與月令'),
+            temporalConditions(evaluation)),
+          el('section', { class: 'direction-section direction-killers' },
+            el('h3', {}, '白中殺'),
+            killerConditions(evaluation)),
           reasons),
         disclosure('全部六組', pairList),
         disclosure('五行關係', elementList),
         disclosure('研究說明',
           el('div', { class: 'direction-research' },
             el('p', {}, '雙星組合僅供研究參考，不參與方向排序。'),
-            el('p', {}, '有氣、墓絕及白中殺目前尚未納入判定。'))),
+            el('p', {}, '白中殺依星與固定宮位判定；入墓、臨絕與支序有氣依各層地支判定。'),
+            el('p', {}, '月令狀態只作條件顯示；刑宮、害宮、四空亡、納音及固定數值權重尚未納入。'),
+            el('p', {}, '目前判定名稱屬工具分級，不是古籍原有等級。'))),
       ),
     ),
   });

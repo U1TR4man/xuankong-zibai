@@ -1,4 +1,5 @@
 import type { StarNumber } from '../overlay/types';
+import type { Branch } from '../engine/time/ganzhi';
 import type {
   EvidenceVerificationStatus, PurpleWhiteSignal, UseContext, WhiteKiller,
 } from './types';
@@ -17,26 +18,26 @@ export interface StarQiReference {
   star: StarNumber;
   element: '木' | '火' | '土' | '金' | '水';
   qiElements: readonly ('木' | '火' | '土' | '金' | '水')[];
-  tombBranch: string;
-  absoluteBranch: string;
-  directQiBranches?: readonly string[];
+  tombBranch: Branch;
+  absoluteBranch: Branch;
+  directQiBranches?: readonly Branch[];
   auditNote: string;
 }
 
 /**
- * 第二輪考源整理出的研究參考表。這些欄位尚未決定要套年／月／日／時的哪一套
- * 干支或節令，因此只供 schema 與學習顯示，不能直接產生 ranking。
+ * 第二、第三輪考源整理出的研究參考表。支序有氣、墓與絕可依第三輪規則
+ * 套入各層地支；五行支持型有氣仍未決定 periodElement，不能自行加權。
  */
 export const STAR_QI_REFERENCE: Readonly<Record<StarNumber, StarQiReference>> = {
-  1: { star: 1, element: '水', qiElements: ['金', '水'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序說已整理；套用時間層的方法待考。' },
-  2: { star: 2, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', auditNote: '五行框架已整理；套用時間層的方法待考。' },
-  3: { star: 3, element: '木', qiElements: ['水', '木'], tombBranch: '未', absoluteBranch: '申', auditNote: '五行框架已整理；套用時間層的方法待考。' },
-  4: { star: 4, element: '木', qiElements: ['水', '木'], tombBranch: '未', absoluteBranch: '申', auditNote: '五行框架已整理；套用時間層的方法待考。' },
-  5: { star: 5, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', auditNote: '五行框架已整理；套用時間層的方法待考。' },
-  6: { star: 6, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', directQiBranches: ['巳', '午', '未', '申', '酉'], auditNote: '支序說已整理；套用時間層的方法待考。' },
-  7: { star: 7, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', auditNote: '五行框架已整理；套用時間層的方法待考。' },
-  8: { star: 8, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序說已整理；套用時間層的方法待考。' },
-  9: { star: 9, element: '火', qiElements: ['木', '火'], tombBranch: '戌', absoluteBranch: '亥', directQiBranches: ['寅', '卯', '辰', '巳', '午'], auditNote: '轉錄有「辰入墓」衝突；本表依第二輪考源暫存戌墓，仍待原頁核對。' },
+  1: { star: 1, element: '水', qiElements: ['金', '水'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣可套年／月／日／時地支；證據級別依次 A／A／B／B。' },
+  2: { star: 2, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  3: { star: 3, element: '木', qiElements: ['水', '木'], tombBranch: '未', absoluteBranch: '申', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  4: { star: 4, element: '木', qiElements: ['水', '木'], tombBranch: '未', absoluteBranch: '申', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  5: { star: 5, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  6: { star: 6, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', directQiBranches: ['巳', '午', '未', '申', '酉'], auditNote: '支序有氣可套年／月／日／時地支；證據級別依次 A／A／B／B。' },
+  7: { star: 7, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  8: { star: 8, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣可套年／月／日／時地支；證據級別依次 A／A／B／B。' },
+  9: { star: 9, element: '火', qiElements: ['木', '火'], tombBranch: '戌', absoluteBranch: '亥', directQiBranches: ['寅', '卯', '辰', '巳', '午'], auditNote: '第三輪採戌墓並套各層地支；早期「辰入墓」轉錄衝突仍待原頁核對。' },
 };
 
 export const WHITE_KILLER_LABEL: Record<WhiteKiller, string> = {
@@ -76,13 +77,14 @@ export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
   },
   {
     id: 'qi_tomb_killers',
-    summary: '紫白須論有氣、墓絕與白中有殺，不能把一六八九永久寫成固定吉星。',
+    summary: '紫白須論支序有氣、墓絕與白中有殺；第三輪已定星宮與星支公式，但原頁仍待逐條覆核。',
     useContexts: ['selection_coarrival'],
     verificationStatus: 'awaiting_scan',
     primarySourceVerified: false,
     witnesses: [
-      { source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '第二輪考源摘要；表格仍需人工核影印頁。' },
-      { source: '《選擇紀要》上編〈時家三元紫白〉、〈論紫白〉', note: '支序與墓絕摘要已存，但套用時間層的方法未定。' },
+      { source: '《類編曆法通書大全》及《三才圖會》時令卷相關材料', note: '第三輪據研究整理星宮定局；未附原頁影像與頁碼。' },
+      { source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '第三輪據研究整理季節、墓絕與白中殺；仍需人工核影印頁。' },
+      { source: '《五要奇書》及《三元選擇歌》相關材料', note: '支持年月日時、紫白同加、有氣與墓絕的選擇框架；待核版本原頁。' },
     ],
   },
   {

@@ -8,12 +8,23 @@ import {
 } from '../src/selection/evaluateDirection';
 import { getPairRule, PURPLE_WHITE_PAIR_RULES } from '../src/selection/pairRules';
 import { SELECTION_METHOD_EVIDENCE, STAR_QI_REFERENCE } from '../src/selection/researchEvidence';
-import type { DirectionSnapshot } from '../src/selection/types';
+import {
+  assessPalaceKillers, assessTemporalStar, buildTemporalBranchContext, seasonalStateFor,
+} from '../src/selection/temporalRules';
+import type { StarNumber } from '../src/overlay/types';
+import type {
+  DirectionSnapshot, PalaceKiller, TemporalBranchContext,
+} from '../src/selection/types';
 
 const AT = fromUtc8(2026, 8, 7, 11, 38);
 const EXAMPLE: DirectionSnapshot = {
   direction: 'SE', palace: 'xun', palaceNumber: 4, name: '巽', bearing: '東南', row: 0, col: 0,
   yearStar: 1, monthStar: 4, dayStar: 8, hourStar: 6,
+};
+const CONTEXT: TemporalBranchContext = {
+  branches: { year: '申', month: '酉', day: '午', hour: '子' },
+  evidence: { year: 'A', month: 'A', day: 'B', hour: 'B' },
+  monthSeason: 'autumn',
 };
 
 describe('紫白擇吉 Phase 1 資料與判讀層', () => {
@@ -69,7 +80,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(getPairRule('36').sourceAudit.directionality).toBe('unknown');
   });
 
-  it('有氣／墓絕表與死退異文只作研究資料，不產生自動判定', () => {
+  it('有氣／墓絕表與死退異文保留研究邊界', () => {
     expect(STAR_QI_REFERENCE[1]).toMatchObject({
       qiElements: ['金', '水'], tombBranch: '辰', absoluteBranch: '巳',
     });
@@ -83,6 +94,83 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(variant.variants?.map((item) => item.reading)).toEqual([
       '死退雙臨始佳', '死退雙臨不利',
     ]);
+  });
+
+  it('白中殺以星乘固定宮位公式化，且同層可重疊', () => {
+    expect(assessPalaceKillers(1, 'kan')).toEqual(['an_jian']);
+    expect(assessPalaceKillers(6, 'li')).toEqual(['shou_ke']);
+    expect(assessPalaceKillers(6, 'xun')).toEqual(['chuan_xin', 'dou_niu']);
+    expect(assessPalaceKillers(6, 'dui')).toEqual(['jiao_jian']);
+    expect(assessPalaceKillers(7, 'qian')).toEqual(['jiao_jian']);
+    expect(assessPalaceKillers(8, 'zhen')).toEqual(['shou_ke', 'dou_niu']);
+    expect(assessPalaceKillers(9, 'kan')).toEqual(['shou_ke', 'chuan_xin']);
+    expect(assessPalaceKillers(5, 'center')).toEqual(['an_jian']);
+    expect(assessPalaceKillers(5, 'li')).toEqual([]);
+  });
+
+  it('白中殺五類完整矩陣逐星鎖定，沒有把本宮金星重複算成交劍', () => {
+    const stars = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
+    const palaces = ['kan', 'kun', 'zhen', 'xun', 'center', 'qian', 'dui', 'gen', 'li'] as const;
+    const native = ['kan', 'kun', 'zhen', 'xun', 'center', 'qian', 'dui', 'gen', 'li'];
+    const controlled = [
+      ['kun', 'center', 'gen'], ['zhen', 'xun'], ['qian', 'dui'], ['qian', 'dui'],
+      ['zhen', 'xun'], ['li'], ['li'], ['zhen', 'xun'], ['kan'],
+    ];
+    const opposite = [['li'], ['gen'], ['dui'], ['qian'], [], ['xun'], ['zhen'], ['kun'], ['kan']];
+    for (const [index, star] of stars.entries()) {
+      const matching = (killer: PalaceKiller) => (
+        palaces.filter((palace) => assessPalaceKillers(star, palace).includes(killer))
+      );
+      expect(matching('an_jian')).toEqual([native[index]]);
+      expect(matching('shou_ke')).toEqual(controlled[index]);
+      expect(matching('chuan_xin')).toEqual(opposite[index]);
+      expect(matching('jiao_jian')).toEqual(star === 6 ? ['dui'] : star === 7 ? ['qian'] : []);
+      expect(matching('dou_niu')).toEqual([2, 5, 6, 7, 8].includes(star) ? ['zhen', 'xun'] : []);
+    }
+  });
+
+  it('六捷墓、臨絕與支序有氣逐層分開，未有直接表的星保持未知', () => {
+    const tomb = assessTemporalStar('year', 1, 'dui', {
+      ...CONTEXT, branches: { ...CONTEXT.branches, year: '辰' },
+    });
+    const absolute = assessTemporalStar('month', 6, 'dui', {
+      ...CONTEXT, branches: { ...CONTEXT.branches, month: '寅' },
+    });
+    const active = assessTemporalStar('day', 9, 'dui', CONTEXT);
+    const unknown = assessTemporalStar('hour', 2, 'dui', CONTEXT);
+    expect(tomb.temporalState).toMatchObject({
+      liuJieTomb: true, absolute: false, branchQi: 'inactive', qiEvidence: 'A',
+    });
+    expect(absolute.temporalState).toMatchObject({
+      liuJieTomb: false, absolute: true, branchQi: 'inactive', qiEvidence: 'A',
+    });
+    expect(active.temporalState.branchQi).toBe('active');
+    expect(active.temporalState.qiEvidence).toBe('B');
+    expect(unknown.temporalState.branchQi).toBe('unknown');
+    expect([1, 2, 3, 4, 5, 6, 7, 8, 9].map((star) => STAR_QI_REFERENCE[star as StarNumber].tombBranch))
+      .toEqual(['辰', '辰', '未', '未', '辰', '丑', '丑', '辰', '戌']);
+    expect([1, 2, 3, 4, 5, 6, 7, 8, 9].map((star) => STAR_QI_REFERENCE[star as StarNumber].absoluteBranch))
+      .toEqual(['巳', '巳', '申', '申', '巳', '寅', '寅', '巳', '亥']);
+    expect(STAR_QI_REFERENCE[1].directQiBranches).toEqual(['申', '酉', '戌', '亥', '子']);
+    expect(STAR_QI_REFERENCE[6].directQiBranches).toEqual(['巳', '午', '未', '申', '酉']);
+    expect(STAR_QI_REFERENCE[8].directQiBranches).toEqual(['申', '酉', '戌', '亥', '子']);
+    expect(STAR_QI_REFERENCE[9].directQiBranches).toEqual(['寅', '卯', '辰', '巳', '午']);
+  });
+
+  it('月令旺相休囚按九星五行保存，但不建立固定數值權重', () => {
+    expect(seasonalStateFor(1, 'winter')).toBe('command');
+    expect(seasonalStateFor(4, 'winter')).toBe('support');
+    expect(seasonalStateFor(6, 'winter')).toBe('rest');
+    expect(seasonalStateFor(8, 'winter')).toBe('imprisoned');
+    expect(seasonalStateFor(9, 'winter')).toBe('controlled');
+  });
+
+  it('四層地支沿用正式年界、節氣月、換日與時辰 API', () => {
+    expect(buildTemporalBranchContext(AT)).toEqual({
+      branches: { year: '午', month: '未', day: '丑', hour: '午' },
+      evidence: { year: 'A', month: 'A', day: 'B', hour: 'B' },
+      monthSeason: 'earth_transition',
+    });
   });
 
   it('研究摘要入庫但不猜吉凶、不假裝已校對', () => {
@@ -128,16 +216,17 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(hits.map((hit) => hit.pair)).toEqual(['14', '18', '16', '48', '46', '86']);
   });
 
-  it('heuristic 只使用紫白集中，雙星參考不產生數值分數', () => {
-    const evaluation = evaluateDirection(EXAMPLE, 'writing');
-    expect(evaluation.verdict).toBe('usable');
+  it('方向判定加入白中殺與時間狀態，雙星參考仍不產生數值分數', () => {
+    const evaluation = evaluateDirection(EXAMPLE, CONTEXT, 'writing');
+    expect(evaluation.verdict).toBe('caution');
     expect(evaluation.purpleWhiteStars).toEqual([1, 8, 6]);
     expect(evaluation.purpleWhiteHits).toEqual(['year', 'day', 'hour']);
     expect(evaluation.purpleWhiteSignal).toBe('three_concentration');
-    expect(evaluation.temporalProfile.starStates.every((state) => (
-      state.qi === 'unknown' && state.tomb === 'unknown' && state.absolute === 'unknown'
-    ))).toBe(true);
-    expect(evaluation.temporalProfile.whiteKillerAssessment.status).toBe('unknown');
+    expect(evaluation.temporalProfile.starStates.map((state) => state.periodBranch))
+      .toEqual(['申', '酉', '午', '子']);
+    expect(evaluation.temporalProfile.whiteKillerAssessment.status).toBe('present');
+    expect(evaluation.temporalProfile.whiteKillerAssessment.hits.find((hit) => hit.level === 'day'))
+      .toMatchObject({ star: 8, killers: ['shou_ke', 'dou_niu'] });
     expect(evaluation.favorableHits).toEqual([]);
     expect(evaluation.cautionHits).toEqual([]);
     expect(evaluation.purposeHits.map((hit) => hit.pair)).toContain('14');
@@ -145,25 +234,49 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation).not.toHaveProperty('score');
   });
 
+  it('四級判定按有氣、殺、墓絕及黃黑值令決定，無紫白保留普通 fallback', () => {
+    const safe = { ...EXAMPLE, palace: 'dui' as const, palaceNumber: 7 };
+    expect(evaluateDirection({
+      ...safe, yearStar: 1, monthStar: 8, dayStar: 9, hourStar: 2,
+    }, CONTEXT).verdict).toBe('priority');
+    expect(evaluateDirection({
+      ...safe, yearStar: 1, monthStar: 8, dayStar: 9, hourStar: 6,
+    }, CONTEXT).verdict).toBe('mixed');
+    expect(evaluateDirection({
+      ...safe, yearStar: 1, monthStar: 8, dayStar: 9, hourStar: 2,
+    }, { ...CONTEXT, branches: { ...CONTEXT.branches, year: '巳' } }).verdict)
+      .toBe('caution');
+    expect(evaluateDirection({
+      ...safe, yearStar: 2, monthStar: 5, dayStar: 1, hourStar: 8,
+    }, { ...CONTEXT, monthSeason: 'earth_transition' }).verdict).toBe('caution');
+    expect(evaluateDirection({
+      ...safe, palace: 'gen', palaceNumber: 8,
+      yearStar: 2, monthStar: 3, dayStar: 4, hourStar: 7,
+    }, CONTEXT).verdict).toBe('ordinary');
+  });
+
   it('0–4 顆紫白各有明確訊號，三時名稱明示為工具分級', () => {
     expect([0, 1, 2, 3, 4].map((count) => purpleWhiteSignalFor(count as 0 | 1 | 2 | 3 | 4)))
       .toEqual(['none', 'single_arrival', 'two_coarrival', 'three_concentration', 'four_coarrival']);
     expect(evaluateDirection({
       ...EXAMPLE, yearStar: 1, monthStar: 6, dayStar: 8, hourStar: 9,
-    }).reasons[0]).toBe('四時紫白同到：4/4');
+    }, CONTEXT).reasons[0]).toBe('四時紫白同到：4/4');
     expect(evaluateDirection({
       ...EXAMPLE, yearStar: 2, monthStar: 3, dayStar: 4, hourStar: 5,
-    }).reasons[0]).toBe('無紫白集中：0/4');
+    }, CONTEXT).reasons[0]).toBe('無紫白集中：0/4');
   });
 
-  it('二五交加保留參考文字，但不直接改變擇吉 verdict', () => {
+  it('二五交加 pair 文字仍不評分；只有另立的黃黑值令條件可觸發警示', () => {
     const evaluation = evaluateDirection({
-      ...EXAMPLE, yearStar: 2, monthStar: 5, dayStar: 1, hourStar: 4,
-    });
+      ...EXAMPLE, palace: 'li', palaceNumber: 9,
+      yearStar: 2, monthStar: 5, dayStar: 1, hourStar: 4,
+    }, CONTEXT);
     expect(evaluation.hits.find((hit) => hit.pair === '25')?.rule.shortMeaning)
       .toContain('二五交加');
     expect(evaluation.cautionHits).toEqual([]);
-    expect(evaluation.verdict).toBe('ordinary');
+    expect(evaluation.temporalProfile.yellowBlackLayers).toEqual(['year', 'month']);
+    expect(evaluation.temporalProfile.yellowBlackThriving).toBe(false);
+    expect(evaluation.verdict).toBe('usable');
   });
 
   it('方向排序不受 pair 用途改變，且不暴露假分數', () => {

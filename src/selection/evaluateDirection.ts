@@ -1,11 +1,13 @@
-import type { FullChart } from '../engine/flyingStar';
+import type { EngineOptions, FullChart } from '../engine/flyingStar';
 import { buildDirectionSnapshots } from './buildDirectionSnapshots';
 import { buildPairHits } from './buildPairHits';
 import { purposeHits } from './purpose';
 import { PURPLE_WHITE_SIGNAL_LABEL, PURPLE_WHITE_STARS } from './researchEvidence';
+import { assessTemporalStar, buildTemporalBranchContext } from './temporalRules';
 import type {
   DirectionEvaluation, DirectionLevel, DirectionSnapshot, DirectionTemporalProfile,
   DirectionVerdict, PairHit, PurpleWhiteCount, PurpleWhiteSignal, SelectionPurpose, SourceLevel,
+  TemporalBranchContext,
 } from './types';
 
 const SOURCE_RANK: Record<SourceLevel, number> = { A: 3, B: 2, C: 1 };
@@ -27,10 +29,6 @@ function highestSource(hits: readonly PairHit[]): SourceLevel {
   ), 'C');
 }
 
-function verdictFor(purpleWhiteCount: number): DirectionVerdict {
-  return purpleWhiteCount >= 2 ? 'usable' : 'ordinary';
-}
-
 export function purpleWhiteSignalFor(count: PurpleWhiteCount): PurpleWhiteSignal {
   if (count === 0) return 'none';
   if (count === 1) return 'single_arrival';
@@ -39,7 +37,10 @@ export function purpleWhiteSignalFor(count: PurpleWhiteCount): PurpleWhiteSignal
   return 'four_coarrival';
 }
 
-function temporalProfile(snapshot: DirectionSnapshot): DirectionTemporalProfile {
+export function buildDirectionTemporalProfile(
+  snapshot: DirectionSnapshot,
+  context: TemporalBranchContext,
+): DirectionTemporalProfile {
   const layerStars: readonly { level: DirectionLevel; star: DirectionSnapshot[`${DirectionLevel}Star`] }[] = [
     { level: 'year', star: snapshot.yearStar },
     { level: 'month', star: snapshot.monthStar },
@@ -50,24 +51,67 @@ function temporalProfile(snapshot: DirectionSnapshot): DirectionTemporalProfile 
     .filter(({ star }) => PURPLE_WHITE_STARS.has(star))
     .map(({ level }) => level);
   const purpleWhiteCount = purpleWhiteHits.length as PurpleWhiteCount;
+  const starStates = layerStars.map(({ level, star }) => (
+    assessTemporalStar(level, star, snapshot.palace, context)
+  ));
+  const killerHits = starStates
+    .filter((state) => state.palaceKillers.length > 0)
+    .map((state) => ({
+      level: state.level, star: state.star, killers: state.palaceKillers,
+    }));
+  const yellowBlackLayers = starStates
+    .filter((state) => state.star === 2 || state.star === 5)
+    .map((state) => state.level);
+  const hasTwo = starStates.some((state) => state.star === 2);
+  const hasFive = starStates.some((state) => state.star === 5);
   return {
     direction: snapshot.direction,
     purpleWhiteHits,
     purpleWhiteCount,
     purpleWhiteSignal: purpleWhiteSignalFor(purpleWhiteCount),
-    starStates: layerStars.map(({ level, star }) => ({
-      level, star, qi: 'unknown', phase: 'unknown', tomb: 'unknown', absolute: 'unknown',
-    })),
+    starStates,
     whiteKillerAssessment: {
-      status: 'unknown',
-      killers: [],
-      note: '白中殺原圖／表格及時間套用方法尚待核對，不以「無」代替未知。',
+      status: killerHits.length > 0 ? 'present' : 'clear',
+      hits: killerHits,
+      note: '依星與固定宮位判定；刑宮、害宮及四空亡尚未納入。',
     },
+    yellowBlackLayers,
+    yellowBlackThriving: hasTwo && hasFive
+      && starStates.filter((state) => state.star === 2 || state.star === 5)
+        .every((state) => state.seasonalState === 'command'),
   };
+}
+
+function verdictFor(profile: DirectionTemporalProfile): DirectionVerdict {
+  const purpleWhiteStates = profile.starStates.filter((state) => state.isPurpleWhite);
+  const purpleWhiteInTombOrAbsolute = purpleWhiteStates.some((state) => (
+    state.temporalState.liuJieTomb || state.temporalState.absolute
+  ));
+  const hasMultiplePalaceKillers = profile.starStates.some((state) => (
+    state.palaceKillers.length >= 2
+  ));
+  if (profile.yellowBlackThriving || hasMultiplePalaceKillers || purpleWhiteInTombOrAbsolute) {
+    return 'caution';
+  }
+
+  const hasAnyCondition = profile.starStates.some((state) => (
+    state.palaceKillers.length > 0
+    || state.temporalState.liuJieTomb
+    || state.temporalState.absolute
+  ));
+  if (profile.purpleWhiteCount >= 2 && hasAnyCondition) return 'mixed';
+
+  const hasActivePurpleWhite = purpleWhiteStates.some((state) => (
+    state.temporalState.branchQi === 'active'
+  ));
+  if (profile.purpleWhiteCount >= 2 && hasActivePurpleWhite) return 'priority';
+  if (profile.purpleWhiteCount >= 1) return 'usable';
+  return 'ordinary';
 }
 
 export function evaluateDirection(
   snapshot: DirectionSnapshot,
+  context: TemporalBranchContext,
   purpose: SelectionPurpose = 'general',
 ): DirectionEvaluation {
   const hits = buildPairHits(snapshot);
@@ -75,14 +119,26 @@ export function evaluateDirection(
   const favorableHits: PairHit[] = [];
   const cautionHits: PairHit[] = [];
   const mixedHits: PairHit[] = [];
-  const profile = temporalProfile(snapshot);
+  const profile = buildDirectionTemporalProfile(snapshot, context);
   const starsByLevel = new Map(profile.starStates.map((state) => [state.level, state.star]));
   const purpleWhiteStars = profile.purpleWhiteHits.map((level) => starsByLevel.get(level)!);
-  const verdict = verdictFor(profile.purpleWhiteCount);
+  const verdict = verdictFor(profile);
   const matchedPurpose = purposeHits(hits, purpose);
+  const activePurpleWhite = profile.starStates.filter((state) => (
+    state.isPurpleWhite && state.temporalState.branchQi === 'active'
+  ));
+  const tombCount = profile.starStates.filter((state) => state.temporalState.liuJieTomb).length;
+  const absoluteCount = profile.starStates.filter((state) => state.temporalState.absolute).length;
   const reasons = [
     `${PURPLE_WHITE_SIGNAL_LABEL[profile.purpleWhiteSignal]}：${profile.purpleWhiteCount}/4`,
-    '有氣、墓絕與白中殺尚未完成可重跑判定，不作加減分',
+    `支序有氣：${activePurpleWhite.length} 層`,
+    `白中殺：${profile.whiteKillerAssessment.hits.length > 0
+      ? `${profile.whiteKillerAssessment.hits.length} 層命中` : '未命中'}`,
+    tombCount > 0 ? `入墓：${tombCount} 層` : '',
+    absoluteCount > 0 ? `臨絕：${absoluteCount} 層` : '',
+    profile.yellowBlackLayers.length >= 2
+      ? `二黑、五黃同到${profile.yellowBlackThriving ? '且月令值旺' : ''}` : '',
+    '月令旺相休囚只作條件顯示，不換算固定分數',
     '雙星 81 組只供參考，不參與方向排序',
   ].filter(Boolean);
 
@@ -109,8 +165,10 @@ export function evaluateDirection(
 export function evaluateDirections(
   chart: FullChart,
   purpose: SelectionPurpose = 'general',
+  options: Pick<EngineOptions, 'dayChangeMode' | 'yearBoundary'> = {},
 ): DirectionEvaluation[] {
-  return buildDirectionSnapshots(chart).map((snapshot) => evaluateDirection(snapshot, purpose));
+  const context = buildTemporalBranchContext(chart.datetime, options);
+  return buildDirectionSnapshots(chart).map((snapshot) => evaluateDirection(snapshot, context, purpose));
 }
 
 export function rankDirections(evaluations: readonly DirectionEvaluation[]): DirectionEvaluation[] {
