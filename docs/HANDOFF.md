@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup、疊盤配色／尋星重複標題補丁，以及紫白擇吉方向 V1 **Phase 1–4** 均已完成。雙星 81 組考源研究版亦已入庫，並與方向 ranking 解耦。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup、疊盤配色／尋星重複標題補丁，以及紫白擇吉方向 V1 **Phase 1–4** 均已完成。雙星 81 組考源研究版亦已入庫並與方向 ranking 解耦；擇吉九宮四星橫排 UI 修正亦已完成。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -25,7 +25,7 @@
 - 擇吉 V1 四寬度 QA／文件 closeout：`79bbe64`
 - 雙星 81 組研究版／ranking 解耦 code checkpoint：`1f7510b`
 - 雙星 81 組研究邊界／QA 文件 checkpoint：`66a8d69`
-- 擇吉盤四星橫排 UI 修正：本輪待驗收／commit
+- 擇吉盤四星橫排 UI checkpoint：`a515ddc`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -37,7 +37,7 @@
 - 雙星 81 組考源研究版實作紀錄：`docs/purple-white-pair-research-v1.md`
 - 擇吉盤四星橫排修正紀錄：`docs/selection-four-stars-horizontal.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4 已完成；下一步應先 review checkpoint 與補齊可追溯古籍來源，再決定 push／deploy。
+P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4 及四星橫排修正已完成；下一步應先 review checkpoint 與補齊可追溯古籍來源，再決定後續 deploy。
 
 ---
 
@@ -192,10 +192,10 @@ tests/fixtures/chart-snapshot.json
 
 ```text
 test files  24 passed
-tests       165 passed
+tests       166 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（243.20 KiB）success
+PWA precache 11 entries（243.16 KiB）success
 single file 玄空紫白.html（約 254 KB；font data URI）success
 ```
 
@@ -234,6 +234,7 @@ single file 玄空紫白.html（約 254 KB；font data URI）success
 - production 320／375／390／430px：疊盤大星為墨色、目前層小值為朱紅、其他層小值為墨灰，排盤與尋星均無 horizontal overflow
 - 簡易／進階尋星內容區均沒有重複 `h1`；導覽「尋星」、首段 helper 與 CTA「開始尋星」正常
 - production 320／375／390／430px：擇吉盤與尋組合皆無 horizontal overflow，每個寬度均有 8 個可選及 8 個排序方向，中宮不參與
+- production 320／375／390／430／768px：擇吉九宮 9 組年／月／日／時均保持四欄橫排；八方與中宮全部 value 維持墨灰，長 pair title 無 horizontal overflow，點擊方向詳情正常
 - 320px 方向詳情完整顯示 6 個 pair；68／86 有序學習卡、無引文警示及 reverse 切換正常
 - 實搜有序 14 可命中 `2026-08-07 07:00`東方 MH，點結果後 selection／purpose／palace／pair／layer URL 均正確；console 無 warning／error
 - 320px 考源研究版 UI 無 horizontal overflow；68 學習卡顯示 A 級、待逐條覆核、無引文警示、`rankingWeight=0` 及 `68 ≠ 86`

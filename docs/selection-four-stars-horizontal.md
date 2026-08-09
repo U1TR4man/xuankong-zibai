@@ -16,8 +16,14 @@
 
 ## 驗收
 
-- Vitest、TypeScript、production／PWA build、單檔 build：待本輪完成後記錄。
-- Production browser 的 320、375、390、430px 及 desktop responsive 驗收：待本輪完成後記錄。
+- Vitest：24 files、166 tests 全數通過。
+- TypeScript、production／PWA build、單檔 build 全數通過。
+- Production build：71 modules；CSS 34.78 kB；JS 136.11 kB；PWA precache 11 entries（243.16 KiB）。
+- 單檔 build：`app.js` 169.09 kB；`玄空紫白.html` 254 KB。
+- Production browser 的 320、375、390、430、768px 均為 9 組四欄，年／月／日／時保持同列；九宮寬度分別為 296、343、358、398、568px，頁面沒有 horizontal overflow。
+- 八方與中宮 label 均為「年月日時」；全部四星 value 在未選及選中方向後皆為墨灰 `rgb(111, 103, 92)`，沒有因目前 `level=hour` 轉為朱紅。
+- 長 pair title 沒有 horizontal overflow；點東南方向可正常選宮並開啟「巽 · 東南」詳情，詳情仍為四星。
+- 五種寬度均完成 responsive screenshot；browser console 無 warning／error。
 
 ## 明確未做
 

@@ -163,7 +163,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 165 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉、Pair 搜尋／學習、URL restore、Search → Chart 與結果 UX 回歸。
+- `npm test` — 166 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、Pair 搜尋／學習、URL restore、Search → Chart 與結果 UX 回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
