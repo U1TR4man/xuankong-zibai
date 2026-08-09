@@ -47,7 +47,7 @@
 - Workspace、時間軸、盤面模式以字體、字重與 32×3／22×2／16×1px 底線分級，不再呈現三組同等重量的文字 tabs。
 - Pair 學習卡與尋組合說明改用「原始使用情境／用途標籤／次序規則」等自然中文，不再把 `rankingWeight`、`reference_only`、`convention` 等內部欄位顯示給使用者。
 - 移除擇吉主盤「TOOL_HEURISTIC · 紫白集中 · 雙星不入排序」內部術語列；方向詳情只以自然中文保留「雙星組合僅供參考，不參與方向排序」，底層 provenance 與 ranking 邏輯不變。
-- 重建 `Zibai Serif` 離線子集，將實際 UI 字元覆蓋由 374 擴至目前 864 個；「雙星參考」「回到今」「全部六組」等後加文字不再於 iOS 逐字 fallback，preload、PWA 快取與單檔內嵌路徑保持不變。
+- 較早字體修正將 `Zibai Serif` 實際 UI 字元覆蓋由 374 擴至 864 個；「雙星參考」「回到今」「全部六組」等後加文字不再於 iOS 逐字 fallback，preload、PWA 快取與單檔內嵌路徑保持不變；第四輪已再擴至 892 個。
 - 日期時間列改用 baseline 對齊；「今／回到今」共用固定 64px 右欄並靠右顯示，320／375／390／430px 不溢出且切換文案不會推動左側日期。
 - 28／29／31 不再被考源資料結構誤作無條件 pure pair；48／98 明示為反向推建，68／86 明示古證據是宮星＋流年，37 的疑似 36 轉錄只存為異文而不覆寫規則。
 - 擇吉九宮的年／月／日／時四星由 2×2 改為由左至右的四欄橫排；八方與中宮共用同一版式，維持墨灰且不加入流刻或目前層朱紅高亮。
@@ -69,6 +69,7 @@
 
 ### Documentation
 
+- 更新 `docs/HANDOFF.md` 的第四輪 checkpoint、現行 truth source、字體雜湊、179 tests、PWA／單檔 build 及四種 iPhone 寬度 Browser 驗收證據。
 - 收錄紫白擇吉第四輪實作紀錄、原始研究 checksum、被修正的第三輪規則、179 tests、PWA／單檔 build 與四種 iPhone 寬度 Browser 驗收。
 - 收錄紫白擇吉第三輪考源 implementation record、原始研究 checksum、白中殺／墓絕／支序有氣／月令的實際公式、178 tests、build 及四種手機寬度驗收；未有原頁的來源狀態仍保持待覆核。
 - 收錄 professional UI/UX refinement 的原始規格 checksum、Phase A–D implementation record、172 tests、production／PWA／單檔 build 與四種手機寬度驗收。
