@@ -96,9 +96,12 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('雙星參考');
     expect($('.direction-reasons')?.textContent?.length).toBeGreaterThan(0);
     expect($('.direction-elements')?.textContent).toContain('年月');
-    expect($('.direction-detail__disclaimer')?.textContent).toContain('TOOL_HEURISTIC');
-    expect($('.direction-detail__disclaimer')?.textContent).toContain('rankingWeight 為 0');
-    expect($('.direction-detail__disclaimer')?.textContent).toContain('仍是 unknown');
+    expect($('.selection-ranking__head')?.textContent).toBe('方向排序');
+    expect($('.selection-ranking')?.textContent).not.toContain('TOOL_HEURISTIC');
+    expect($('.selection-ranking')?.textContent).not.toContain('雙星不入排序');
+    expect($('.direction-detail__disclaimer')?.textContent)
+      .toBe('雙星組合僅供參考，不參與方向排序。');
+    expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('TOOL_HEURISTIC');
     const pairButton = $<HTMLButtonElement>('.direction-pairs .direction-pair')!;
     expect(pairButton.tagName).toBe('BUTTON');
     pairButton.click();

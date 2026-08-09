@@ -106,7 +106,7 @@ tests/fixtures/chart-snapshot.json
 ### V2.1 Phase A–D — Visual refinement + iOS date/time
 
 - 原生 date/time input 改為 `sheet-input-shell` 負責 border／focus，input 本身保持 `appearance:auto`、零 border／outline；320–430px 無 clipping 或雙框
-- 自帶 `public/fonts/zibai-serif-medium.woff2`（Noto Serif CJK TC Medium 2.003；860 個 UI 字元／861 glyph，約 221 KB）與 OFL；preload、PWA precache、單檔 data URI 均完成
+- 自帶 `public/fonts/zibai-serif-medium.woff2`（Noto Serif CJK TC Medium 2.003；859 個 UI 字元／860 glyph，約 221 KB）與 OFL；preload、PWA precache、單檔 data URI 均完成
 - `scripts/build-font-subset.py` 掃描 `src/**/*.ts(x)`、`index.html` 與其他直接顯示的靜態文字後重建子集；來源 OTF checksum、產物 coverage 與 glyph inventory 均可重跑檢查
 - TopBar 兩個 emoji 改成 `currentColor`、1.5px stroke inline SVG
 - LevelSegment 保留 tablist／tab／aria-selected，只移除外框、divider 與 active 色塊，改為 22×2px 朱砂底線
@@ -168,7 +168,7 @@ tests/fixtures/chart-snapshot.json
 - 11–99 共 81 個 ordered pair 均有穩定 schema；`68 !== 86`、`37 !== 73`，不得將 reverse pair 合併
 - 擇吉盤組裝年／月／日／時四星，每方向建立 YM／YD／YH／MD／MH／DH 六個 pair；中宮保留顯示但不搜尋、不排序
 - 原盤／疊盤／擇吉為互斥模式；擇吉用途、方向、pair 與 layer 可由 URL 還原
-- 方向判讀只顯示可解釋的「優先／可用／普通／吉凶並見／慎用」與 `TOOL_HEURISTIC`，不顯示數值分數
+- 方向判讀只顯示可解釋的「優先／可用／普通／吉凶並見／慎用」，不顯示數值分數或 `TOOL_HEURISTIC` 內部術語；雙星不入排序的邊界只在方向詳情以自然中文說明
 - 尋組合支援有序／不分次序、六種 layer、日期 preset、一年上限、50 筆分批、deep-link 高亮，以及按用途 tags 反向搜尋
 - Pair 學習卡分開來源 A／B／C、review、五行結構、適用條件與 reverse pair；無逐字引文時必須明示「尚未收錄可核對的逐字引文」
 - 81 組是「結構與現代研究摘要完整」，不是「古訣全部已驗證」；未取得可追溯版本、頁碼／章節與逐字引文前，必須保持 `needs-review`、`verified=false`、`rankingWeight=0`
@@ -202,8 +202,8 @@ test files  24 passed
 tests       172 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（415.05 KiB）success
-single file 玄空紫白.html（約 480 KB；font data URI）success
+PWA precache 11 entries（414.43 KiB）success
+single file 玄空紫白.html（約 479 KB；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -221,7 +221,7 @@ single file 玄空紫白.html（約 480 KB；font data URI）success
 - 日期 Sheet apply、Esc、focus return
 - 320 / 375 / 390 / 430 native date/time shell 無 clipping；兩個 input 都維持 `appearance:auto`
 - date/time focus：shell 1px border + 2px outline；input 0 border + no outline
-- 品牌字體 `document.fonts.check()` 對「雙星參考／回到今／全部六組」等新增字串命中；production font 與 public font SHA-256 均為 `ae32ca6c89e7a62acdb7a325cfe52c23487235c5ea84207f087854524ffd3c8f`
+- 品牌字體 `document.fonts.check()` 對「雙星參考／回到今／全部六組」等新增字串命中；production font 與 public font SHA-256 均為 `1270b60fba30c0d0dbc0642bbb85298ad53287a13cac6a54557489755cd659b9`
 - 日期時間列在 320／375／390／430px 均無 overflow；右側「今／回到今」維持 64px 並以 baseline 對齊，左側日期位置不因文案長度跳動
 - TopBar 兩個 SVG 均為 1.5px stroke
 - 主頁一個「今」、無常駐 UTC+8；TimePicker／Settings 仍顯示 UTC+8

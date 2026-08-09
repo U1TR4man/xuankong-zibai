@@ -106,7 +106,7 @@ export function openDirectionDetailSheet(
       el('section', { class: 'direction-section' },
         el('h3', {}, '五行關係'), elementList),
       el('p', { class: 'direction-detail__disclaimer' },
-        '狀態屬 TOOL_HEURISTIC；目前只按紫白集中作保守排序。有氣、墓絕與白中殺仍是 unknown；雙星 81 組只供學習參考，rankingWeight 為 0，不參與方向排序。'),
+        '雙星組合僅供參考，不參與方向排序。'),
     ),
   });
 }
