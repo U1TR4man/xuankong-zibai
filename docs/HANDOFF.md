@@ -25,6 +25,7 @@
 - 擇吉 V1 四寬度 QA／文件 closeout：`79bbe64`
 - 雙星 81 組研究版／ranking 解耦 code checkpoint：`1f7510b`
 - 雙星 81 組研究邊界／QA 文件 checkpoint：`66a8d69`
+- 擇吉盤四星橫排 UI 修正：本輪待驗收／commit
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -34,6 +35,7 @@
 - 疊盤配色／尋星標題修正紀錄：`docs/overlay-color-search-heading-patch.md`
 - 紫白擇吉方向 V1 實作紀錄：`docs/purple-white-selection-v1.md`
 - 雙星 81 組考源研究版實作紀錄：`docs/purple-white-pair-research-v1.md`
+- 擇吉盤四星橫排修正紀錄：`docs/selection-four-stars-horizontal.md`
 
 P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4 已完成；下一步應先 review checkpoint 與補齊可追溯古籍來源，再決定 push／deploy。
 
@@ -170,6 +172,7 @@ tests/fixtures/chart-snapshot.json
 - 研究版已補齊 81 組現代摘要：A 20、A/B 3、B 53、B/C 3、C 2；但全部仍是 `needs-review`、`verified=false`
 - 25／52、37／73、68／86 為明確 `orderSensitive`；時間 pair 的慢層第一碼／快層第二碼只是工具 convention
 - 全部 81 組 `temporalUse=reference_only`、`rankingWeight=0`、`polarity=neutral`；pair 斷語、來源與用途 tags 不參與方向 verdict／ranking
+- 擇吉九宮的年／月／日／時已改為由左至右的四欄橫排；八方與中宮共用版式，全部維持墨灰，不加入流刻或目前層高亮
 
 #### Reserved future capability — 最佳時窗
 

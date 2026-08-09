@@ -56,14 +56,27 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
   it('八方四星逐一等於同一 FullChart，沒有改寫原飛星', () => {
     const chart = computeFullChart(AT);
     const xun = $<HTMLButtonElement>('[data-selection-palace="xun"]')!;
+    const labels = Array.from(xun.querySelectorAll('.selection-cell__star small'))
+      .map((node) => node.textContent);
     const values = Array.from(xun.querySelectorAll('.selection-cell__star strong'))
       .map((node) => Number(node.textContent));
+    expect(labels).toEqual(['年', '月', '日', '時']);
     expect(values).toEqual([
       chart.year.palaceStars.xun,
       chart.month.palaceStars.xun,
       chart.day.palaceStars.xun,
       chart.hour.palaceStars.xun,
     ]);
+  });
+
+  it('八方與中宮共用年月日時四欄，沒有加入流刻', () => {
+    const groups = document.querySelectorAll('.selection-grid .selection-cell__stars');
+    expect(groups).toHaveLength(9);
+    for (const group of groups) {
+      expect(Array.from(group.querySelectorAll('.selection-cell__star small'))
+        .map((node) => node.textContent)).toEqual(['年', '月', '日', '時']);
+    }
+    expect($('.selection-grid')?.textContent).not.toContain('刻');
   });
 
   it('點方向可查看 verdict 原因、六組參考 pair、五行與方法聲明', async () => {
