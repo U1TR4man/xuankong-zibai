@@ -85,6 +85,8 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 
 這 81 組全部是「雙星參考」：`needs-review`、`verified=false`、`rankingWeight=0`。研究版沒有附古籍版本頁碼與逐字引文，工具不會把摘要假裝成原文，也不會讓 pair 斷語或用途 tags 直接改變八方排序。
 
+第二輪考源進一步加入 `sourceAudit`，分開記錄證據形式、原始使用情境、次序可信度、宮位／方位條件、異文與原頁核對狀態。擇吉主盤亦顯示 0–4 顆紫白的集中訊號；有氣、墓絕與白中殺目前明示為 `unknown`，不會先套不確定公式或固定分數。詳見 [第二輪考源紀錄](docs/purple-white-second-round-source-audit.md)。
+
 ## 架構
 
 ```
@@ -163,7 +165,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 166 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、Pair 搜尋／學習、URL restore、Search → Chart 與結果 UX 回歸。
+- `npm test` — 171 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第二輪考源 audit、Pair 搜尋／學習、URL restore、Search → Chart 與結果 UX 回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
@@ -173,7 +175,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
 - 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前的方向排序只是不顯示分數的 `TOOL_HEURISTIC`。
-- 雙星古訣資料仍需以可追溯版本、頁碼／章節與逐字引文逐條校對；未核對條目必須繼續保持 `needs-review`、`verified=false`、`rankingWeight=0`。
+- 雙星古訣資料已有第二輪 `sourceAudit`，但仍需以可追溯版本、頁碼／章節與原頁影像逐條校對；未核對條目必須繼續保持 `needs-review`、`verified=false`、`primarySourceVerified=false`、`rankingWeight=0`。
 - 進階搜尋條件尚未序列化到 URL，也未加入 recent search；簡易搜尋已支援 URL restore，切回尋星仍會保留本次頁面生命週期內的上一輪結果。
 - 已用真實 production 瀏覽器驗證 320 / 375 / 390 / 430 / 768，iPhone 實機使用亦回報無問題；如需 release-grade 證據，可再補 Safari／PWA standalone／iOS Chrome 分項紀錄。
 - 未做 IndexedDB（目前資料量小，設定用 localStorage 已足夠）。
