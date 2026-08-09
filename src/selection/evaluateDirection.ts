@@ -187,8 +187,9 @@ export function evaluateDirections(
   chart: FullChart,
   purpose: SelectionPurpose = 'general',
   options: Pick<EngineOptions, 'dayChangeMode' | 'yearBoundary'> = {},
+  temporalContext?: TemporalBranchContext,
 ): DirectionEvaluation[] {
-  const context = buildTemporalBranchContext(chart.datetime, options);
+  const context = temporalContext ?? buildTemporalBranchContext(chart.datetime, options);
   return buildDirectionSnapshots(chart).map((snapshot) => evaluateDirection(snapshot, context, purpose));
 }
 

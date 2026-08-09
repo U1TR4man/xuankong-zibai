@@ -20,23 +20,33 @@ beforeAll(async () => {
   __setNowForTesting(NOW);
   await import('../src/app');
   const searchButton = Array.from(document.querySelectorAll<HTMLButtonElement>('.workspace-nav__item'))
-    .find((button) => button.textContent === '尋星')!;
+    .find((button) => button.textContent === '搜尋')!;
   searchButton.click();
 });
 
 describe('紫白擇吉 Phase 3 尋組合 UI', () => {
-  it('尋星頁提供尋星／尋組合兩個搜尋工具，helper 仍是首個內容', () => {
-    expect($('.search-view')?.firstElementChild?.classList.contains('search-view__helper')).toBe(true);
+  it('搜尋頁先提供可鍵盤操作的尋星／尋組合 tabs，再顯示 helper', async () => {
+    expect($('.search-view')?.firstElementChild?.classList.contains('search-tool')).toBe(true);
     expect(document.querySelectorAll('.search-tool__item')).toHaveLength(2);
-    expect($('.search-tool')?.getAttribute('role')).toBe('radiogroup');
+    expect($('.search-tool')?.getAttribute('role')).toBe('tablist');
+    const starButton = $<HTMLButtonElement>('#search-tab-stars')!;
+    expect(starButton.getAttribute('role')).toBe('tab');
+    expect(starButton.getAttribute('aria-selected')).toBe('true');
+    expect(starButton.tabIndex).toBe(0);
     const pairButton = Array.from(document.querySelectorAll<HTMLButtonElement>('.search-tool__item'))
       .find((button) => button.textContent === '尋組合')!;
-    pairButton.click();
+    expect(pairButton.id).toBe('search-tab-pairs');
+    starButton.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await Promise.resolve();
 
     expect($('.search-view h1')).toBeNull();
     expect($('.search-view__helper')?.textContent).toContain('有序或不分次序');
     expect($('.pair-search-view')).not.toBeNull();
     expect($('.pair-search-form__submit')?.textContent).toBe('開始尋組合');
+    expect($('#search-tab-pairs')?.getAttribute('aria-selected')).toBe('true');
+    expect($('#search-tab-pairs')?.getAttribute('aria-controls')).toBe('search-panel-pairs');
+    expect($('#search-panel-pairs')?.getAttribute('aria-labelledby')).toBe('search-tab-pairs');
+    expect(document.activeElement?.id).toBe('search-tab-pairs');
   });
 
   it('預設 14、有序、未來 7 日及六個 Pair Layer', () => {
@@ -103,7 +113,7 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
 
   it('不分次序搜尋可命中 14／41，並可限制單一 layer', async () => {
     const searchButton = Array.from(document.querySelectorAll<HTMLButtonElement>('.workspace-nav__item'))
-      .find((button) => button.textContent === '尋星')!;
+      .find((button) => button.textContent === '搜尋')!;
     searchButton.click();
     $<HTMLInputElement>('input[name="pairOrder"][value="unordered"]')!.click();
     const layerInputs = Array.from(document.querySelectorAll<HTMLInputElement>('input[name="pairLayers"]'));
@@ -135,7 +145,7 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
     expect($('.pair-search-results .search-results__summary')?.textContent)
       .toContain('用途參考：文書／考試');
     expect(document.querySelectorAll('.pair-search-result').length).toBeGreaterThan(0);
-    expect($('.pair-search-result__quality')?.textContent).toContain('研究簡寫 A');
+    expect($('.pair-search-result__quality')?.textContent).toContain('古法規則');
     expect($('.pair-search-result__quality')?.textContent).toContain('紫白集中');
   });
 

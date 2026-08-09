@@ -12,6 +12,7 @@ import { computeFullChart, type FullChart } from './engine/flyingStar';
 import type { StarResult } from './engine/flyingStar/types';
 import { buildPalaceOverlay } from './overlay/buildPalaceOverlay';
 import { evaluateDirections } from './selection/evaluateDirection';
+import { buildTemporalBranchContext } from './selection/temporalRules';
 import {
   getState, migrateLegacyHome, refreshFollowedNow, restoreFromUrl, setDateTime, subscribe,
   type AppState, type Level,
@@ -41,17 +42,23 @@ function resultFor(chart: FullChart, level: Level): StarResult {
 }
 
 function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLElement {
+  const temporalContext = state.selectionMode
+    ? buildTemporalBranchContext(chart.datetime, {
+      dayChangeMode: state.settings.dayChangeMode,
+      yearBoundary: state.settings.yearBoundary,
+    })
+    : undefined;
   const directionEvaluations = state.selectionMode
     ? evaluateDirections(chart, state.selectionPurpose, {
       dayChangeMode: state.settings.dayChangeMode,
       yearBoundary: state.settings.yearBoundary,
-    })
+    }, temporalContext)
     : undefined;
   const card = el('section', {
     class: 'card', id: 'current-chart', role: 'tabpanel',
     'aria-labelledby': `level-tab-${state.level}`, 'data-swipe-zone': 'chart',
   },
-    ChartHeader(result, state.level, state),
+    ChartHeader(result, state.level, state, temporalContext),
     state.selectionMode && directionEvaluations
       ? SelectionPurposeControl(state)
       : null,

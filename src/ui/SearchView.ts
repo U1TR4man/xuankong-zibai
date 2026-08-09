@@ -14,6 +14,11 @@ import { SearchResults } from './SearchResults';
 type SearchMode = 'simple' | 'advanced';
 type SearchTool = 'stars' | 'pairs';
 
+const SEARCH_TOOLS: readonly SearchTool[] = ['stars', 'pairs'];
+const SEARCH_TOOL_LABEL: Readonly<Record<SearchTool, string>> = {
+  stars: '尋星', pairs: '尋組合',
+};
+
 interface SearchDraft {
   mode: SearchMode;
   startDate: string;
@@ -324,39 +329,56 @@ export function SearchView(state: AppState): HTMLElement {
     setSimpleSearchUrlState(simpleUrlState(nextDraft));
     setView('search');
   };
-  const switchTool = (tool: SearchTool) => {
-    if (tool === activeSearchTool) return;
+  const switchTool = (tool: SearchTool, focus = false) => {
+    if (tool === activeSearchTool) {
+      if (focus) queueMicrotask(() => document.getElementById(`search-tab-${tool}`)?.focus());
+      return;
+    }
     searchRunId += 1;
     cancelPairSearch();
     activeSearchTool = tool;
     setSimpleSearchUrlState(tool === 'stars' ? simpleUrlState(model!.draft) : undefined);
     setView('search');
+    if (focus) queueMicrotask(() => document.getElementById(`search-tab-${tool}`)?.focus());
   };
-  const toolSwitch = el('div', { class: 'search-tool', role: 'radiogroup', 'aria-label': '搜尋類型' },
-    el('button', {
-      class: `search-tool__item${activeSearchTool === 'stars' ? ' is-active' : ''}`,
-      type: 'button', role: 'radio', 'aria-checked': String(activeSearchTool === 'stars'),
-      onclick: () => switchTool('stars'),
-    }, '尋星'),
-    el('button', {
-      class: `search-tool__item${activeSearchTool === 'pairs' ? ' is-active' : ''}`,
-      type: 'button', role: 'radio', 'aria-checked': String(activeSearchTool === 'pairs'),
-      onclick: () => switchTool('pairs'),
-    }, '尋組合'),
+  const toolSwitch = el('div', { class: 'search-tool', role: 'tablist', 'aria-label': '搜尋工具' },
+    ...SEARCH_TOOLS.map((tool) => el('button', {
+      id: `search-tab-${tool}`,
+      class: `search-tool__item${activeSearchTool === tool ? ' is-active' : ''}`,
+      type: 'button',
+      role: 'tab',
+      tabindex: activeSearchTool === tool ? '0' : '-1',
+      'aria-selected': String(activeSearchTool === tool),
+      'aria-controls': `search-panel-${tool}`,
+      onclick: () => switchTool(tool),
+      onkeydown: (rawEvent: Event) => {
+        const event = rawEvent as KeyboardEvent;
+        const currentIndex = SEARCH_TOOLS.indexOf(tool);
+        let nextIndex: number | undefined;
+        if (event.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + SEARCH_TOOLS.length) % SEARCH_TOOLS.length;
+        if (event.key === 'ArrowRight') nextIndex = (currentIndex + 1) % SEARCH_TOOLS.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = SEARCH_TOOLS.length - 1;
+        if (nextIndex === undefined) return;
+        event.preventDefault();
+        switchTool(SEARCH_TOOLS[nextIndex]!, true);
+      },
+    }, SEARCH_TOOL_LABEL[tool])),
   );
-  if (activeSearchTool === 'pairs') {
-    return el('main', { class: 'search-view' },
-      el('p', { class: 'search-view__helper' },
-        '指定有序或不分次序的雙星參考，搜尋年月日時六種 Pair Layer；斷語不參與擇吉排序。'),
-      toolSwitch,
-      PairSearchView(state),
-    );
-  }
-  return el('main', { class: 'search-view', 'aria-busy': String(Boolean(model.searching)) },
-    el('p', { class: 'search-view__helper' }, mode === 'simple'
+  const helper = el('p', { class: 'search-view__helper' }, activeSearchTool === 'pairs'
+    ? '指定有序或不分次序的雙星參考，搜尋年月日時六種組合層；斷語不參與擇吉排序。'
+    : mode === 'simple'
       ? '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。'
-      : '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。'),
-    toolSwitch,
+      : '可同時指定多個層級；同層選多星代表任一符合，跨層條件必須同時成立。');
+  const panel = activeSearchTool === 'pairs'
+    ? el('div', {
+      class: 'search-tool-panel', id: 'search-panel-pairs', role: 'tabpanel',
+      'aria-labelledby': 'search-tab-pairs', tabindex: '0',
+    }, PairSearchView(state))
+    : el('div', {
+      class: 'search-tool-panel', id: 'search-panel-stars', role: 'tabpanel',
+      'aria-labelledby': 'search-tab-stars', tabindex: '0',
+    },
     SearchForm(state, model, () => switchMode(mode === 'simple' ? 'advanced' : 'simple')),
     model.searching
       ? el('div', { class: 'search-status', role: 'status', 'aria-live': 'polite' },
@@ -365,5 +387,9 @@ export function SearchView(state: AppState): HTMLElement {
       )
       : null,
     model.query && model.matches ? SearchResults(model.query, model.matches) : null,
-  );
+    );
+  return el('main', {
+    class: 'search-view',
+    'aria-busy': activeSearchTool === 'stars' ? String(Boolean(model.searching)) : undefined,
+  }, toolSwitch, helper, panel);
 }

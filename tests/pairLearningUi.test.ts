@@ -34,7 +34,7 @@ describe('紫白擇吉 Phase 4 Pair 學習卡', () => {
     expect($<HTMLDialogElement>('dialog.sheet-dialog--pair-rule')?.open).toBe(true);
     expect($('.sheet__title')?.textContent).toBe('68｜六八');
     expect($('.pair-rule__meaning')?.textContent).toContain('武科、韜略、權位');
-    expect($('.pair-rule__badges')?.textContent).toContain('研究簡寫 A');
+    expect($('.pair-rule__badges')?.textContent).toContain('古法規則');
     expect($('.pair-rule__badges')?.textContent).toContain('待逐條覆核');
     expect($('.pair-rule__badges')?.textContent).toContain('待核原頁影像');
     expect($('.pair-rule')?.textContent).toContain('五行關係');

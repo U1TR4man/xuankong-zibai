@@ -1,6 +1,7 @@
 import type { PalaceKey } from '../engine/flyingStar/types';
-import type { Branch } from '../engine/time/ganzhi';
+import type { Branch, Ganzhi } from '../engine/time/ganzhi';
 import type { StarNumber } from '../overlay/types';
+import type { TemporalPillars } from './temporalPillars';
 
 export type DirectionCode = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW';
 export type DirectionPalaceKey = Exclude<PalaceKey, 'center'>;
@@ -88,6 +89,7 @@ export interface TemporalStarAssessment {
   star: StarNumber;
   palace: PalaceKey;
   periodBranch: Branch;
+  ganzhi: Ganzhi;
   isPurpleWhite: boolean;
   role: LayerRole;
   palaceKillers: PalaceKiller[];
@@ -116,7 +118,7 @@ export interface WhiteKillerAssessment {
 }
 
 export interface TemporalBranchContext {
-  branches: Record<DirectionLevel, Branch>;
+  pillars: TemporalPillars;
   evidence: Record<DirectionLevel, TemporalEvidenceLevel>;
   monthSeason: 'spring' | 'summer' | 'autumn' | 'winter' | 'earth_transition';
 }

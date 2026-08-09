@@ -20,8 +20,8 @@ beforeAll(async () => {
   await import('../src/app');
 });
 
-describe('Phase 3 尋星 A UI', () => {
-  it('以排盤／尋星兩個核心入口切換，預設仍是排盤', () => {
+describe('Phase 3 搜尋 UI', () => {
+  it('以排盤／搜尋兩個核心入口切換，預設仍是排盤', () => {
     expect(document.querySelectorAll('.workspace-nav__item')).toHaveLength(2);
     expect($('.workspace-nav__item[aria-current="page"]')?.textContent).toBe('排盤');
     expect($('.search-view')).toBeNull();
@@ -30,7 +30,7 @@ describe('Phase 3 尋星 A UI', () => {
   it('簡易搜尋提供日期、宮位、日／時／刻與單星條件', () => {
     $<HTMLButtonElement>('.overlay-toggle')!.click();
     const searchButton = Array.from(document.querySelectorAll<HTMLButtonElement>('.workspace-nav__item'))
-      .find((button) => button.textContent === '尋星')!;
+      .find((button) => button.textContent === '搜尋')!;
     searchButton.click();
 
     const params = new URLSearchParams(location.search);
@@ -39,9 +39,11 @@ describe('Phase 3 尋星 A UI', () => {
     expect(params.has('overlay')).toBe(false);
     expect(params.has('overlayPrimary')).toBe(false);
     expect(params.has('selectedPalace')).toBe(false);
-    expect($('.workspace-nav__item[aria-current="page"]')?.textContent).toBe('尋星');
+    expect($('.workspace-nav__item[aria-current="page"]')?.textContent).toBe('搜尋');
     expect($('.search-view h1')).toBeNull();
-    expect($('.search-view')?.firstElementChild?.classList.contains('search-view__helper')).toBe(true);
+    expect($('.search-view')?.firstElementChild?.classList.contains('search-tool')).toBe(true);
+    expect($('.search-tool')?.getAttribute('role')).toBe('tablist');
+    expect($('.search-tool-panel')?.getAttribute('role')).toBe('tabpanel');
     expect($('.search-view__helper')?.textContent).toBe(
       '選擇宮位、層級與飛星，找出指定日期內所有符合的時間。',
     );
@@ -130,7 +132,7 @@ describe('Phase 3 尋星 A UI', () => {
 
   it('回到尋星會保留上一輪條件與結果', () => {
     const searchButton = Array.from(document.querySelectorAll<HTMLButtonElement>('.workspace-nav__item'))
-      .find((button) => button.textContent === '尋星')!;
+      .find((button) => button.textContent === '搜尋')!;
     searchButton.click();
 
     expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');

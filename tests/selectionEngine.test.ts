@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { computeFullChart } from '../src/engine/flyingStar';
 import { fromUtc8 } from '../src/engine/time/utc8';
+import { ganzhiFromIndex60 } from '../src/engine/time/ganzhi';
 import { buildDirectionSnapshots } from '../src/selection/buildDirectionSnapshots';
 import { buildPairHits } from '../src/selection/buildPairHits';
 import {
@@ -24,7 +25,10 @@ const EXAMPLE: DirectionSnapshot = {
   monthCenterStar: 4,
 };
 const CONTEXT: TemporalBranchContext = {
-  branches: { year: '申', month: '酉', day: '午', hour: '子' },
+  pillars: {
+    year: ganzhiFromIndex60(8), month: ganzhiFromIndex60(9),
+    day: ganzhiFromIndex60(6), hour: ganzhiFromIndex60(0),
+  },
   evidence: { year: 'A', month: 'A', day: 'B', hour: 'B' },
   monthSeason: 'autumn',
 };
@@ -146,10 +150,12 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
 
   it('六捷墓、臨絕與支序有氣逐層分開，未有直接表的星保持未知', () => {
     const tomb = assessTemporalStar('year', 1, 'dui', {
-      ...CONTEXT, branches: { ...CONTEXT.branches, year: '辰' },
+      ...CONTEXT,
+      pillars: { ...CONTEXT.pillars, year: ganzhiFromIndex60(4) },
     });
     const absolute = assessTemporalStar('month', 6, 'dui', {
-      ...CONTEXT, branches: { ...CONTEXT.branches, month: '寅' },
+      ...CONTEXT,
+      pillars: { ...CONTEXT.pillars, month: ganzhiFromIndex60(2) },
     });
     const active = assessTemporalStar('day', 9, 'dui', CONTEXT);
     const unknown = assessTemporalStar('hour', 2, 'dui', CONTEXT);
@@ -181,8 +187,11 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
   });
 
   it('四層地支沿用正式年界、節氣月、換日與時辰 API', () => {
-    expect(buildTemporalBranchContext(AT)).toEqual({
-      branches: { year: '午', month: '未', day: '丑', hour: '午' },
+    const context = buildTemporalBranchContext(AT);
+    expect(Object.fromEntries(Object.entries(context.pillars).map(([level, pillar]) => (
+      [level, pillar.text]
+    )))).toEqual({ year: '丙午', month: '乙未', day: '癸丑', hour: '戊午' });
+    expect(context).toMatchObject({
       evidence: { year: 'A', month: 'A', day: 'B', hour: 'B' },
       monthSeason: 'earth_transition',
     });

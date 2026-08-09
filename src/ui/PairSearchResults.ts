@@ -8,6 +8,10 @@ import { showSelectionChart } from '../state/appState';
 import { el } from './dom';
 
 const RESULT_PAGE_SIZE = 50;
+const SOURCE_LABEL = {
+  A: '古法規則', 'A/B': '古法規則與研究整理',
+  B: '研究整理', 'B/C': '研究整理', C: '研究中',
+} as const;
 
 function resultTime(match: PairSearchMatch): { date: string; time: string } {
   const start = parseUtc8(match.startDateTime)!;
@@ -43,7 +47,7 @@ function PairResultCard(match: PairSearchMatch): HTMLElement {
     `年${snapshot.yearStar} · 月${snapshot.monthStar} · 日${snapshot.dayStar} · 時${snapshot.hourStar}`),
   match.purposeContext
     ? el('span', { class: 'pair-search-result__quality' },
-      `研究簡寫 ${hit.rule.sourceGrade} · 紫白集中 ${match.purposeContext.purpleWhiteCount}`)
+      `${SOURCE_LABEL[hit.rule.sourceGrade]} · 紫白集中 ${match.purposeContext.purpleWhiteCount}`)
     : null,
   el('span', { class: 'pair-search-result__arrow', 'aria-hidden': 'true' }, '›'),
   );

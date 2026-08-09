@@ -80,6 +80,21 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.selection-grid')?.textContent).not.toContain('刻');
   });
 
+  it('擇吉 ChartHeader 以輕量 metadata 顯示 canonical 干支，並可開完整四柱', () => {
+    const trigger = $<HTMLButtonElement>('.temporal-ganzhi-meta')!;
+    expect(trigger.textContent).toContain('癸丑日 · 戊午時');
+    expect(trigger.getAttribute('aria-label')).toContain('丙午年、乙未月、癸丑日、戊午時');
+    expect(trigger.getAttribute('aria-label')).toContain('查看完整四柱');
+    trigger.click();
+    expect($<HTMLDialogElement>('dialog.sheet-dialog--temporal-pillars')?.open).toBe(true);
+    expect($('.sheet__title')?.textContent).toBe('時間干支');
+    expect(Array.from(document.querySelectorAll('.temporal-pillars dt')).map((node) => node.textContent))
+      .toEqual(['年柱', '月柱', '日柱', '時柱']);
+    expect(Array.from(document.querySelectorAll('.temporal-pillars dd')).map((node) => node.textContent))
+      .toEqual(['丙午', '乙未', '癸丑', '戊午']);
+    $<HTMLButtonElement>('dialog .sheet__close')!.click();
+  });
+
   it('方向詳情首屏只顯示結果，研究內容預設收起且仍可完整展開', async () => {
     $<HTMLButtonElement>('[data-selection-palace="xun"]')!.click();
     await Promise.resolve();
@@ -89,14 +104,17 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($<HTMLDialogElement>('dialog.sheet-dialog--direction')?.open).toBe(true);
     expect($('.sheet__title')?.textContent).toBe('巽 · 東南');
     expect(document.querySelectorAll('.direction-detail__star')).toHaveLength(4);
+    expect(Array.from(document.querySelectorAll('.direction-detail__ganzhi'))
+      .map((node) => node.textContent)).toEqual(['丙午', '乙未', '癸丑', '戊午']);
     expect($('.direction-detail__verdict')?.textContent).toBe('慎用');
-    expect($('.direction-primary-conditions')?.textContent).toContain('時氣與白中殺');
-    expect($('.direction-primary-conditions')?.textContent).toContain('白中殺');
-    const conditionOrder = $('.direction-primary-conditions')?.compareDocumentPosition(
+    expect($('.direction-primary-conditions')).toBeNull();
+    expect($('.direction-primary-signal')?.textContent).toContain('紫白主幹');
+    expect($('.direction-primary-signal')?.textContent).toContain('3/4');
+    const conditionOrder = $('.direction-primary-signal')?.compareDocumentPosition(
       $('.direction-primary-reference')!,
     ) ?? 0;
     expect(conditionOrder & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect($('.direction-primary-reference')?.textContent).toContain('主要參考');
+    expect($('.direction-primary-reference')?.textContent).toContain('雙星參考');
     expect($('[data-selection-palace="xun"] .selection-cell__condition')?.textContent)
       .toContain('鬥牛');
     expect($('[data-selection-palace="zhen"] .selection-cell__condition')?.textContent)
@@ -109,12 +127,16 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-temporal')?.textContent).toContain('三層紫白同到');
     expect($('.direction-temporal')?.textContent).toContain('合格');
     expect(document.querySelectorAll('.direction-condition-list li')).toHaveLength(4);
-    expect($('.direction-branch-conditions')?.textContent).toContain('有氣、墓絕與月令');
+    expect($('.direction-branch-conditions')?.textContent).toContain('時序條件');
+    expect($('.direction-branch-conditions')?.textContent).toContain('日 · 癸丑');
+    expect($('.direction-branch-conditions')?.textContent).toContain('丑支 →');
     expect($('.direction-killers')?.textContent).toContain('鬥牛殺');
+    expect($('.direction-killers')?.textContent).toContain('到巽宮 →');
     expect(document.querySelectorAll('.direction-pairs .direction-pair')).toHaveLength(6);
-    expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('主要參考');
+    expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('雙星參考');
     expect($('.direction-reasons')?.textContent?.length).toBeGreaterThan(0);
-    expect($('.direction-elements')?.textContent).toContain('年月');
+    expect($('.direction-other-reasons')?.textContent).toContain('宮星五行');
+    expect(document.querySelectorAll('.direction-elements')[1]?.textContent).toContain('年月');
     expect($('.selection-ranking__head')?.textContent).toBe('方向排序');
     expect($('.selection-ranking')?.textContent).not.toContain('TOOL_HEURISTIC');
     expect($('.selection-ranking')?.textContent).not.toContain('雙星不入排序');
@@ -129,6 +151,7 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('TOOL_HEURISTIC');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('unknown');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('rankingWeight');
+    expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('研究簡寫');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('二時紫白同加');
     const pairButton = $<HTMLButtonElement>('.direction-pairs .direction-pair')!;
     expect(pairButton.tagName).toBe('BUTTON');

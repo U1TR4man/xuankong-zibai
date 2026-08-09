@@ -39,7 +39,7 @@ export function TopBar(state: AppState): HTMLElement {
   return el(
     'header',
     { class: 'topbar', 'aria-label': state.view === 'search'
-      ? '玄空紫白・尋星'
+      ? '玄空紫白・搜尋'
       : `玄空紫白・目前為流${LEVEL_LABEL[state.level]}盤` },
     el('button', { class: 'topbar__brand', type: 'button', onclick: goHome }, '玄空紫白'),
     el('div', { class: 'topbar__actions' },

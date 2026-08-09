@@ -3,7 +3,7 @@ import { el } from './dom';
 
 const ITEMS: readonly { view: AppView; label: string }[] = [
   { view: 'chart', label: '排盤' },
-  { view: 'search', label: '尋星' },
+  { view: 'search', label: '搜尋' },
 ];
 
 export function PrimaryNavigation(state: AppState): HTMLElement {

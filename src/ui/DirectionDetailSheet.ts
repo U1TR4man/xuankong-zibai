@@ -4,15 +4,15 @@ import { PURPLE_WHITE_SIGNAL_LABEL, WHITE_KILLER_LABEL } from '../selection/rese
 import {
   VERDICT_LABEL, type BranchQiState, type DirectionEvaluation, type DirectionLevel,
   type LayerRole, type PairHit, type PalaceElementRelation, type SeasonalState,
-  type SourceGrade, type TemporalStarAssessment,
+  type SourceGrade,
 } from '../selection/types';
 import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
 import { openPairRuleSheet } from './PairRuleSheet';
 
 const SOURCE_LABEL: Record<SourceGrade, string> = {
-  A: '研究簡寫 A', 'A/B': '研究簡寫 A/B',
-  B: '研究簡寫 B', 'B/C': '研究簡寫 B/C', C: '研究簡寫 C',
+  A: '古法規則', 'A/B': '古法規則與研究整理',
+  B: '研究整理', 'B/C': '研究整理', C: '研究中',
 };
 const LEVEL_LABEL: Record<DirectionLevel, string> = {
   year: '年', month: '月', day: '日', hour: '時',
@@ -36,9 +36,11 @@ const ELEMENT_RELATION_LABEL: Record<PalaceElementRelation, (
   star_controls_palace: (palace, star) => `星${star}剋宮${palace}`,
 };
 
-function starItem(label: string, value: number): HTMLElement {
+function starItem(label: string, ganzhi: string, value: number): HTMLElement {
   return el('span', { class: 'direction-detail__star' },
-    el('small', {}, label), el('strong', {}, String(value)));
+    el('small', {}, label),
+    el('span', { class: 'direction-detail__ganzhi' }, ganzhi),
+    el('strong', {}, String(value)));
 }
 
 function pairRow(hit: PairHit, matched = false, returnFocusSelector?: string): HTMLElement {
@@ -72,29 +74,21 @@ function disclosure(title: string, ...content: HTMLElement[]): HTMLElement {
     el('div', { class: 'direction-disclosure__body' }, ...content));
 }
 
-function layerName(state: TemporalStarAssessment): string {
-  return `${LEVEL_LABEL[state.level]}${starName(state.star)}`;
-}
-
 function temporalConditions(evaluation: DirectionEvaluation): HTMLElement {
   return el('ul', { class: 'direction-condition-list' },
     ...evaluation.temporalProfile.starStates.map((state) => {
       const qualified = evaluation.qualifiedPurpleWhiteHits.includes(state.level);
       const conditions = [
-        `${state.periodBranch}支`,
         state.isPurpleWhite ? qualified ? '✓ 合格紫白' : '紫白條件未齊' : '',
         QI_LABEL[state.temporalState.branchQi],
         state.temporalState.liuJieTomb ? '入墓' : '',
         state.temporalState.absolute ? '臨絕' : '',
         `月令${SEASONAL_LABEL[state.seasonalState]}`,
-        ELEMENT_RELATION_LABEL[state.elementRelation.relation](
-          state.elementRelation.palaceElement, state.elementRelation.starElement,
-        ),
       ].filter(Boolean);
       return el('li', {},
-        el('strong', {}, layerName(state)),
-        el('span', {}, conditions.join(' · ')),
-        el('small', {}, `${ROLE_LABEL[state.role]} · 時層套用 ${state.temporalState.qiEvidence} 級`));
+        el('strong', {}, `${LEVEL_LABEL[state.level]} · ${state.ganzhi.text} · ${starName(state.star)}`),
+        el('span', {}, `${state.periodBranch}支 → ${conditions.join(' · ')}`),
+        el('small', {}, `${ROLE_LABEL[state.role]} · 星與時間地支判讀`));
     }));
 }
 
@@ -104,27 +98,17 @@ function killerConditions(evaluation: DirectionEvaluation): HTMLElement {
     return el('p', { class: 'direction-condition-empty' }, '本方四層未命中白中殺定局');
   }
   return el('ul', { class: 'direction-killer-list' },
-    ...hits.map((hit) => el('li', {},
-      el('strong', {}, `${LEVEL_LABEL[hit.level]}${starName(hit.star)}`),
-      el('span', {}, hit.killers.map((killer) => killer === 'an_jian'
-        ? `月暗建（月白${evaluation.temporalProfile.monthAnJian.centerStar}入中）`
-        : WHITE_KILLER_LABEL[killer]).join('、')))));
-}
-
-function conditionSummary(evaluation: DirectionEvaluation): string {
-  const states = evaluation.temporalProfile.starStates;
-  const active = states.filter((state) => state.temporalState.branchQi === 'active').length;
-  const tomb = states.filter((state) => state.temporalState.liuJieTomb).length;
-  const absolute = states.filter((state) => state.temporalState.absolute).length;
-  const killers = evaluation.temporalProfile.whiteKillerAssessment.hits.length;
-  return [
-    `紫白到方 ${evaluation.purpleWhiteCount}/4`,
-    `合格 ${evaluation.qualifiedPurpleWhiteCount} 層`,
-    `白中殺 ${killers > 0 ? `${killers} 層` : '未命中'}`,
-    active > 0 ? `支序有氣 ${active} 層` : '',
-    tomb > 0 ? `入墓 ${tomb} 層` : '',
-    absolute > 0 ? `臨絕 ${absolute} 層` : '',
-  ].filter(Boolean).join(' · ');
+    ...hits.flatMap((hit) => hit.killers.map((killer) => {
+      if (killer === 'an_jian') {
+        const centerStar = evaluation.temporalProfile.monthAnJian.centerStar;
+        return el('li', {},
+          el('strong', {}, `月白 · ${starName(centerStar)}入中`),
+          el('span', {}, `月白入中 → ${evaluation.snapshot.name}宮為月暗建禁修方`));
+      }
+      return el('li', {},
+        el('strong', {}, `${LEVEL_LABEL[hit.level]} · ${starName(hit.star)}`),
+        el('span', {}, `到${evaluation.snapshot.name}宮 → ${WHITE_KILLER_LABEL[killer]}`));
+    })));
 }
 
 export function openDirectionDetailSheet(
@@ -135,8 +119,12 @@ export function openDirectionDetailSheet(
 ): void {
   const { snapshot } = evaluation;
   const returnSelector = `[data-selection-palace="${snapshot.palace}"]`;
+  const otherReasons = evaluation.reasons.filter((reason) => ![
+    '紫白到方：', '支序有氣：', '主要層合格：', '白中殺：',
+    '月暗建：', '入墓：', '臨絕：',
+  ].some((prefix) => reason.startsWith(prefix)));
   const reasons = el('ul', { class: 'direction-reasons' },
-    ...evaluation.reasons.map((reason) => el('li', {}, reason)));
+    ...otherReasons.map((reason) => el('li', {}, reason)));
   const pairList = el('div', { class: 'direction-pairs' },
     ...evaluation.hits.map((hit) => pairRow(
       hit, hit.pair === matchedPair && (!matchedLayer || hit.layer === matchedLayer),
@@ -163,19 +151,20 @@ export function openDirectionDetailSheet(
     returnFocusSelector: returnSelector,
     content: el('div', { class: 'direction-detail' },
       el('div', { class: 'direction-detail__stars', 'aria-label': '年月日時四星' },
-        starItem('年', snapshot.yearStar), starItem('月', snapshot.monthStar),
-        starItem('日', snapshot.dayStar), starItem('時', snapshot.hourStar)),
+        ...evaluation.temporalProfile.starStates.map((state) => (
+          starItem(LEVEL_LABEL[state.level], state.ganzhi.text, state.star)
+        ))),
       el('p', { class: `direction-detail__verdict verdict--${evaluation.verdict}` },
         VERDICT_LABEL[evaluation.verdict]),
       evaluation.purpose !== 'general'
         ? el('p', { class: 'direction-detail__purpose' },
           `雙星用途參考：${purposeLabel(evaluation.purpose)} · 命中 ${evaluation.purposeHits.length} 組`)
         : null,
-      el('section', { class: 'direction-section direction-primary-conditions' },
-        el('h3', {}, '時氣與白中殺'),
-        el('p', {}, conditionSummary(evaluation))),
+      el('section', { class: 'direction-section direction-primary-signal' },
+        el('h3', {}, '紫白主幹'),
+        el('p', {}, `${evaluation.purpleWhiteCount}/4 · ${PURPLE_WHITE_SIGNAL_LABEL[evaluation.purpleWhiteSignal]}`)),
       el('section', { class: 'direction-section direction-primary-reference' },
-        el('h3', {}, '主要參考'), main),
+        el('h3', {}, '雙星參考'), main),
       el('div', { class: 'direction-disclosures' },
         disclosure('為甚麼',
           el('section', { class: 'direction-section direction-temporal' },
@@ -185,12 +174,20 @@ export function openDirectionDetailSheet(
             el('p', {}, purpleWhiteLayers.length > 0
               ? `命中層：${purpleWhiteLayers.join('、')}` : '命中層：無')),
           el('section', { class: 'direction-section direction-branch-conditions' },
-            el('h3', {}, '有氣、墓絕與月令'),
+            el('h3', {}, '時序條件'),
             temporalConditions(evaluation)),
           el('section', { class: 'direction-section direction-killers' },
             el('h3', {}, '白中殺'),
             killerConditions(evaluation)),
-          reasons),
+          el('section', { class: 'direction-section direction-other-reasons' },
+            el('h3', {}, '其他判定理由'),
+            el('h4', {}, '宮星五行'),
+            el('ul', { class: 'direction-elements' },
+              ...evaluation.temporalProfile.starStates.map((state) => el('li', {},
+                `${LEVEL_LABEL[state.level]}${starName(state.star)}：${ELEMENT_RELATION_LABEL[state.elementRelation.relation](
+                  state.elementRelation.palaceElement, state.elementRelation.starElement,
+                )}`))),
+            reasons)),
         disclosure('全部六組', pairList),
         disclosure('五行關係', elementList),
         disclosure('研究說明',

@@ -7,8 +7,8 @@ import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
 
 const SOURCE_LABEL: Record<SourceGrade, string> = {
-  A: '研究簡寫 A', 'A/B': '研究簡寫 A/B',
-  B: '研究簡寫 B', 'B/C': '研究簡寫 B/C', C: '研究簡寫 C',
+  A: '古法規則', 'A/B': '古法規則與研究整理',
+  B: '研究整理', 'B/C': '研究整理', C: '研究中',
 };
 const REVIEW_LABEL: Record<ReviewStatus, string> = {
   verified: '已校對', 'needs-review': '研究摘要待逐條覆核', pending: '資料待校對',

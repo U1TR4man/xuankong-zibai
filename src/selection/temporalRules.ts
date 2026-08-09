@@ -1,11 +1,10 @@
 import type { PalaceKey } from '../engine/flyingStar/types';
-import { getYearGanzhi, resolveSolarYear, type YearBoundary } from '../engine/flyingStar/yearStar';
-import { getChineseHour } from '../engine/time/chineseHour';
-import { BRANCHES, type Branch } from '../engine/time/ganzhi';
-import { getGanzhiDay, type DayChangeMode } from '../engine/time/ganzhiDay';
-import { getSolarMonthByJieqi } from '../engine/time/solarTerms';
+import type { YearBoundary } from '../engine/flyingStar/yearStar';
+import type { Branch } from '../engine/time/ganzhi';
+import type { DayChangeMode } from '../engine/time/ganzhiDay';
 import type { StarNumber } from '../overlay/types';
 import { PURPLE_WHITE_STARS, STAR_QI_REFERENCE } from './researchEvidence';
+import { buildTemporalPillars } from './temporalPillars';
 import type {
   DirectionLevel, DirectionPalaceKey, Element, LayerRole, MonthAnJianAssessment,
   PalaceElementRelation, PalaceKiller, SeasonalState, TemporalBranchContext, TemporalStarAssessment,
@@ -95,17 +94,11 @@ export function buildTemporalBranchContext(
   date: Date,
   options: TemporalContextOptions = {},
 ): TemporalBranchContext {
-  const solarYear = resolveSolarYear(date, options.yearBoundary ?? 'lichun');
-  const monthBranch = BRANCHES[getSolarMonthByJieqi(date).branchIndex]!;
+  const pillars = buildTemporalPillars(date, options);
   return {
-    branches: {
-      year: getYearGanzhi(solarYear).branch,
-      month: monthBranch,
-      day: getGanzhiDay(date, options.dayChangeMode ?? 'midnight').branch,
-      hour: getChineseHour(date).branch,
-    },
+    pillars,
     evidence: { year: 'A', month: 'A', day: 'B', hour: 'B' },
-    monthSeason: MONTH_SEASON_BY_BRANCH[monthBranch],
+    monthSeason: MONTH_SEASON_BY_BRANCH[pillars.month.branch],
   };
 }
 
@@ -156,13 +149,14 @@ export function assessTemporalStar(
   context: TemporalBranchContext,
 ): TemporalStarAssessment {
   const reference = STAR_QI_REFERENCE[star];
-  const periodBranch = context.branches[level];
+  const periodBranch = context.pillars[level].branch;
   const activeBranches = reference.directQiBranches;
   return {
     level,
     star,
     palace,
     periodBranch,
+    ganzhi: context.pillars[level],
     isPurpleWhite: PURPLE_WHITE_STARS.has(star),
     role: LAYER_ROLE[level],
     palaceKillers: assessPalaceKillers(star, palace),
