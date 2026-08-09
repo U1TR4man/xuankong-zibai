@@ -6,6 +6,9 @@
 
 ### Added
 
+- 新增第五輪 source-aware 規則政策：白中殺為年月正式、日時參考；支序有氣為年月正式、日層警示、時層類推。
+- 新增大月建獨立月干支飛宮介面、日主／時課 Gate 介面與月納音研究狀態；未封版前明確為尚未評估、不參與排序。
+- 一般九宮暗建新增 `generic_jiugong`、`san_yuan_bao_hai` 及 `jiyao_native_and_center` 異文資料，不合併成單一超級規則。
 - 新增擇吉時間層唯一的 `TemporalPillars`：年月日時完整干支共用既有年界、節氣月、換日及中國時辰 boundary；selection 判讀與 UI 顯示由同一 context 取值。
 - 擇吉 ChartHeader 新增單行干支 metadata；mobile 顯示日時、wide 顯示四柱，點擊可開「時間干支」Bottom Sheet。
 - 新增年界、節氣月、兩種換日、子午時及 UTC+8 跨日／跨年的四柱 boundary tests。
@@ -33,6 +36,9 @@
 
 ### Changed
 
+- 一般九宮暗建改為分別使用年、月、日、時的入中星；主盤只顯示「年九宮暗建／月九宮暗建」正式警示，日時只在詳情作類比參考。
+- 五黃暗建預設從第四輪的「四隅唯一解」改為一般九宮本位的中宮；乾坤艮巽四隅保留為《三元寶海鈎玄》異文，不疊加參與 ranking。
+- 時層支序有氣改為 C 級類推參考，UI 明示「支序有氣（類推參考）」；月層 role 改為月令核心，日層保留 Gate 定位。
 - Direction Detail 四欄加入干支；首屏改為 verdict、紫白主幹及「雙星參考」，「為甚麼」依紫白主幹、時序條件、白中殺、其他理由的因果順序顯示。
 - 頂層「尋星」改名「搜尋」；內層尋星／尋組合移到 helper 前並改為完整 keyboard tabs，支援左右鍵、Home／End、roving tabindex 及 tabpanel 關聯。
 - 新增 4.5:1 以上的 `--ink-muted`，提升日期節氣、干支、picker hint、來源與研究 metadata 等小字可讀性；裝飾箭頭仍使用 tertiary。
@@ -44,6 +50,8 @@
 
 ### Fixed
 
+- 修正日、時白中殺類比過度影響 verdict：底層仍完整計算與顯示，但不再直接將方向從優先降為吉凶並見或慎用。
+- 重建 `Zibai Serif` 離線字體子集至 910 個 UI 字元／911 glyphs；第五輪新增研究文字已進 preload、PWA precache 與單檔 data URI。
 - 重建 `Zibai Serif` 離線字體子集至 895 個 UI 字元／896 glyphs；新增干支與搜尋 UI 字元已進 preload、PWA precache 與單檔 data URI。
 - 雙星來源級別在一般 UI 改用「古法規則／研究整理／研究中」等自然中文，不再顯示 `研究簡寫 A／A/B` schema token；底層 source grade 保持不變。
 - 修正第三輪暗建過度簡化：不再把飛星回本宮視為暗建，改依月白入中星反推禁修方。
@@ -77,6 +85,7 @@
 
 ### Documentation
 
+- 收錄紫白擇吉第五輪實作紀錄、原始研究 checksum、暗建傳本分層、年月／日時證據政策、大月建／日主 Gate／月納音暫緩邊界、191 tests、PWA／單檔 build 與四種手機寬度驗收。
 - 收錄干支加入與 UI/UX refinement V2 implementation record、原始規格 checksum、188 tests、PWA／單檔 build、五種寬度及 keyboard／focus／font 驗收證據。
 - 更新 `docs/HANDOFF.md` 的第四輪 checkpoint、現行 truth source、字體雜湊、179 tests、PWA／單檔 build 及四種 iPhone 寬度 Browser 驗收證據。
 - 收錄紫白擇吉第四輪實作紀錄、原始研究 checksum、被修正的第三輪規則、179 tests、PWA／單檔 build 與四種 iPhone 寬度 Browser 驗收。

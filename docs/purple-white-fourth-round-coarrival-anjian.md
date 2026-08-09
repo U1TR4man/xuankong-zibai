@@ -1,5 +1,7 @@
 # 紫白擇吉第四輪考源 implementation record
 
+> 歷史記錄：co-arrival、raw／qualified arrival 及 classical 受剋分離繼續有效；本文的「暗建只套月層」、「五黃四隅為唯一解」、四層 role 及 status V4 已被 [第五輪實作紀錄](purple-white-fifth-round-layered-anjian-qi.md) 修正。
+
 本文件記錄 `紫白擇吉_第四輪考源_四課同到與暗建修正.md` 的保守落地方式，並取代第三輪中「暗建＝飛星回本宮」及「所有宮剋星都叫受剋殺」的暫定實作。
 
 ## 原始研究規格
