@@ -33,13 +33,15 @@ describe('紫白擇吉 Phase 4 Pair 學習卡', () => {
 
     expect($<HTMLDialogElement>('dialog.sheet-dialog--pair-rule')?.open).toBe(true);
     expect($('.sheet__title')?.textContent).toBe('68｜六八');
-    expect($('.pair-rule__meaning')?.textContent).toBe('武科 · 韜略');
-    expect($('.pair-rule__badges')?.textContent).toContain('A · 古訣直述');
-    expect($('.pair-rule__badges')?.textContent).toContain('需要覆核');
+    expect($('.pair-rule__meaning')?.textContent).toContain('武科、韜略、權位');
+    expect($('.pair-rule__badges')?.textContent).toContain('A · 研究判定直接');
+    expect($('.pair-rule__badges')?.textContent).toContain('待逐條覆核');
     expect($('.pair-rule')?.textContent).toContain('五行關係');
     expect($('.pair-rule')?.textContent).toContain('用途 tags');
     expect($('.pair-rule__tags')?.textContent).toContain('韜略');
     expect($('.pair-rule__source')?.textContent).toContain('尚未收錄可核對的逐字引文');
+    expect($('.pair-rule')?.textContent).toContain('rankingWeight：0');
+    expect($('.pair-rule__disclaimer')?.textContent).toContain('不參與擇吉排序');
   });
 
   it('有序 pair 明示 68 ≠ 86，反向按鈕會開啟不同資料', () => {
@@ -47,7 +49,7 @@ describe('紫白擇吉 Phase 4 Pair 學習卡', () => {
     $<HTMLButtonElement>('.pair-rule__reverse')!.click();
 
     expect($('.sheet__title')?.textContent).toBe('86｜八六');
-    expect($('.pair-rule__meaning')?.textContent).toBe('文士參軍 · 異途');
+    expect($('.pair-rule__meaning')?.textContent).toContain('文士參軍、異途擢用');
     expect($('.pair-rule__direction')?.textContent).toContain('86 ≠ 68');
   });
 });

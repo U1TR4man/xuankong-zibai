@@ -101,7 +101,7 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
         el('input', {
           type: 'radio', name: 'pairSearchBy', value: 'purpose', checked: draft.searchBy === 'purpose',
         }),
-        el('span', {}, '適合用途')),
+        el('span', {}, '用途參考')),
     ),
   );
   const pairCriteria = [
@@ -119,6 +119,8 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
           el('span', {}, `不分次序：${draft.firstStar}${draft.secondStar}／${draft.secondStar}${draft.firstStar}`)),
       ),
     ),
+    el('p', { class: 'pair-search-form__convention' },
+      '有序搜尋以較慢層為第一碼、較快層為第二碼；這是本工具的時間疊盤 convention。'),
   ];
   const purposeCriteria = el('label', { class: 'search-field' },
     el('span', { class: 'search-field__label' }, '用途'),
@@ -163,8 +165,8 @@ function PairSearchForm(state: AppState, model: PairSearchModel): HTMLFormElemen
   form.append(el('button', {
     class: 'btn btn--primary pair-search-form__submit', type: 'submit', disabled: model.searching,
   }, model.searching
-    ? draft.searchBy === 'purpose' ? '尋用途中…' : '尋組合中…'
-    : draft.searchBy === 'purpose' ? '開始尋用途' : '開始尋組合'));
+    ? draft.searchBy === 'purpose' ? '尋用途參考中…' : '尋組合中…'
+    : draft.searchBy === 'purpose' ? '開始尋用途參考' : '開始尋組合'));
 
   if (model.searching) form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')
     .forEach((control) => { control.disabled = true; });

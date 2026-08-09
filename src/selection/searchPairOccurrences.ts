@@ -29,7 +29,6 @@ export interface PairSearchMatch {
   hit: PairHit;
   purposeContext?: {
     purpose: SelectionPurpose;
-    otherCautionCount: number;
     purpleWhiteCount: number;
   };
 }
@@ -85,7 +84,6 @@ export function searchPairOccurrences(
           hit,
           purposeContext: query.purpose && evaluation ? {
             purpose: query.purpose,
-            otherCautionCount: evaluation.cautionHits.length,
             purpleWhiteCount: evaluation.purpleWhiteCount,
           } : undefined,
         });
@@ -93,10 +91,9 @@ export function searchPairOccurrences(
     }
   }
   if (query.purpose) {
-    const sourceRank = { A: 3, B: 2, C: 1 } as const;
+    const sourceRank = { A: 5, 'A/B': 4, B: 3, 'B/C': 2, C: 1 } as const;
     matches.sort((a, b) => (
-      sourceRank[b.hit.rule.sourceLevel] - sourceRank[a.hit.rule.sourceLevel]
-      || (a.purposeContext?.otherCautionCount ?? 0) - (b.purposeContext?.otherCautionCount ?? 0)
+      sourceRank[b.hit.rule.sourceGrade] - sourceRank[a.hit.rule.sourceGrade]
       || (b.purposeContext?.purpleWhiteCount ?? 0) - (a.purposeContext?.purpleWhiteCount ?? 0)
       || a.startDateTime.localeCompare(b.startDateTime)
     ));

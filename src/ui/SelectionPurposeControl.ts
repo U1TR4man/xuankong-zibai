@@ -6,7 +6,7 @@ import { el } from './dom';
 export function SelectionPurposeControl(state: AppState): HTMLElement {
   const select = el('select', {
     class: 'selection-purpose__select',
-    'aria-label': '擇吉用途',
+    'aria-label': '雙星用途參考',
   }, ...PURPOSE_OPTIONS.map((purpose) => el('option', {
     value: purpose.value,
     selected: state.selectionPurpose === purpose.value,
@@ -15,7 +15,7 @@ export function SelectionPurposeControl(state: AppState): HTMLElement {
     setSelectionPurpose(select.value as SelectionPurpose);
   });
   return el('label', { class: 'selection-purpose' },
-    el('span', { class: 'selection-purpose__label' }, '用途'),
+    el('span', { class: 'selection-purpose__label' }, '雙星參考'),
     select,
   );
 }

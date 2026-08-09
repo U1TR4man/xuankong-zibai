@@ -66,7 +66,7 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     ]);
   });
 
-  it('點方向可查看 verdict 原因、六組 pair、五行與 heuristic 聲明', async () => {
+  it('點方向可查看 verdict 原因、六組參考 pair、五行與方法聲明', async () => {
     $<HTMLButtonElement>('[data-selection-palace="xun"]')!.click();
     await Promise.resolve();
     const { getState } = await import('../src/state/appState');
@@ -76,9 +76,11 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.sheet__title')?.textContent).toBe('巽 · 東南');
     expect(document.querySelectorAll('.direction-detail__star')).toHaveLength(4);
     expect(document.querySelectorAll('.direction-pairs .direction-pair')).toHaveLength(6);
+    expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('雙星參考');
     expect($('.direction-reasons')?.textContent?.length).toBeGreaterThan(0);
     expect($('.direction-elements')?.textContent).toContain('年月');
     expect($('.direction-detail__disclaimer')?.textContent).toContain('TOOL_HEURISTIC');
+    expect($('.direction-detail__disclaimer')?.textContent).toContain('rankingWeight 為 0');
     const pairButton = $<HTMLButtonElement>('.direction-pairs .direction-pair')!;
     expect(pairButton.tagName).toBe('BUTTON');
     pairButton.click();
@@ -86,8 +88,10 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.pair-rule__section')?.textContent).toContain('五行關係');
   });
 
-  it('用途只更新高亮／排序 context，並保留在擇吉 URL', async () => {
+  it('用途只更新雙星參考 context，不改方向排序，並保留在 URL', async () => {
     $<HTMLButtonElement>('dialog .sheet__close')!.click();
+    const before = Array.from(document.querySelectorAll('.selection-ranking__direction'))
+      .map((item) => item.textContent);
     const purpose = $<HTMLSelectElement>('.selection-purpose__select')!;
     purpose.value = 'writing';
     purpose.dispatchEvent(new Event('change', { bubbles: true }));
@@ -97,6 +101,8 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect(getState().selectionMode).toBe(true);
     expect(location.search).toContain('purpose=writing');
     expect(document.querySelectorAll('.selection-grid button.selection-cell')).toHaveLength(8);
+    expect(Array.from(document.querySelectorAll('.selection-ranking__direction'))
+      .map((item) => item.textContent)).toEqual(before);
   });
 
   it('疊盤與擇吉互相切換時不會同時開啟', async () => {

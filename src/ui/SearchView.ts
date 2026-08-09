@@ -347,7 +347,7 @@ export function SearchView(state: AppState): HTMLElement {
   if (activeSearchTool === 'pairs') {
     return el('main', { class: 'search-view' },
       el('p', { class: 'search-view__helper' },
-        '指定有序或不分次序的雙星組合，搜尋年月日時六種 Pair Layer。'),
+        '指定有序或不分次序的雙星參考，搜尋年月日時六種 Pair Layer；斷語不參與擇吉排序。'),
       toolSwitch,
       PairSearchView(state),
     );

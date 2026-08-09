@@ -1,13 +1,14 @@
 import { purposeLabel } from '../selection/purpose';
 import {
-  VERDICT_LABEL, type DirectionEvaluation, type PairHit, type SourceLevel,
+  VERDICT_LABEL, type DirectionEvaluation, type PairHit, type SourceGrade,
 } from '../selection/types';
 import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
 import { openPairRuleSheet } from './PairRuleSheet';
 
-const SOURCE_LABEL: Record<SourceLevel, string> = {
-  A: 'A · 古訣直述', B: 'B · 古訣旁證', C: 'C · 推演／結構',
+const SOURCE_LABEL: Record<SourceGrade, string> = {
+  A: 'A · 研究判定直接', 'A/B': 'A/B · 直接／旁證',
+  B: 'B · 古賦旁證', 'B/C': 'B/C · 旁證／推演', C: 'C · 彙整／推演',
 };
 
 function starItem(label: string, value: number): HTMLElement {
@@ -29,7 +30,7 @@ function pairRow(hit: PairHit, matched = false, returnFocusSelector?: string): H
   el('strong', { class: 'direction-pair__key' }, hit.pair),
   el('span', { class: 'direction-pair__meaning' },
     hit.rule.reviewStatus === 'pending' ? '資料待校對' : `${hit.rule.title} · ${hit.rule.shortMeaning}`),
-  el('small', { class: 'direction-pair__source' }, SOURCE_LABEL[hit.rule.sourceLevel]),
+  el('small', { class: 'direction-pair__source' }, SOURCE_LABEL[hit.rule.sourceGrade]),
   );
 }
 
@@ -77,10 +78,10 @@ export function openDirectionDetailSheet(
         `狀態：${VERDICT_LABEL[evaluation.verdict]}`),
       evaluation.purpose !== 'general'
         ? el('p', { class: 'direction-detail__purpose' },
-          `用途：${purposeLabel(evaluation.purpose)} · 命中 ${evaluation.purposeHits.length} 組`)
+          `雙星用途參考：${purposeLabel(evaluation.purpose)} · 命中 ${evaluation.purposeHits.length} 組`)
         : null,
       el('section', { class: 'direction-section' },
-        el('h3', {}, '主要組合'), main),
+        el('h3', {}, '雙星參考'), main),
       el('section', { class: 'direction-section' },
         el('h3', {}, '為甚麼'), reasons),
       el('section', { class: 'direction-section' },
@@ -88,7 +89,7 @@ export function openDirectionDetailSheet(
       el('section', { class: 'direction-section' },
         el('h3', {}, '五行關係'), elementList),
       el('p', { class: 'direction-detail__disclaimer' },
-        '狀態屬 TOOL_HEURISTIC；古訣、五行結構與工具排序分層顯示，不代表個人化吉凶保證。'),
+        '狀態屬 TOOL_HEURISTIC；雙星 81 組只供學習參考，rankingWeight 為 0，不參與方向排序。'),
     ),
   });
 }

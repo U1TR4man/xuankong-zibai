@@ -677,6 +677,12 @@ button, select, input { font: inherit; color: inherit; }
   border-radius: 6px;
   background: var(--paper-raised);
 }
+.pair-search-form__convention {
+  margin: calc(-1 * var(--s2)) 0 0;
+  color: var(--ink-tertiary);
+  font-size: 12px;
+  line-height: 1.5;
+}
 .selection-cell {
   width: 100%;
   min-width: 0;

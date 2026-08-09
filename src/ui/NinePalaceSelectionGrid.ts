@@ -84,7 +84,7 @@ export function NinePalaceSelectionGrid(
       type: 'button', role: 'gridcell',
       'data-selection-palace': palace.key,
       'aria-pressed': String(selected),
-      'aria-label': `${evaluation.snapshot.bearing}，年${evaluation.snapshot.yearStar}，月${evaluation.snapshot.monthStar}，日${evaluation.snapshot.dayStar}，時${evaluation.snapshot.hourStar}，${evaluation.verdict}，主要組合${shownHit.pair}${shownHit.rule.title}`,
+      'aria-label': `${evaluation.snapshot.bearing}，年${evaluation.snapshot.yearStar}，月${evaluation.snapshot.monthStar}，日${evaluation.snapshot.dayStar}，時${evaluation.snapshot.hourStar}，${evaluation.verdict}，雙星參考${shownHit.pair}${shownHit.rule.title}`,
       onclick: (event: Event) => openDirection(event.currentTarget as HTMLElement, evaluation, state),
     },
     el('span', { class: 'cell__palace' }, evaluation.snapshot.bearing),

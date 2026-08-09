@@ -10,22 +10,14 @@ import type {
 
 const PURPLE_WHITE = new Set<StarNumber>([1, 6, 8, 9]);
 const SOURCE_RANK: Record<SourceLevel, number> = { A: 3, B: 2, C: 1 };
-const POLARITY_RANK = { caution: 4, favorable: 3, mixed: 2, neutral: 1 } as const;
+const SOURCE_GRADE_RANK = { A: 5, 'A/B': 4, B: 3, 'B/C': 2, C: 1 } as const;
 const VERDICT_RANK: Record<DirectionVerdict, number> = {
   priority: 5, usable: 4, mixed: 3, ordinary: 2, caution: 1,
 };
 
-function appliesDirectly(hit: PairHit): boolean {
-  const applicability = hit.rule.applicability;
-  return applicability.temporalSelection === 'direct'
-    && !applicability.requiresPalaceContext
-    && !applicability.requiresProsperityContext;
-}
-
 function topHit(hits: readonly PairHit[]): PairHit {
   return [...hits].sort((a, b) => (
-    POLARITY_RANK[b.rule.polarity] - POLARITY_RANK[a.rule.polarity]
-    || SOURCE_RANK[b.rule.sourceLevel] - SOURCE_RANK[a.rule.sourceLevel]
+    SOURCE_GRADE_RANK[b.rule.sourceGrade] - SOURCE_GRADE_RANK[a.rule.sourceGrade]
     || Number(b.rule.reviewStatus !== 'pending') - Number(a.rule.reviewStatus !== 'pending')
   ))[0]!;
 }
@@ -36,17 +28,8 @@ function highestSource(hits: readonly PairHit[]): SourceLevel {
   ), 'C');
 }
 
-function verdictFor(
-  favorable: readonly PairHit[], caution: readonly PairHit[],
-  purpleWhiteCount: number,
-): DirectionVerdict {
-  if (caution.some((hit) => hit.rule.priority === 'high')) return 'caution';
-  if (favorable.length > 0 && caution.length > 0) return 'mixed';
-  const strongFavorable = favorable.some((hit) => hit.rule.sourceLevel === 'A'
-    || hit.rule.sourceLevel === 'B');
-  if (strongFavorable && caution.length === 0 && purpleWhiteCount >= 2) return 'priority';
-  if ((favorable.length > 0 || purpleWhiteCount >= 2) && caution.length === 0) return 'usable';
-  return 'ordinary';
+function verdictFor(purpleWhiteCount: number): DirectionVerdict {
+  return purpleWhiteCount >= 2 ? 'usable' : 'ordinary';
 }
 
 export function evaluateDirection(
@@ -54,19 +37,17 @@ export function evaluateDirection(
   purpose: SelectionPurpose = 'general',
 ): DirectionEvaluation {
   const hits = buildPairHits(snapshot);
-  const directHits = hits.filter(appliesDirectly);
-  const favorableHits = directHits.filter((hit) => hit.rule.polarity === 'favorable');
-  const cautionHits = directHits.filter((hit) => hit.rule.polarity === 'caution');
-  const mixedHits = directHits.filter((hit) => hit.rule.polarity === 'mixed');
+  // 81 組只是雙星參考層，rankingWeight 固定為 0。
+  const favorableHits: PairHit[] = [];
+  const cautionHits: PairHit[] = [];
+  const mixedHits: PairHit[] = [];
   const stars = [snapshot.yearStar, snapshot.monthStar, snapshot.dayStar, snapshot.hourStar];
   const purpleWhiteStars = stars.filter((star) => PURPLE_WHITE.has(star));
-  const verdict = verdictFor(favorableHits, cautionHits, purpleWhiteStars.length);
+  const verdict = verdictFor(purpleWhiteStars.length);
   const matchedPurpose = purposeHits(hits, purpose);
   const reasons = [
-    ...favorableHits.map((hit) => `${hit.pair} ${hit.rule.title}｜${hit.rule.shortMeaning}`),
-    ...cautionHits.map((hit) => `${hit.pair} ${hit.rule.title}｜${hit.rule.shortMeaning}`),
     purpleWhiteStars.length > 0 ? `紫白集中：${purpleWhiteStars.join('、')}` : '未見紫白集中',
-    cautionHits.length === 0 ? '未命中目前已校對的主要警示組合' : '',
+    '雙星 81 組只供參考，不參與方向排序',
   ].filter(Boolean);
 
   return {
@@ -96,11 +77,6 @@ export function evaluateDirections(
 export function rankDirections(evaluations: readonly DirectionEvaluation[]): DirectionEvaluation[] {
   return [...evaluations].sort((a, b) => (
     VERDICT_RANK[b.verdict] - VERDICT_RANK[a.verdict]
-    || b.purposeHits.length - a.purposeHits.length
-    || b.favorableHits.filter((hit) => hit.rule.sourceLevel === 'A').length
-      - a.favorableHits.filter((hit) => hit.rule.sourceLevel === 'A').length
-    || b.favorableHits.filter((hit) => hit.rule.sourceLevel === 'B').length
-      - a.favorableHits.filter((hit) => hit.rule.sourceLevel === 'B').length
     || b.purpleWhiteCount - a.purpleWhiteCount
   ));
 }

@@ -46,6 +46,7 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
     expect($<HTMLInputElement>('input[name="pairOrder"][value="ordered"]')?.checked).toBe(true);
     expect(document.querySelectorAll('input[name="pairLayers"]')).toHaveLength(6);
     expect(document.querySelectorAll('input[name="pairLayers"]:checked')).toHaveLength(6);
+    expect($('.pair-search-form__convention')?.textContent).toContain('較慢層為第一碼');
   });
 
   it('指定次序搜尋 14，結果顯示日期、時段、方向、layer 與四星 context', async () => {
@@ -118,9 +119,9 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
       .every((result) => ['14', '41'].includes(result.getAttribute('data-pair') ?? ''))).toBe(true);
   });
 
-  it('可以按用途 tags 反向搜尋，結果明示來源與紫白集中', async () => {
+  it('可以按用途 tags 搜尋雙星參考，結果明示來源與紫白集中', async () => {
     $<HTMLInputElement>('input[name="pairSearchBy"][value="purpose"]')!.click();
-    expect($('.pair-search-form__submit')?.textContent).toBe('開始尋用途');
+    expect($('.pair-search-form__submit')?.textContent).toBe('開始尋用途參考');
     expect($<HTMLSelectElement>('select[name="pairPurpose"]')?.value).toBe('writing');
     for (const input of Array.from(
       document.querySelectorAll<HTMLInputElement>('input[name="pairLayers"]'),
@@ -131,10 +132,8 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
     await waitForPairSearch();
 
     expect($('.pair-search-results .search-results__summary')?.textContent)
-      .toContain('適合用途：文書／考試');
+      .toContain('用途參考：文書／考試');
     expect(document.querySelectorAll('.pair-search-result').length).toBeGreaterThan(0);
-    expect(Array.from(document.querySelectorAll('.pair-search-result'))
-      .every((result) => result.getAttribute('data-pair') === '14')).toBe(true);
     expect($('.pair-search-result__quality')?.textContent).toContain('來源 A');
     expect($('.pair-search-result__quality')?.textContent).toContain('紫白集中');
   });

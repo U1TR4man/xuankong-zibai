@@ -28,19 +28,34 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
       expect(rule.tags).toBeInstanceOf(Array);
       expect(rule.reversePair).toBe(`${rule.secondStar}${rule.firstStar}`);
       expect(['A', 'B', 'C']).toContain(rule.sourceLevel);
+      expect(['A', 'A/B', 'B', 'B/C', 'C']).toContain(rule.sourceGrade);
+      expect(rule.reviewStatus).toBe('needs-review');
+      expect(rule.temporalUse).toBe('reference_only');
+      expect(rule.rankingWeight).toBe(0);
+      expect(rule.verified).toBe(false);
     }
   });
 
-  it('未知古訣不猜吉凶，明確標 pending／資料待校對', () => {
+  it('研究摘要入庫但不猜吉凶、不假裝已校對', () => {
     expect(getPairRule('53')).toMatchObject({
-      polarity: 'neutral', sourceLevel: 'C', reviewStatus: 'pending', shortMeaning: '資料待校對',
+      polarity: 'neutral', sourceLevel: 'B', sourceGrade: 'B', reviewStatus: 'needs-review',
+      shortMeaning: '三木犯五：病災、瘟疾、衝突', rankingWeight: 0,
     });
   });
 
   it('有序組合不自動排序，68 與 86 保留不同象義', () => {
-    expect(getPairRule('68')).toMatchObject({ pair: '68', reversePair: '86', shortMeaning: '武科 · 韜略' });
-    expect(getPairRule('86')).toMatchObject({ pair: '86', reversePair: '68', shortMeaning: '文士參軍 · 異途' });
+    expect(getPairRule('68')).toMatchObject({
+      pair: '68', reversePair: '86', orderSensitive: true,
+      shortMeaning: '六八：武科、韜略、權位、尊榮',
+    });
+    expect(getPairRule('86')).toMatchObject({
+      pair: '86', reversePair: '68', orderSensitive: true,
+      shortMeaning: '八六：文士參軍、異途擢用、由文入權',
+    });
     expect(getPairRule('37')).not.toEqual(getPairRule('73'));
+    expect(getPairRule('25').orderSensitive).toBe(true);
+    expect(getPairRule('52').orderSensitive).toBe(true);
+    expect(getPairRule('14').orderSensitive).toBe(false);
   });
 
   it('八方快照只組裝正式 FullChart 的年月日時，中宮不參與', () => {
@@ -64,29 +79,35 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(hits.map((hit) => hit.pair)).toEqual(['14', '18', '16', '48', '46', '86']);
   });
 
-  it('heuristic 保留可解釋理由，不產生數值分數', () => {
+  it('heuristic 只使用紫白集中，雙星參考不產生數值分數', () => {
     const evaluation = evaluateDirection(EXAMPLE, 'writing');
-    expect(evaluation.verdict).toBe('priority');
+    expect(evaluation.verdict).toBe('usable');
     expect(evaluation.purpleWhiteStars).toEqual([1, 8, 6]);
-    expect(evaluation.favorableHits.map((hit) => hit.pair)).toEqual(['14', '86']);
+    expect(evaluation.favorableHits).toEqual([]);
+    expect(evaluation.cautionHits).toEqual([]);
     expect(evaluation.purposeHits.map((hit) => hit.pair)).toContain('14');
-    expect(evaluation.reasons.join(' ')).toContain('四一同宮');
+    expect(evaluation.reasons.join(' ')).toContain('雙星 81 組只供參考');
     expect(evaluation).not.toHaveProperty('score');
   });
 
-  it('二五交加是 high-priority caution，不以其他訊號加減抵銷', () => {
+  it('二五交加保留參考文字，但不直接改變擇吉 verdict', () => {
     const evaluation = evaluateDirection({
       ...EXAMPLE, yearStar: 2, monthStar: 5, dayStar: 1, hourStar: 4,
     });
-    expect(evaluation.cautionHits.map((hit) => hit.pair)).toContain('25');
-    expect(evaluation.favorableHits.map((hit) => hit.pair)).toContain('14');
-    expect(evaluation.verdict).toBe('caution');
+    expect(evaluation.hits.find((hit) => hit.pair === '25')?.rule.shortMeaning)
+      .toContain('二五交加');
+    expect(evaluation.cautionHits).toEqual([]);
+    expect(evaluation.verdict).toBe('ordinary');
   });
 
-  it('同級排序只用 rule hit、用途與紫白集中，不暴露假分數', () => {
-    const ranked = rankDirections(evaluateDirections(computeFullChart(AT), 'fame'));
+  it('方向排序不受 pair 用途改變，且不暴露假分數', () => {
+    const chart = computeFullChart(AT);
+    const ranked = rankDirections(evaluateDirections(chart, 'fame'));
+    const general = rankDirections(evaluateDirections(chart, 'general'));
     expect(ranked).toHaveLength(8);
     expect(ranked.map((item) => item.snapshot.palace)).not.toContain('center');
+    expect(ranked.map((item) => item.snapshot.palace))
+      .toEqual(general.map((item) => item.snapshot.palace));
     expect(ranked.every((item) => !('score' in item))).toBe(true);
   });
 });

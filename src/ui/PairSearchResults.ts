@@ -43,8 +43,7 @@ function PairResultCard(match: PairSearchMatch): HTMLElement {
     `年${snapshot.yearStar} · 月${snapshot.monthStar} · 日${snapshot.dayStar} · 時${snapshot.hourStar}`),
   match.purposeContext
     ? el('span', { class: 'pair-search-result__quality' },
-      `來源 ${hit.rule.sourceLevel} · 紫白集中 ${match.purposeContext.purpleWhiteCount}`,
-      match.purposeContext.otherCautionCount > 0 ? ' · 同方向另有警示' : '')
+      `來源 ${hit.rule.sourceGrade} · 紫白集中 ${match.purposeContext.purpleWhiteCount}`)
     : null,
   el('span', { class: 'pair-search-result__arrow', 'aria-hidden': 'true' }, '›'),
   );
@@ -111,7 +110,7 @@ export function PairSearchResults(
   renderVisible();
 
   const heading = query.purpose
-    ? `適合用途：${purposeLabel(query.purpose)}`
+    ? `用途參考：${purposeLabel(query.purpose)}`
     : query.ordered
       ? `${pair} ${rule.title}`
       : `${pair}／${reverse} · 不分次序`;
@@ -128,7 +127,7 @@ export function PairSearchResults(
     matches.length > 0
       ? el('div', { class: 'search-results__body' }, list, more)
       : el('div', { class: 'search-empty' },
-        el('p', {}, '這段時間沒有找到符合的雙星組合'),
+        el('p', {}, '這段時間沒有找到符合的雙星參考'),
         el('p', {}, '請修改日期、次序或 Pair Layer 後再搜尋。'),
       ),
   );

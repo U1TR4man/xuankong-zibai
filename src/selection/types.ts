@@ -8,8 +8,14 @@ export type PairLayer = 'YM' | 'YD' | 'YH' | 'MD' | 'MH' | 'DH';
 export type PairKey = `${StarNumber}${StarNumber}`;
 
 export type SourceLevel = 'A' | 'B' | 'C';
+export type SourceGrade = SourceLevel | 'A/B' | 'B/C';
 export type Polarity = 'favorable' | 'caution' | 'mixed' | 'neutral';
 export type ReviewStatus = 'verified' | 'needs-review' | 'pending';
+export type PairContext =
+  | 'general_pair' | 'palace_conditioned' | 'house_double_star' | 'temporal_experimental';
+export type PairEvidenceType =
+  | 'direct_pair' | 'named_pattern' | 'palace_conditioned'
+  | 'related_classic' | 'derived' | 'research_summary';
 export type DirectionVerdict = 'priority' | 'usable' | 'ordinary' | 'mixed' | 'caution';
 export type SelectionPurpose =
   | 'general' | 'writing' | 'wealth' | 'negotiation' | 'fame' | 'celebration' | 'travel';
@@ -56,13 +62,24 @@ export interface PurpleWhitePairRule {
   tags: string[];
   reversePair: PairKey;
   directionSensitive: boolean;
+  orderSensitive: boolean;
   sourceLevel: SourceLevel;
+  sourceGrade: SourceGrade;
   reviewStatus: ReviewStatus;
   sources: {
     title: string;
+    evidenceType: PairEvidenceType;
     quote?: string;
     note?: string;
   }[];
+  context: PairContext;
+  modernInterpretation: string;
+  originalText?: string;
+  edition?: string;
+  sourceDate?: string;
+  verified: boolean;
+  temporalUse: 'reference_only';
+  rankingWeight: 0;
   applicability: {
     samePalace: boolean;
     temporalSelection: 'direct' | 'conditional' | 'reference';
