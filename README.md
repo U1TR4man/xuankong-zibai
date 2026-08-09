@@ -8,7 +8,7 @@
 ```
 npm install
 npm run dev       # 開發
-npm test          # 172 個測試（含 1200 點 engine snapshot）
+npm test          # 178 個測試（含 1200 點 engine snapshot）
 npm run build     # 產生 dist/（含 service worker、manifest）
 npm run preview
 ```
@@ -43,7 +43,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 ### V2.1 視覺精修與 iOS 日期時間修正
 
 - 日期／時間仍使用原生 `<input type="date">`、`<input type="time">`；外層 shell 統一繪製 border 與 focus，避免 iOS WebKit 原生控件內外框尺寸不同步。
-- 自帶約 222 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、862 個 UI 字元子集，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
+- 自帶約 227 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、864 個 UI 字元子集，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
 - 頂欄 info／settings 改為同一套 1.5px inline SVG，不再依賴平台 emoji。
 - 層級列改為無外框 tab + 朱砂短底線；主畫面只保留一個「今」，UTC+8 說明留在選時與設定 Sheet。
 - 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
@@ -52,8 +52,8 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 
 ### Professional UI/UX refinement
 
-- 擇吉九宮移除低價值的紫白集中數，保留方向、四星、狀態及主要組合；320px 資訊字不再縮至 8px。
-- 方向詳情首屏只顯示結果與主要參考；理由、六組、五行及研究說明預設收起，按需展開。
+- 擇吉九宮移除低價值的紫白集中數，保留方向、四星、狀態及主要條件；320px 資訊字不再縮至 8px。
+- 方向詳情首屏顯示結果、時氣／白中殺摘要與主要參考；理由、六組、五行及研究說明預設收起，按需展開。
 - Bottom Sheet 初始焦點改到 sheet surface，關閉按鈕統一為 1.5px inline SVG 並保留 keyboard focus。
 - Workspace、時間軸及盤面模式以 sans／serif、字重及不同底線尺寸拉開三層 hierarchy；routing／state 不變。
 - 詳見 [專業 UI/UX refinement 紀錄](docs/professional-uiux-refinement.md)。
@@ -87,13 +87,13 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 | 3 | 尋組合、有序／不分次序、Layer filter、分批結果與 deep-link | ✅ |
 | 4 | Pair 學習卡、來源／review、reverse pair 與按用途參考搜尋 | ✅ |
 
-擇吉盤顯示每個方向的年／月／日／時四星，並建立 YM、YD、YH、MD、MH、DH 六個有序組合；中宮只保留參考，不參與八方搜尋或排序。方向狀態屬 `TOOL_HEURISTIC`，不顯示虛構的 0–100 分或星級。
+擇吉盤顯示每個方向的年／月／日／時四星，並建立 YM、YD、YH、MD、MH、DH 六個有序組合；中宮只保留參考，不參與八方搜尋或排序。方向狀態屬可解釋的工具分級，不顯示虛構的 0–100 分或星級。
 
 `docs/purple-white-pair-research-v1.md` 已將研究版 81 組現代摘要收入資料庫，並保留 A、A/B、B、B/C、C 來源級別。25／52、37／73、68／86 明確保留次序差異。
 
 這 81 組全部是「雙星參考」：`needs-review`、`verified=false`、`rankingWeight=0`。研究版沒有附古籍版本頁碼與逐字引文，工具不會把摘要假裝成原文，也不會讓 pair 斷語或用途 tags 直接改變八方排序。
 
-第二輪考源進一步加入 `sourceAudit`，分開記錄證據形式、原始使用情境、次序可信度、宮位／方位條件、異文與原頁核對狀態。擇吉主盤亦顯示 0–4 顆紫白的集中訊號；有氣、墓絕與白中殺目前明示為 `unknown`，不會先套不確定公式或固定分數。詳見 [第二輪考源紀錄](docs/purple-white-second-round-source-audit.md)。
+第二輪考源加入 `sourceAudit`，分開記錄證據形式、原始使用情境、次序可信度、宮位／方位條件、異文與原頁核對狀態。第三輪再將文件明定的暗建、受剋、穿心、交劍、鬥牛、墓絕、1／6／8／9 支序有氣及月令狀態做成可重跑規則；沒有直接支序表的星不硬推，月令亦不換算固定分數。詳見 [第二輪考源紀錄](docs/purple-white-second-round-source-audit.md)及 [第三輪考源紀錄](docs/purple-white-third-round-temporal-rules.md)。
 
 ## 架構
 
@@ -173,7 +173,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 172 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第二輪考源 audit、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
+- `npm test` — 178 個測試，涵蓋算法、1200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第三輪白中殺／時間狀態、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
@@ -182,8 +182,8 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 ## 尚未做的事
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
-- 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前的方向排序只是不顯示分數的 `TOOL_HEURISTIC`。
-- 雙星古訣資料已有第二輪 `sourceAudit`，但仍需以可追溯版本、頁碼／章節與原頁影像逐條校對；未核對條目必須繼續保持 `needs-review`、`verified=false`、`primarySourceVerified=false`、`rankingWeight=0`。
+- 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前方向 status 即使已加入第三輪條件，仍只是工具分級。
+- 雙星古訣及第三輪時間規則仍需以可追溯版本、頁碼／章節與原頁影像逐條校對；未核對條目必須繼續保持 `needs-review`、`verified=false`、`primarySourceVerified=false`、`rankingWeight=0`。
 - 進階搜尋條件尚未序列化到 URL，也未加入 recent search；簡易搜尋已支援 URL restore，切回尋星仍會保留本次頁面生命週期內的上一輪結果。
 - 已用真實 production 瀏覽器驗證 320 / 375 / 390 / 430 / 768，iPhone 實機使用亦回報無問題；如需 release-grade 證據，可再補 Safari／PWA standalone／iOS Chrome 分項紀錄。
 - 未做 IndexedDB（目前資料量小，設定用 localStorage 已足夠）。

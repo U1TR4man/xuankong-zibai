@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup、疊盤配色／尋星重複標題補丁，以及紫白擇吉方向 V1 **Phase 1–4** 均已完成。雙星 81 組第一、第二輪考源已入庫並與方向 ranking 解耦；擇吉九宮四星橫排 UI 修正亦已完成。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／尋星 implementation **Phase 0–6**、盤面／尋星／URL cleanup、疊盤配色／尋星重複標題補丁，以及紫白擇吉方向 V1 **Phase 1–4** 均已完成。雙星 81 組第一、第二輪考源已入庫並與方向 ranking 解耦；第三輪白中殺、墓絕、支序有氣及月令狀態亦已落地。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -27,6 +27,7 @@
 - 雙星 81 組研究邊界／QA 文件 checkpoint：`66a8d69`
 - 擇吉盤四星橫排 UI checkpoint：`a515ddc`
 - 紫白擇吉第二輪考源／source audit code checkpoint：`e389de3`
+- 紫白擇吉第三輪白中殺／時間狀態 code checkpoint：`d3d6374`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -38,8 +39,9 @@
 - 雙星 81 組考源研究版實作紀錄：`docs/purple-white-pair-research-v1.md`
 - 擇吉盤四星橫排修正紀錄：`docs/selection-four-stars-horizontal.md`
 - 紫白擇吉第二輪考源紀錄：`docs/purple-white-second-round-source-audit.md`
+- 紫白擇吉第三輪考源紀錄：`docs/purple-white-third-round-temporal-rules.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排及第二輪 source audit 已完成；下一步應補齊可追溯原頁，再決定有氣／白中殺公式與後續 deploy。
+P0 iPhone 實機使用已回報無問題。疊盤、尋星 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排及第三輪時間規則均已完成；下一步是補齊可追溯原頁及處理 deploy，不應擅自擴展暫緩公式。
 
 ---
 
@@ -106,7 +108,7 @@ tests/fixtures/chart-snapshot.json
 ### V2.1 Phase A–D — Visual refinement + iOS date/time
 
 - 原生 date/time input 改為 `sheet-input-shell` 負責 border／focus，input 本身保持 `appearance:auto`、零 border／outline；320–430px 無 clipping 或雙框
-- 自帶 `public/fonts/zibai-serif-medium.woff2`（Noto Serif CJK TC Medium 2.003；862 個 UI 字元／863 glyph，約 222 KB）與 OFL；preload、PWA precache、單檔 data URI 均完成
+- 自帶 `public/fonts/zibai-serif-medium.woff2`（Noto Serif CJK TC Medium 2.003；864 個 UI 字元／865 glyph，約 227 KB）與 OFL；preload、PWA precache、單檔 data URI 均完成
 - `scripts/build-font-subset.py` 掃描 `src/**/*.ts(x)`、`index.html` 與其他直接顯示的靜態文字後重建子集；來源 OTF checksum、產物 coverage 與 glyph inventory 均可重跑檢查
 - TopBar 兩個 emoji 改成 `currentColor`、1.5px stroke inline SVG
 - LevelSegment 保留 tablist／tab／aria-selected，只移除外框、divider 與 active 色塊，改為 22×2px 朱砂底線
@@ -186,10 +188,21 @@ tests/fixtures/chart-snapshot.json
 - 25／52、37／73、68／86 為明確 `orderSensitive`；時間 pair 的慢層第一碼／快層第二碼只是工具 convention
 - 全部 81 組 `temporalUse=reference_only`、`rankingWeight=0`、`polarity=neutral`；pair 斷語、來源與用途 tags 不參與方向 verdict／ranking
 - 擇吉九宮的年／月／日／時已改為由左至右的四欄橫排；八方與中宮共用版式，全部維持墨灰，不加入流刻或目前層高亮
-- 每方已建立四時紫白 profile，主盤顯示 0–4／4 與「紫白到方／二時同加／三時集中／四時同到」；有氣、墓絕與白中殺維持 unknown，不作加減分
+- 每方已建立四時紫白 profile；professional UI 後主盤不顯示 `n/4`，實際命中層及集中程度保留在方向詳情
 - 81 組底層新增 `evidenceForm`、`useContexts`、`directionality`、`verificationStatus`、條件、witnesses 與 variants；V1 A／B／C 只保留為研究簡寫
 - 28／29 保存乾宮條件、31 保存庚方條件；48／98 是 reverse inferred；68／86 的直接解讀證據是宮星＋流年，不是年月日時古法
 - 「死退雙臨始佳／不利」與 37 的疑似 36 轉錄均保留異文，不自動修文；全部 81 組仍 `primarySourceVerified=false`、`reference_only`、`rankingWeight=0`
+
+### 紫白擇吉第三輪白中殺與時間狀態
+
+- `src/selection/temporalRules.ts` 集中保存星本宮、星宮五行、對宮、白中殺、墓絕、支序有氣及月令矩陣；只讀正式時間 API，不修改 Engine
+- 白中殺採星乘固定宮位：暗建、受剋、穿心、六／七交劍及鬥牛均可重跑；同層多項命中不得互相覆蓋
+- 墓、絕及支序有氣逐層使用年／月／日／時支；時層證據是 A／A／B／B，只有 1／6／8／9 有直接支序有氣表
+- 月令保存得令、得生、休、囚、受制，不換算固定分數；二黑五黃只在同到且四季土月得令時觸發慎用
+- 方向 status 納入白中殺與時間條件；無紫白仍保留「普通」作中性 fallback，所有名稱都只是工具分級
+- 宮格優先顯示白中殺／墓絕提示；方向詳情先顯示「時氣與白中殺」，再顯示主要雙星參考，尋組合 deep-link 仍優先顯示命中 pair
+- 刑宮、害宮、四空亡、24 山、納音、統臨／專臨、未有直接表的 active branches、81 pair 評分及固定權重均未實作
+- 第三輪研究文件仍未附精確頁碼、逐字引文與原頁影像；`primarySourceVerified`／`verified` 不得因此提升
 
 #### Reserved future capability — 最佳時窗
 
@@ -209,11 +222,11 @@ tests/fixtures/chart-snapshot.json
 
 ```text
 test files  24 passed
-tests       172 passed
+tests       178 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（416.71 KiB）success
-single file 玄空紫白.html（約 482 KB；font data URI）success
+PWA precache 11 entries（425.85 KiB）success
+single file 玄空紫白.html（503,199 bytes；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -262,6 +275,8 @@ single file 玄空紫白.html（約 482 KB；font data URI）success
 - 實搜有序 14 可命中 `2026-08-07 07:00`東方 MH，點結果後 selection／purpose／palace／pair／layer URL 均正確；console 無 warning／error
 - 320px 考源研究版 UI 無 horizontal overflow；68 學習卡以自然中文顯示 A 級、待逐條覆核、無引文警示及 `68 ≠ 86`，底層 `rankingWeight=0` 仍由 engine test 鎖定
 - 雙星用途從文書／考試切到喜慶後，八方排序完全不變；尋組合快慢層次序規則可見，console 無 warning／error
+- production 320／375／390／430px：第三輪擇吉九宮分別為 296／343／358／398px 正方，9 格及 8 個排序方向完整，宮格條件摘要無文字容器 overflow
+- production 320px：方向詳情四個 disclosure 預設收起；「時氣與白中殺」位於主要參考之前，展開後四層地支、墓絕、月令及重疊白中殺完整
 
 ---
 
@@ -290,7 +305,7 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - 刻盤目前仍只有「八刻十五分鐘制」一種策略。
 - Dark Mode 明確留待 V3。
 - IndexedDB 目前沒有必要，設定繼續使用 localStorage。
-- 跨時段最佳時窗、個人化吉凶評分與 Future filters 尚未實作；現有擇吉方向排序只是 `TOOL_HEURISTIC`，不得冒充古法定論。
+- 跨時段最佳時窗、個人化吉凶評分與 Future filters 尚未實作；現有擇吉方向 status 雖已加入第三輪條件，仍是可解釋工具分級，不得冒充古法原有等級。
 - 進階搜尋 URL serialization、recent search、多宮／任一宮與入中星搜尋均未實作；簡易搜尋 URL restore 已完成。
 - 頂層「尋星」改名「搜尋」與九宮式宮位 selector 只記錄為 P2 構想，本輪未實作。
-- 雙星 81 組第二輪 source audit 已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
+- 雙星 81 組第二輪 source audit 及第三輪時間規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
