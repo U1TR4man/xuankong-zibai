@@ -5,6 +5,7 @@ import type { DayChangeMode } from '../engine/time/ganzhiDay';
 import type { StarNumber } from '../overlay/types';
 import { PURPLE_WHITE_STARS, STAR_QI_REFERENCE } from './researchEvidence';
 import { buildTemporalPillars } from './temporalPillars';
+import { WHITE_KILLER_MATRIX, type WhiteKillerMatrixRow } from './whiteKillerMatrix';
 import type {
   AnJianVariantId, DaYueJianAssessment, DirectionLevel, DirectionPalaceKey, Element,
   GenericWhiteKillerAnJianAssessment, LayerRole, MonthlyCenterStarState,
@@ -15,8 +16,11 @@ import type {
 type MonthSeason = TemporalBranchContext['monthSeason'];
 
 export const NATIVE_PALACE: Readonly<Record<StarNumber, PalaceKey>> = {
-  1: 'kan', 2: 'kun', 3: 'zhen', 4: 'xun', 5: 'center',
-  6: 'qian', 7: 'dui', 8: 'gen', 9: 'li',
+  1: WHITE_KILLER_MATRIX[1].anJian[0], 2: WHITE_KILLER_MATRIX[2].anJian[0],
+  3: WHITE_KILLER_MATRIX[3].anJian[0], 4: WHITE_KILLER_MATRIX[4].anJian[0],
+  5: WHITE_KILLER_MATRIX[5].anJian[0], 6: WHITE_KILLER_MATRIX[6].anJian[0],
+  7: WHITE_KILLER_MATRIX[7].anJian[0], 8: WHITE_KILLER_MATRIX[8].anJian[0],
+  9: WHITE_KILLER_MATRIX[9].anJian[0],
 };
 
 export const STAR_ELEMENT: Readonly<Record<StarNumber, Element>> = {
@@ -27,11 +31,6 @@ export const STAR_ELEMENT: Readonly<Record<StarNumber, Element>> = {
 export const PALACE_ELEMENT: Readonly<Record<PalaceKey, Element>> = {
   kan: '水', kun: '土', zhen: '木', xun: '木', center: '土',
   qian: '金', dui: '金', gen: '土', li: '火',
-};
-
-const OPPOSITE_PALACE: Readonly<Partial<Record<PalaceKey, PalaceKey>>> = {
-  kan: 'li', li: 'kan', kun: 'gen', gen: 'kun',
-  zhen: 'dui', dui: 'zhen', xun: 'qian', qian: 'xun',
 };
 
 const CONTROLS: Readonly<Record<Element, Element>> = {
@@ -46,8 +45,11 @@ type AnJianVariantTable = Readonly<Partial<Record<StarNumber, readonly PalaceKey
 /** 第五輪修正：一般九宮暗建、《三元寶海》五黃四隅及《選擇紀要》異文分層保存。 */
 export const AN_JIAN_VARIANTS: Readonly<Record<AnJianVariantId, AnJianVariantTable>> = {
   generic_jiugong: {
-    1: ['kan'], 2: ['kun'], 3: ['zhen'], 4: ['xun'], 5: ['center'],
-    6: ['qian'], 7: ['dui'], 8: ['gen'], 9: ['li'],
+    1: WHITE_KILLER_MATRIX[1].anJian, 2: WHITE_KILLER_MATRIX[2].anJian,
+    3: WHITE_KILLER_MATRIX[3].anJian, 4: WHITE_KILLER_MATRIX[4].anJian,
+    5: WHITE_KILLER_MATRIX[5].anJian, 6: WHITE_KILLER_MATRIX[6].anJian,
+    7: WHITE_KILLER_MATRIX[7].anJian, 8: WHITE_KILLER_MATRIX[8].anJian,
+    9: WHITE_KILLER_MATRIX[9].anJian,
   },
   san_yuan_bao_hai: {
     1: ['kan'], 2: ['kun'], 3: ['zhen'], 4: ['xun'],
@@ -104,12 +106,6 @@ export const ELEMENT_SUPPORT_QI_POLICY: RuleEvidence = {
   rankingUse: 'disabled',
 };
 
-/** 古表命名的受剋殺，與一般「宮五行剋星五行」分開。 */
-const CLASSICAL_SHOU_KE: Readonly<Record<StarNumber, readonly PalaceKey[]>> = {
-  1: ['center'], 2: ['zhen', 'xun'], 3: ['qian', 'dui'], 4: ['qian', 'dui'],
-  5: ['zhen', 'xun'], 6: ['li'], 7: ['li'], 8: ['zhen', 'xun'], 9: ['kan'],
-};
-
 export const LAYER_ROLE: Readonly<Record<DirectionLevel, LayerRole>> = {
   year: 'background_or_large_scale',
   month: 'seasonal_command',
@@ -163,17 +159,25 @@ export function buildTemporalBranchContext(
   };
 }
 
-export function assessPalaceKillers(star: StarNumber, palace: PalaceKey): PalaceKiller[] {
+export function assessAnJian(centerStar: StarNumber, palace: PalaceKey): boolean {
+  return (WHITE_KILLER_MATRIX[centerStar].anJian as readonly PalaceKey[]).includes(palace);
+}
+
+export function assessArrivalWhiteKillers(
+  star: StarNumber,
+  palace: PalaceKey,
+): PalaceKiller[] {
+  const row: WhiteKillerMatrixRow = WHITE_KILLER_MATRIX[star];
   const killers: PalaceKiller[] = [];
-  if (CLASSICAL_SHOU_KE[star].includes(palace)) killers.push('shou_ke');
-  if (star !== 5 && OPPOSITE_PALACE[NATIVE_PALACE[star]] === palace) killers.push('chuan_xin');
-  if ((star === 6 && palace === 'dui') || (star === 7 && palace === 'qian')) {
-    killers.push('jiao_jian');
-  }
-  if ([2, 5, 6, 7, 8].includes(star) && (palace === 'zhen' || palace === 'xun')) {
-    killers.push('dou_niu');
-  }
+  if ((row.shouKe as readonly PalaceKey[]).includes(palace)) killers.push('shou_ke');
+  if ((row.chuanXin as readonly PalaceKey[]).includes(palace)) killers.push('chuan_xin');
+  if ((row.jiaoJian as readonly PalaceKey[]).includes(palace)) killers.push('jiao_jian');
+  if ((row.douNiu as readonly PalaceKey[]).includes(palace)) killers.push('dou_niu');
   return killers;
+}
+
+export function assessLiuJie(star: StarNumber, periodBranch: Branch): boolean {
+  return WHITE_KILLER_MATRIX[star].liuJieTomb === periodBranch;
 }
 
 function samePalaces(first: readonly PalaceKey[], second: readonly PalaceKey[]): boolean {
@@ -202,7 +206,8 @@ export function assessGenericWhiteKillerAnJian(
     });
   return {
     level,
-    active: forbiddenPalaces.includes(palace),
+    active: variantId === 'generic_jiugong'
+      ? assessAnJian(centerStar, palace) : forbiddenPalaces.includes(palace),
     centerStar,
     forbiddenPalaces,
     evidence: WHITE_KILLER_LAYER_POLICY[level].layerEvidence[level]!,
@@ -300,11 +305,11 @@ export function assessTemporalStar(
     isPurpleWhite: PURPLE_WHITE_STARS.has(star),
     role: LAYER_ROLE[level],
     arrivalRule: PURPLE_WHITE_ARRIVAL_POLICY[level],
-    palaceKillers: assessPalaceKillers(star, palace),
+    palaceKillers: assessArrivalWhiteKillers(star, palace),
     whiteKillerRule,
     elementRelation: palaceElementRelationFor(star, palace),
     temporalState: {
-      liuJieTomb: reference.tombBranch === periodBranch,
+      liuJieTomb: assessLiuJie(star, periodBranch),
       absolute: reference.absoluteBranch === periodBranch,
       branchQi: activeBranches
         ? activeBranches.includes(periodBranch) ? 'active' : 'inactive'

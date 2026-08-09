@@ -12,10 +12,11 @@ import { SELECTION_METHOD_EVIDENCE, STAR_QI_REFERENCE } from '../src/selection/r
 import {
   AN_JIAN_VARIANTS, BRANCH_QI_POLICY, ELEMENT_SUPPORT_QI_POLICY,
   PURPLE_WHITE_ARRIVAL_POLICY, WHITE_KILLER_LAYER_POLICY,
-  assessGenericWhiteKillerAnJian, assessPalaceKillers,
+  assessAnJian, assessArrivalWhiteKillers, assessGenericWhiteKillerAnJian, assessLiuJie,
   assessTemporalStar, buildMonthlyCenterStarState, buildTemporalBranchContext,
   buildTimeGateAssessment, computeDaYueJian, palaceElementRelationFor, seasonalStateFor,
 } from '../src/selection/temporalRules';
+import { WHITE_KILLER_MATRIX, WHITE_KILLER_MATRIX_AUDIT } from '../src/selection/whiteKillerMatrix';
 import type { StarNumber } from '../src/overlay/types';
 import type {
   DirectionSnapshot, PalaceKiller, TemporalBranchContext,
@@ -96,7 +97,8 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(STAR_QI_REFERENCE[9]).toMatchObject({
       tombBranch: '戌', absoluteBranch: '亥',
     });
-    expect(STAR_QI_REFERENCE[9].auditNote).toContain('轉錄');
+    expect(STAR_QI_REFERENCE[9].auditNote).toContain('封版為戌墓');
+    expect(STAR_QI_REFERENCE[9].auditNote).toContain('原頁仍待核對');
     const variant = SELECTION_METHOD_EVIDENCE.find((item) => item.id === 'death_retreat_variant')!;
     expect(variant.verificationStatus).toBe('variant');
     expect(variant.primarySourceVerified).toBe(false);
@@ -119,7 +121,10 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(assessGenericWhiteKillerAnJian('hour', 6, 'qian')).toMatchObject({
       active: true, evidence: 'B', rankingUse: 'reference_only',
     });
-    expect(assessPalaceKillers(1, 'kan')).toEqual([]);
+    expect(assessAnJian(1, 'kan')).toBe(true);
+    expect(assessAnJian(1, 'li')).toBe(false);
+    expect(assessAnJian(5, 'center')).toBe(true);
+    expect(assessArrivalWhiteKillers(1, 'kan')).toEqual([]);
   });
 
   it('大月建由月入中星本宮推得，舊年干起例停用', () => {
@@ -162,37 +167,54 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
   });
 
   it('古典白中殺可同層重疊，且一般五行相剋另列', () => {
-    expect(assessPalaceKillers(1, 'center')).toEqual(['shou_ke']);
-    expect(assessPalaceKillers(6, 'li')).toEqual(['shou_ke']);
-    expect(assessPalaceKillers(6, 'xun')).toEqual(['chuan_xin', 'dou_niu']);
-    expect(assessPalaceKillers(6, 'dui')).toEqual(['jiao_jian']);
-    expect(assessPalaceKillers(7, 'qian')).toEqual(['jiao_jian']);
-    expect(assessPalaceKillers(8, 'zhen')).toEqual(['shou_ke', 'dou_niu']);
-    expect(assessPalaceKillers(9, 'kan')).toEqual(['shou_ke', 'chuan_xin']);
-    expect(assessPalaceKillers(5, 'center')).toEqual([]);
-    expect(assessPalaceKillers(5, 'li')).toEqual([]);
+    expect(assessArrivalWhiteKillers(1, 'center')).toEqual(['shou_ke']);
+    expect(assessArrivalWhiteKillers(6, 'li')).toEqual(['shou_ke']);
+    expect(assessArrivalWhiteKillers(6, 'xun')).toEqual(['chuan_xin', 'dou_niu']);
+    expect(assessArrivalWhiteKillers(6, 'dui')).toEqual(['jiao_jian']);
+    expect(assessArrivalWhiteKillers(7, 'qian')).toEqual(['jiao_jian']);
+    expect(assessArrivalWhiteKillers(8, 'zhen')).toEqual(['shou_ke', 'dou_niu']);
+    expect(assessArrivalWhiteKillers(9, 'kan')).toEqual(['shou_ke', 'chuan_xin']);
+    expect(assessArrivalWhiteKillers(5, 'center')).toEqual([]);
+    expect(assessArrivalWhiteKillers(5, 'li')).toEqual([]);
     expect(palaceElementRelationFor(1, 'gen').relation).toBe('palace_controls_star');
-    expect(assessPalaceKillers(1, 'gen')).not.toContain('shou_ke');
+    expect(assessArrivalWhiteKillers(1, 'gen')).not.toContain('shou_ke');
   });
 
-  it('白中殺四類古表逐星鎖定，暗建不混入逐星矩陣', () => {
+  it('第七輪九星×六殺矩陣逐格鎖定，三種輸入不混用', () => {
     const stars = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
     const palaces = ['kan', 'kun', 'zhen', 'xun', 'center', 'qian', 'dui', 'gen', 'li'] as const;
-    const controlled = [
-      ['center'], ['zhen', 'xun'], ['qian', 'dui'], ['qian', 'dui'],
-      ['zhen', 'xun'], ['li'], ['li'], ['zhen', 'xun'], ['kan'],
-    ];
-    const opposite = [['li'], ['gen'], ['dui'], ['qian'], [], ['xun'], ['zhen'], ['kun'], ['kan']];
-    for (const [index, star] of stars.entries()) {
+    expect(WHITE_KILLER_MATRIX).toEqual({
+      1: { liuJieTomb: '辰', anJian: ['kan'], shouKe: ['center'], chuanXin: ['li'], jiaoJian: [], douNiu: [] },
+      2: { liuJieTomb: '辰', anJian: ['kun'], shouKe: ['zhen', 'xun'], chuanXin: ['gen'], jiaoJian: [], douNiu: ['zhen', 'xun'] },
+      3: { liuJieTomb: '未', anJian: ['zhen'], shouKe: ['qian', 'dui'], chuanXin: ['dui'], jiaoJian: [], douNiu: [] },
+      4: { liuJieTomb: '未', anJian: ['xun'], shouKe: ['qian', 'dui'], chuanXin: ['qian'], jiaoJian: [], douNiu: [] },
+      5: { liuJieTomb: '辰', anJian: ['center'], shouKe: ['zhen', 'xun'], chuanXin: [], jiaoJian: [], douNiu: ['zhen', 'xun'] },
+      6: { liuJieTomb: '丑', anJian: ['qian'], shouKe: ['li'], chuanXin: ['xun'], jiaoJian: ['dui'], douNiu: ['zhen', 'xun'] },
+      7: { liuJieTomb: '丑', anJian: ['dui'], shouKe: ['li'], chuanXin: ['zhen'], jiaoJian: ['qian'], douNiu: ['zhen', 'xun'] },
+      8: { liuJieTomb: '辰', anJian: ['gen'], shouKe: ['zhen', 'xun'], chuanXin: ['kun'], jiaoJian: [], douNiu: ['zhen', 'xun'] },
+      9: { liuJieTomb: '戌', anJian: ['li'], shouKe: ['kan'], chuanXin: ['kan'], jiaoJian: [], douNiu: [] },
+    });
+    expect(WHITE_KILLER_MATRIX_AUDIT).toMatchObject({
+      version: 'seventh_round_9x6',
+      restoredColumnOrder: [9, 1, 2, 3, 4, 5, 6, 7, 8],
+      fiveYellowDefault: 'center', fiveYellowFourCorners: 'variant_only',
+      primarySourceVerified: false,
+    });
+    for (const star of stars) {
+      const row = WHITE_KILLER_MATRIX[star];
       const matching = (killer: PalaceKiller) => (
-        palaces.filter((palace) => assessPalaceKillers(star, palace).includes(killer))
+        palaces.filter((palace) => assessArrivalWhiteKillers(star, palace).includes(killer))
       );
       expect(matching('an_jian')).toEqual([]);
-      expect(matching('shou_ke')).toEqual(controlled[index]);
-      expect(matching('chuan_xin')).toEqual(opposite[index]);
-      expect(matching('jiao_jian')).toEqual(star === 6 ? ['dui'] : star === 7 ? ['qian'] : []);
-      expect(matching('dou_niu')).toEqual([2, 5, 6, 7, 8].includes(star) ? ['zhen', 'xun'] : []);
+      expect(matching('shou_ke')).toEqual(row.shouKe);
+      expect(matching('chuan_xin')).toEqual(row.chuanXin);
+      expect(matching('jiao_jian')).toEqual(row.jiaoJian);
+      expect(matching('dou_niu')).toEqual(row.douNiu);
+      expect(palaces.filter((palace) => assessAnJian(star, palace))).toEqual(row.anJian);
+      expect(assessLiuJie(star, row.liuJieTomb)).toBe(true);
     }
+    expect(assessLiuJie(1, '戌')).toBe(false);
+    expect(assessLiuJie(9, '辰')).toBe(false);
   });
 
   it('六捷墓、臨絕與支序有氣逐層分開，未有直接表的星保持未知', () => {

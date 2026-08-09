@@ -149,6 +149,12 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-research')?.textContent)
       .toContain('五黃預設在中宮');
     expect($('.direction-research')?.textContent)
+      .toContain('九星×六殺定局已封版');
+    expect($('.direction-research')?.textContent)
+      .toContain('九宮暗建看各層入中星');
+    expect($('.direction-research')?.textContent)
+      .toContain('六捷入墓看各層時間地支');
+    expect($('.direction-research')?.textContent)
       .toContain('年、月白中殺正式參與判定');
     expect($('.direction-research')?.textContent)
       .toContain('紫白一時加／二時加');

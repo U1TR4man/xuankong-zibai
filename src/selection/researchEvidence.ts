@@ -3,6 +3,7 @@ import type { Branch } from '../engine/time/ganzhi';
 import type {
   EvidenceVerificationStatus, PurpleWhiteSignal, UseContext, WhiteKiller,
 } from './types';
+import { WHITE_KILLER_MATRIX } from './whiteKillerMatrix';
 
 export const PURPLE_WHITE_STARS = new Set<StarNumber>([1, 6, 8, 9]);
 
@@ -25,19 +26,19 @@ export interface StarQiReference {
 }
 
 /**
- * 第二至第五輪考源整理出的研究參考表。支序有氣只對年、月正式運用；
- * 日層只作警示，時層只作類推參考。五行支持型有氣仍未決定 periodElement，不能自行加權。
+ * 第二至第七輪考源整理出的研究參考表。支序有氣對年、月正式運用；
+ * 日層為 B+ 次級有效，時層只作類推參考。五行支持型有氣仍未決定 periodElement，不能自行加權。
  */
 export const STAR_QI_REFERENCE: Readonly<Record<StarNumber, StarQiReference>> = {
-  1: { star: 1, element: '水', qiElements: ['金', '水'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣層級為年 A／月 A／日 B 警示／時 C 類推。' },
-  2: { star: 2, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
-  3: { star: 3, element: '木', qiElements: ['水', '木'], tombBranch: '未', absoluteBranch: '申', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
-  4: { star: 4, element: '木', qiElements: ['水', '木'], tombBranch: '未', absoluteBranch: '申', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
-  5: { star: 5, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
-  6: { star: 6, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', directQiBranches: ['巳', '午', '未', '申', '酉'], auditNote: '支序有氣層級為年 A／月 A／日 B 警示／時 C 類推。' },
-  7: { star: 7, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
-  8: { star: 8, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣層級為年 A／月 A／日 B 警示／時 C 類推。' },
-  9: { star: 9, element: '火', qiElements: ['木', '火'], tombBranch: '戌', absoluteBranch: '亥', directQiBranches: ['寅', '卯', '辰', '巳', '午'], auditNote: '支序有氣層級為年 A／月 A／日 B 警示／時 C 類推；早期「辰入墓」轉錄衝突仍待原頁核對。' },
+  1: { star: 1, element: '水', qiElements: ['金', '水'], tombBranch: WHITE_KILLER_MATRIX[1].liuJieTomb, absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣層級為年 A／月 A／日 B+ 次級有效／時 C 類推。' },
+  2: { star: 2, element: '土', qiElements: ['火', '土'], tombBranch: WHITE_KILLER_MATRIX[2].liuJieTomb, absoluteBranch: '巳', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  3: { star: 3, element: '木', qiElements: ['水', '木'], tombBranch: WHITE_KILLER_MATRIX[3].liuJieTomb, absoluteBranch: '申', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  4: { star: 4, element: '木', qiElements: ['水', '木'], tombBranch: WHITE_KILLER_MATRIX[4].liuJieTomb, absoluteBranch: '申', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  5: { star: 5, element: '土', qiElements: ['火', '土'], tombBranch: WHITE_KILLER_MATRIX[5].liuJieTomb, absoluteBranch: '巳', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  6: { star: 6, element: '金', qiElements: ['土', '金'], tombBranch: WHITE_KILLER_MATRIX[6].liuJieTomb, absoluteBranch: '寅', directQiBranches: ['巳', '午', '未', '申', '酉'], auditNote: '支序有氣層級為年 A／月 A／日 B+ 次級有效／時 C 類推。' },
+  7: { star: 7, element: '金', qiElements: ['土', '金'], tombBranch: WHITE_KILLER_MATRIX[7].liuJieTomb, absoluteBranch: '寅', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
+  8: { star: 8, element: '土', qiElements: ['火', '土'], tombBranch: WHITE_KILLER_MATRIX[8].liuJieTomb, absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣層級為年 A／月 A／日 B+ 次級有效／時 C 類推。' },
+  9: { star: 9, element: '火', qiElements: ['木', '火'], tombBranch: WHITE_KILLER_MATRIX[9].liuJieTomb, absoluteBranch: '亥', directQiBranches: ['寅', '卯', '辰', '巳', '午'], auditNote: '支序有氣層級為年 A／月 A／日 B+ 次級有效／時 C 類推；第七輪已依欄序與多源對讀封版為戌墓，原頁仍待核對。' },
 };
 
 export const WHITE_KILLER_LABEL: Record<WhiteKiller, string> = {
@@ -84,7 +85,7 @@ export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
   },
   {
     id: 'qi_tomb_killers',
-    summary: '支序生旺型有氣對年月正式運用、日層警示、時層類推；白中殺及 generic 五行關係繼續分開。',
+    summary: '支序生旺型有氣對年月正式運用、日層 B+ 次級有效、時層類推；六捷墓與其他白中殺及一般五行關係繼續分開。',
     useContexts: ['selection_coarrival'],
     verificationStatus: 'awaiting_scan',
     primarySourceVerified: false,
@@ -96,12 +97,14 @@ export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
   },
   {
     id: 'white_killer_tables',
-    summary: '一般九宮暗建預設依九星本位，五黃為中宮；五黃四隅及本宮加中宮另存傳本，不疊加。年月白中殺正式運用，日時只作參考。',
+    summary: '第七輪已封版九星×六殺定局：暗建讀入中星，受剋、穿心、交劍、鬥牛讀到方星，六捷讀時間地支。五黃預設中宮，四隅只存異文；年月正式運用，日時只作參考。',
     useContexts: ['selection_coarrival'],
     verificationStatus: 'variant',
     primarySourceVerified: false,
     witnesses: [
-      { source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '保存一般九宮暗建與白中殺總論架構；完整表仍待逐格核影。' },
+      { source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '提供九星六殺表格主線；第七輪以還原欄序及多源對讀重建定局，原頁影像仍待收入專案。' },
+      { source: '《佐玄直指圖解》及《造命宗鏡集》相關傳文', note: '互證穿心、受剋、交劍與鬥牛的星宮定局；規則級已封版，固定版本頁碼仍待核。' },
+      { source: '《類編曆法通書大全》及《五要奇書》相關材料', note: '對讀六捷墓、暗建及殺例；本專案尚無可重跑原頁影像，故不標記原典已核。' },
       { source: '《三元寶海鈎玄》下卷', note: '修方操作文直接列山頭、年頭及月白殺；五黃四隅只作傳本異文。' },
     ],
     variants: [
@@ -111,11 +114,11 @@ export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
   },
   {
     id: 'da_yue_jian_boundary',
-    summary: '大月建屬月家神煞，以月干支飛宮獨立保存；未完成多年逐月比對前，不 alias 現有月紫白入中星。',
+    summary: '第六輪已封版大月建為本月入中紫白星的後天本宮；與月九宮暗建同位時合流顯示，只計一次警示，舊年干起例已停用。',
     useContexts: ['selection_coarrival'],
     verificationStatus: 'awaiting_scan',
     primarySourceVerified: false,
-    witnesses: [{ source: '《欽定協紀辨方書》卷三十四', note: '記大月建為月干支飛宮，取當月入中一星本宮；尚待與現行月紫白逐月比對。' }],
+    witnesses: [{ source: '《欽定協紀辨方書》卷三十四', note: '取當月入中一星的本宮；第六輪已完成 36 個月型與現行月紫白的程式對讀，原頁影像仍待收入專案。' }],
   },
   {
     id: 'element_support_qi_boundary',
