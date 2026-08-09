@@ -1,7 +1,7 @@
 import { STAR_ELEMENTS, starName } from '../engine/flyingStar/types';
 import { asStarNumber, type StarNumber } from '../overlay/types';
 import type {
-  PairKey, PurpleWhitePairRule, SourceGrade, SourceLevel,
+  PairKey, PairSourceAudit, PurpleWhitePairRule, SourceGrade, SourceLevel,
 } from './types';
 
 const GENERATES: Readonly<Record<string, string>> = {
@@ -130,6 +130,99 @@ const TITLES: Partial<Record<PairKey, string>> = {
 };
 
 const ORDER_SENSITIVE = new Set<PairKey>(['25', '37', '52', '68', '73', '86']);
+const REPEATED_SINGLE_STAR = new Set<PairKey>([
+  '11', '22', '33', '44', '55', '66', '77', '88', '99',
+]);
+
+function witness(
+  source: string,
+  evidenceForm: PairSourceAudit['evidenceForm'],
+  note: string,
+  reading?: string,
+): PairSourceAudit['textWitnesses'][number] {
+  return {
+    source, evidenceForm, verificationStatus: 'awaiting_scan', reading, note,
+  };
+}
+
+function audited(
+  evidenceForm: PairSourceAudit['evidenceForm'],
+  directionality: PairSourceAudit['directionality'],
+  source: string,
+  note: string,
+  reading?: string,
+  extra: Partial<PairSourceAudit> = {},
+): PairSourceAudit {
+  return {
+    evidenceForm,
+    useContexts: ['base_plus_flow', 'temporal_pair_reference'],
+    directionality,
+    verificationStatus: 'awaiting_scan',
+    primarySourceVerified: false,
+    textWitnesses: [witness(source, evidenceForm, note, reading)],
+    ...extra,
+  };
+}
+
+const AUDIT_OVERRIDES: Partial<Record<PairKey, PairSourceAudit>> = {
+  '14': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '古句說兩星同宮，未證明 14／41 有不同斷法；未附版本原頁。', '四一同宮'),
+  '41': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '古句說兩星同宮，未證明 14／41 有不同斷法；未附版本原頁。', '四一同宮'),
+  '25': audited('direct_ordered_pair', 'explicit_order', '今傳《紫白訣／紫白賦》', '黃遇黑與黑逢黃另分家庭角色；未附版本原頁。'),
+  '52': audited('direct_ordered_pair', 'explicit_order', '今傳《紫白訣／紫白賦》', '黃遇黑與黑逢黃另分家庭角色；未附版本原頁。'),
+  '37': audited('direct_ordered_pair', 'explicit_order', '今傳《紫白訣／紫白賦》', '三遇七臨為有序句；另有網頁轉錄疑誤，不能自動改成 36。', '三遇七臨', {
+    variants: [{
+      reading: '三六迭逢而遇盜', source: '《樓宇寶鑑》網頁轉錄',
+      verificationStatus: 'suspected_transcription_error',
+      note: '疑為「三七會臨而盜竊」的轉錄問題；不作 36 的直接證據。',
+    }],
+  }),
+  '73': audited('direct_ordered_pair', 'explicit_order', '今傳《紫白訣／紫白賦》', '七逢三到為有序句；未附版本原頁。', '七逢三到'),
+  '68': audited('direct_ordered_pair', 'explicit_order', '吳師青《紫白賦辨正》', '證據情境是宮星 6 × 流年 8，不是年星 × 月星；未附版本原頁。'),
+  '86': audited('direct_ordered_pair', 'explicit_order', '吳師青《紫白賦辨正》', '證據情境是宮星 8 × 流年 6，不是年星 × 月星；未附版本原頁。'),
+  '69': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '古句支持六九相會，未證明反向另有不同古義。', '六會九'),
+  '96': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '古句支持六九相會，未證明反向另有不同古義。', '六會九'),
+  '79': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '古句支持七九相會，未證明反向另有不同古義。', '七九之會'),
+  '97': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '古句支持七九相會，未證明反向另有不同古義。', '七九之會'),
+  '38': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '古句支持三八相逢，未證明反向另有不同古義。', '三八之逢'),
+  '83': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '古句支持三八相逢，未證明反向另有不同古義。', '三八之逢'),
+  '84': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '原句由八遇四表述；未附版本原頁。', '八遇四'),
+  '48': audited('direct_same_palace_pair', 'reverse_inferred', '今傳《紫白訣／紫白賦》', '由 84 反向建立索引，只能標 reverse inferred。', '八遇四'),
+  '89': audited('direct_same_palace_pair', 'unordered_pair', '今傳《紫白訣／紫白賦》', '原句由八遇九表述；未附版本原頁。', '八逢紫曜'),
+  '98': audited('direct_same_palace_pair', 'reverse_inferred', '今傳《紫白訣／紫白賦》', '由 89 反向建立索引，只能標 reverse inferred。', '八逢紫曜'),
+  '23': audited('classic_trigram_pair', 'unordered_pair', '《玄空秘旨》及鬥牛名目', '卦象可作旁證；鬥牛煞的 pair 映射仍需分來源。', '雷出地'),
+  '32': audited('classic_trigram_pair', 'unordered_pair', '《玄空秘旨》及鬥牛名目', '卦象可作旁證；鬥牛煞的 pair 映射仍需分來源。', '雷出地'),
+  '67': audited('named_pattern', 'unknown', '今傳交劍殺材料', '古文「金與金同位」比 67 專名更廣，不能證明只限此 pair。'),
+  '76': audited('named_pattern', 'unknown', '今傳交劍殺材料', '古文「金與金同位」比 76 專名更廣，不能證明只限此 pair。'),
+  '28': audited('palace_conditioned', 'unknown', '今傳《紫白訣／紫白賦》相關條件句', '原義至少包含二黑、乾宮與八白三個條件，不能化約為純 28。', undefined, {
+    useContexts: ['palace_specific', 'temporal_pair_reference'], conditions: { palace: 6 },
+  }),
+  '29': audited('palace_conditioned', 'unknown', '今傳《紫白訣／紫白賦》相關條件句', '原義至少包含二黑、乾宮與九紫三個條件，不能化約為純 29。', undefined, {
+    useContexts: ['palace_specific', 'temporal_pair_reference'], conditions: { palace: 6 },
+  }),
+  '31': audited('palace_conditioned', 'unknown', '今傳《紫白訣／紫白賦》相關條件句', '原義包含三碧臨庚與一白，不能化約為無方位條件的純 31。', undefined, {
+    useContexts: ['palace_specific', 'temporal_pair_reference'], conditions: { direction: '庚' },
+  }),
+};
+
+function sourceAudit(pair: PairKey): PairSourceAudit {
+  const override = AUDIT_OVERRIDES[pair];
+  if (override) return override;
+  if (REPEATED_SINGLE_STAR.has(pair)) {
+    return audited(
+      'single_star_repeated', 'unordered_pair',
+      '第二輪考源對 81 組的證據形式校正',
+      '主要由單星重疊與後世彙整建立，尚未收錄可核原頁的 pair 逐字引文。',
+      undefined,
+      { useContexts: ['temporal_pair_reference'] },
+    );
+  }
+  return audited(
+    'derived', 'unknown', '第二輪考源對 81 組的證據形式校正',
+    '目前只保留現代摘要與五行／後世整理索引，尚待逐條 source map。',
+    undefined,
+    { useContexts: ['temporal_pair_reference'] },
+  );
+}
 
 function normalizedSourceLevel(grade: SourceGrade): SourceLevel {
   if (grade === 'A') return 'A';
@@ -158,7 +251,11 @@ function tagsFor(meaning: string): string[] {
 function buildRule(first: StarNumber, second: StarNumber): PurpleWhitePairRule {
   const pair = pairKey(first, second);
   const entry = RESEARCH_ENTRIES[pair];
-  const orderSensitive = ORDER_SENSITIVE.has(pair);
+  const audit = sourceAudit(pair);
+  const orderSensitive = audit.directionality === 'explicit_order';
+  if (orderSensitive !== ORDER_SENSITIVE.has(pair)) {
+    throw new Error(`第二輪方向性與既有有序清單不一致：${pair}`);
+  }
   return {
     pair,
     firstStar: first,
@@ -188,9 +285,10 @@ function buildRule(first: StarNumber, second: StarNumber): PurpleWhitePairRule {
     applicability: {
       samePalace: true,
       temporalSelection: 'reference',
-      requiresPalaceContext: false,
+      requiresPalaceContext: audit.useContexts.includes('palace_specific'),
       requiresProsperityContext: true,
     },
+    sourceAudit: audit,
   };
 }
 

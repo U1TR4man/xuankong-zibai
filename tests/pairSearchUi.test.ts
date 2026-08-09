@@ -134,7 +134,7 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
     expect($('.pair-search-results .search-results__summary')?.textContent)
       .toContain('用途參考：文書／考試');
     expect(document.querySelectorAll('.pair-search-result').length).toBeGreaterThan(0);
-    expect($('.pair-search-result__quality')?.textContent).toContain('來源 A');
+    expect($('.pair-search-result__quality')?.textContent).toContain('研究簡寫 A');
     expect($('.pair-search-result__quality')?.textContent).toContain('紫白集中');
   });
 

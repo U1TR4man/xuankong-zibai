@@ -49,6 +49,7 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect(location.search).toContain('selection=1');
     expect(document.querySelectorAll('.selection-grid .selection-cell')).toHaveLength(9);
     expect(document.querySelectorAll('.selection-grid button.selection-cell')).toHaveLength(8);
+    expect(document.querySelectorAll('.selection-cell__concentration')).toHaveLength(8);
     expect($('.selection-cell--center')?.textContent).toContain('不參與排序');
     expect(document.querySelectorAll('.selection-ranking__direction')).toHaveLength(8);
   });
@@ -88,12 +89,16 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($<HTMLDialogElement>('dialog.sheet-dialog--direction')?.open).toBe(true);
     expect($('.sheet__title')?.textContent).toBe('巽 · 東南');
     expect(document.querySelectorAll('.direction-detail__star')).toHaveLength(4);
+    expect($('.direction-temporal')?.textContent).toContain('三時紫白集中');
+    expect($('.direction-temporal')?.textContent).toContain('有氣／墓絕：尚未判定');
+    expect($('.direction-temporal')?.textContent).toContain('白中殺：尚未判定');
     expect(document.querySelectorAll('.direction-pairs .direction-pair')).toHaveLength(6);
     expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('雙星參考');
     expect($('.direction-reasons')?.textContent?.length).toBeGreaterThan(0);
     expect($('.direction-elements')?.textContent).toContain('年月');
     expect($('.direction-detail__disclaimer')?.textContent).toContain('TOOL_HEURISTIC');
     expect($('.direction-detail__disclaimer')?.textContent).toContain('rankingWeight 為 0');
+    expect($('.direction-detail__disclaimer')?.textContent).toContain('仍是 unknown');
     const pairButton = $<HTMLButtonElement>('.direction-pairs .direction-pair')!;
     expect(pairButton.tagName).toBe('BUTTON');
     pairButton.click();

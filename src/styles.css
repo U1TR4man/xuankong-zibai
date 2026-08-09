@@ -723,6 +723,15 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
 }
 .selection-cell__star small { font-size: 9px; color: var(--ink-tertiary); }
 .selection-cell__star strong { font-size: 12px; font-weight: 600; }
+.selection-cell__concentration {
+  width: 100%;
+  overflow: hidden;
+  color: var(--ink-secondary);
+  font-size: 9px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .selection-verdict {
   font-size: 11px;
   line-height: 1.1;
@@ -794,6 +803,12 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
 .direction-detail__purpose { color: var(--ink-secondary); font-size: 13px; }
 .direction-section { display: flex; flex-direction: column; gap: var(--s2); }
 .direction-section h3 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 500; }
+.direction-temporal {
+  padding: var(--s3);
+  background: var(--paper-muted);
+}
+.direction-temporal p { margin: 0; color: var(--ink-secondary); font-size: 13px; line-height: 1.6; }
+.direction-temporal__signal { color: var(--ink) !important; font-weight: 600; }
 .direction-main-pairs,
 .direction-pairs { display: flex; flex-direction: column; }
 .direction-pair {
@@ -842,6 +857,10 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
 .pair-rule__source h4 { margin: 0 0 var(--s2); font-size: 13px; font-weight: 600; }
 .pair-rule__source blockquote { margin: 0; padding-left: var(--s3); border-left: 2px solid var(--line-strong); color: var(--ink-secondary); }
 .pair-rule__empty { color: var(--ink-tertiary) !important; }
+.pair-rule__audit,
+.pair-rule__variants { padding: var(--s3); background: var(--paper-muted); }
+.pair-rule__variants article { padding-top: var(--s2); border-top: 1px solid var(--line); }
+.pair-rule__variants article small { color: var(--ink-tertiary); }
 .pair-rule__direction { padding-top: var(--s3); border-top: 1px solid var(--line); }
 .pair-rule__reverse { width: 100%; }
 .pair-rule__disclaimer { margin: 0; color: var(--ink-tertiary); font-size: 11px; line-height: 1.6; }
@@ -1329,6 +1348,7 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
   .selection-cell { gap: 3px; padding: 4px 2px; }
   .selection-cell__star small { font-size: 8px; }
   .selection-cell__star strong { font-size: 11px; }
+  .selection-cell__concentration { font-size: 8px; }
   .selection-cell__top { font-size: 8px; }
   .nav__btn { font-size: 13px; padding: var(--s1) var(--s2); }
   .ke__item { grid-template-columns: auto 1fr auto; gap: var(--s2); font-size: 14px; }

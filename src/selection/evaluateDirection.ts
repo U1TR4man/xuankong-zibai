@@ -1,14 +1,13 @@
 import type { FullChart } from '../engine/flyingStar';
-import type { StarNumber } from '../overlay/types';
 import { buildDirectionSnapshots } from './buildDirectionSnapshots';
 import { buildPairHits } from './buildPairHits';
 import { purposeHits } from './purpose';
+import { PURPLE_WHITE_SIGNAL_LABEL, PURPLE_WHITE_STARS } from './researchEvidence';
 import type {
-  DirectionEvaluation, DirectionSnapshot, DirectionVerdict, PairHit, SelectionPurpose,
-  SourceLevel,
+  DirectionEvaluation, DirectionLevel, DirectionSnapshot, DirectionTemporalProfile,
+  DirectionVerdict, PairHit, PurpleWhiteCount, PurpleWhiteSignal, SelectionPurpose, SourceLevel,
 } from './types';
 
-const PURPLE_WHITE = new Set<StarNumber>([1, 6, 8, 9]);
 const SOURCE_RANK: Record<SourceLevel, number> = { A: 3, B: 2, C: 1 };
 const SOURCE_GRADE_RANK = { A: 5, 'A/B': 4, B: 3, 'B/C': 2, C: 1 } as const;
 const VERDICT_RANK: Record<DirectionVerdict, number> = {
@@ -32,6 +31,41 @@ function verdictFor(purpleWhiteCount: number): DirectionVerdict {
   return purpleWhiteCount >= 2 ? 'usable' : 'ordinary';
 }
 
+export function purpleWhiteSignalFor(count: PurpleWhiteCount): PurpleWhiteSignal {
+  if (count === 0) return 'none';
+  if (count === 1) return 'single_arrival';
+  if (count === 2) return 'two_coarrival';
+  if (count === 3) return 'three_concentration';
+  return 'four_coarrival';
+}
+
+function temporalProfile(snapshot: DirectionSnapshot): DirectionTemporalProfile {
+  const layerStars: readonly { level: DirectionLevel; star: DirectionSnapshot[`${DirectionLevel}Star`] }[] = [
+    { level: 'year', star: snapshot.yearStar },
+    { level: 'month', star: snapshot.monthStar },
+    { level: 'day', star: snapshot.dayStar },
+    { level: 'hour', star: snapshot.hourStar },
+  ];
+  const purpleWhiteHits = layerStars
+    .filter(({ star }) => PURPLE_WHITE_STARS.has(star))
+    .map(({ level }) => level);
+  const purpleWhiteCount = purpleWhiteHits.length as PurpleWhiteCount;
+  return {
+    direction: snapshot.direction,
+    purpleWhiteHits,
+    purpleWhiteCount,
+    purpleWhiteSignal: purpleWhiteSignalFor(purpleWhiteCount),
+    starStates: layerStars.map(({ level, star }) => ({
+      level, star, qi: 'unknown', phase: 'unknown', tomb: 'unknown', absolute: 'unknown',
+    })),
+    whiteKillerAssessment: {
+      status: 'unknown',
+      killers: [],
+      note: '白中殺原圖／表格及時間套用方法尚待核對，不以「無」代替未知。',
+    },
+  };
+}
+
 export function evaluateDirection(
   snapshot: DirectionSnapshot,
   purpose: SelectionPurpose = 'general',
@@ -41,20 +75,25 @@ export function evaluateDirection(
   const favorableHits: PairHit[] = [];
   const cautionHits: PairHit[] = [];
   const mixedHits: PairHit[] = [];
-  const stars = [snapshot.yearStar, snapshot.monthStar, snapshot.dayStar, snapshot.hourStar];
-  const purpleWhiteStars = stars.filter((star) => PURPLE_WHITE.has(star));
-  const verdict = verdictFor(purpleWhiteStars.length);
+  const profile = temporalProfile(snapshot);
+  const starsByLevel = new Map(profile.starStates.map((state) => [state.level, state.star]));
+  const purpleWhiteStars = profile.purpleWhiteHits.map((level) => starsByLevel.get(level)!);
+  const verdict = verdictFor(profile.purpleWhiteCount);
   const matchedPurpose = purposeHits(hits, purpose);
   const reasons = [
-    purpleWhiteStars.length > 0 ? `紫白集中：${purpleWhiteStars.join('、')}` : '未見紫白集中',
+    `${PURPLE_WHITE_SIGNAL_LABEL[profile.purpleWhiteSignal]}：${profile.purpleWhiteCount}/4`,
+    '有氣、墓絕與白中殺尚未完成可重跑判定，不作加減分',
     '雙星 81 組只供參考，不參與方向排序',
   ].filter(Boolean);
 
   return {
     snapshot,
+    temporalProfile: profile,
     hits,
     verdict,
-    purpleWhiteCount: purpleWhiteStars.length,
+    purpleWhiteCount: profile.purpleWhiteCount,
+    purpleWhiteHits: profile.purpleWhiteHits,
+    purpleWhiteSignal: profile.purpleWhiteSignal,
     purpleWhiteStars,
     favorableHits,
     cautionHits,

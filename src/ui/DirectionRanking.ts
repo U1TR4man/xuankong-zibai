@@ -37,7 +37,7 @@ export function DirectionRanking(
   return el('section', { class: 'selection-ranking', 'aria-labelledby': 'selection-ranking-title' },
     el('div', { class: 'selection-ranking__head' },
       el('h2', { id: 'selection-ranking-title' }, '方向排序'),
-      el('small', {}, 'TOOL_HEURISTIC · 雙星不入排序')),
+      el('small', {}, 'TOOL_HEURISTIC · 紫白集中 · 雙星不入排序')),
     ...groups,
   );
 }

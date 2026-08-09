@@ -34,12 +34,17 @@ describe('紫白擇吉 Phase 4 Pair 學習卡', () => {
     expect($<HTMLDialogElement>('dialog.sheet-dialog--pair-rule')?.open).toBe(true);
     expect($('.sheet__title')?.textContent).toBe('68｜六八');
     expect($('.pair-rule__meaning')?.textContent).toContain('武科、韜略、權位');
-    expect($('.pair-rule__badges')?.textContent).toContain('A · 研究判定直接');
+    expect($('.pair-rule__badges')?.textContent).toContain('研究簡寫 A');
     expect($('.pair-rule__badges')?.textContent).toContain('待逐條覆核');
+    expect($('.pair-rule__badges')?.textContent).toContain('待核原頁影像');
     expect($('.pair-rule')?.textContent).toContain('五行關係');
+    expect($('.pair-rule__audit')?.textContent).toContain('直接有序 pair');
+    expect($('.pair-rule__audit')?.textContent).toContain('古句明確有次序');
+    expect($('.pair-rule__audit')?.textContent).toContain('原始來源直接核對：否');
+    expect($('.pair-rule')?.textContent).toContain('宮／宅基礎星＋流年星');
     expect($('.pair-rule')?.textContent).toContain('用途 tags');
     expect($('.pair-rule__tags')?.textContent).toContain('韜略');
-    expect($('.pair-rule__source')?.textContent).toContain('尚未收錄可核對的逐字引文');
+    expect($('.pair-rule__source')?.textContent).toContain('尚未收錄可核對版本／頁碼的逐字引文');
     expect($('.pair-rule')?.textContent).toContain('rankingWeight：0');
     expect($('.pair-rule__disclaimer')?.textContent).toContain('不參與擇吉排序');
   });
@@ -51,5 +56,15 @@ describe('紫白擇吉 Phase 4 Pair 學習卡', () => {
     expect($('.sheet__title')?.textContent).toBe('86｜八六');
     expect($('.pair-rule__meaning')?.textContent).toContain('文士參軍、異途擢用');
     expect($('.pair-rule__direction')?.textContent).toContain('86 ≠ 68');
+  });
+
+  it('轉錄疑點以 variant 顯示，不會默默覆寫 pair', () => {
+    openPairRuleSheet($<HTMLButtonElement>('#pair-trigger')!, getPairRule('37'));
+
+    expect($('.sheet__title')?.textContent).toBe('37｜三七疊至');
+    expect($('.pair-rule__variants')?.textContent).toContain('此句有異文／轉錄疑點');
+    expect($('.pair-rule__variants')?.textContent).toContain('三六迭逢而遇盜');
+    expect($('.pair-rule__variants')?.textContent).toContain('疑似轉錄錯誤');
+    expect($('.pair-rule__variants')?.textContent).toContain('不作 36 的直接證據');
   });
 });

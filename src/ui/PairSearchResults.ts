@@ -43,7 +43,7 @@ function PairResultCard(match: PairSearchMatch): HTMLElement {
     `年${snapshot.yearStar} · 月${snapshot.monthStar} · 日${snapshot.dayStar} · 時${snapshot.hourStar}`),
   match.purposeContext
     ? el('span', { class: 'pair-search-result__quality' },
-      `來源 ${hit.rule.sourceGrade} · 紫白集中 ${match.purposeContext.purpleWhiteCount}`)
+      `研究簡寫 ${hit.rule.sourceGrade} · 紫白集中 ${match.purposeContext.purpleWhiteCount}`)
     : null,
   el('span', { class: 'pair-search-result__arrow', 'aria-hidden': 'true' }, '›'),
   );

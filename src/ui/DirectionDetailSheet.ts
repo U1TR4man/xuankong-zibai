@@ -1,14 +1,19 @@
+import { starName } from '../engine/flyingStar/types';
 import { purposeLabel } from '../selection/purpose';
+import { PURPLE_WHITE_SIGNAL_LABEL } from '../selection/researchEvidence';
 import {
-  VERDICT_LABEL, type DirectionEvaluation, type PairHit, type SourceGrade,
+  VERDICT_LABEL, type DirectionEvaluation, type DirectionLevel, type PairHit, type SourceGrade,
 } from '../selection/types';
 import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
 import { openPairRuleSheet } from './PairRuleSheet';
 
 const SOURCE_LABEL: Record<SourceGrade, string> = {
-  A: 'A · 研究判定直接', 'A/B': 'A/B · 直接／旁證',
-  B: 'B · 古賦旁證', 'B/C': 'B/C · 旁證／推演', C: 'C · 彙整／推演',
+  A: '研究簡寫 A', 'A/B': '研究簡寫 A/B',
+  B: '研究簡寫 B', 'B/C': '研究簡寫 B/C', C: '研究簡寫 C',
+};
+const LEVEL_LABEL: Record<DirectionLevel, string> = {
+  year: '年', month: '月', day: '日', hour: '時',
 };
 
 function starItem(label: string, value: number): HTMLElement {
@@ -64,6 +69,10 @@ export function openDirectionDetailSheet(
     ...mainHits(evaluation).map((hit) => pairRow(
       hit, hit.pair === matchedPair, returnSelector,
     )));
+  const purpleWhiteLayers = evaluation.temporalProfile.purpleWhiteHits.map((level) => {
+    const state = evaluation.temporalProfile.starStates.find((item) => item.level === level)!;
+    return `${LEVEL_LABEL[level]}${starName(state.star)}`;
+  });
 
   openBottomSheet({
     title: `${snapshot.name} · ${snapshot.bearing}`,
@@ -74,6 +83,14 @@ export function openDirectionDetailSheet(
       el('div', { class: 'direction-detail__stars', 'aria-label': '年月日時四星' },
         starItem('年', snapshot.yearStar), starItem('月', snapshot.monthStar),
         starItem('日', snapshot.dayStar), starItem('時', snapshot.hourStar)),
+      el('section', { class: 'direction-section direction-temporal' },
+        el('h3', {}, '紫白擇方主幹'),
+        el('p', { class: 'direction-temporal__signal' },
+          `${evaluation.purpleWhiteCount}/4 · ${PURPLE_WHITE_SIGNAL_LABEL[evaluation.purpleWhiteSignal]}`),
+        el('p', {}, purpleWhiteLayers.length > 0
+          ? `命中層：${purpleWhiteLayers.join('、')}` : '命中層：無'),
+        el('p', {}, '有氣／墓絕：尚未判定（時間五行套用方法待考）'),
+        el('p', {}, `白中殺：尚未判定（${evaluation.temporalProfile.whiteKillerAssessment.note}）`)),
       el('p', { class: `direction-detail__verdict verdict--${evaluation.verdict}` },
         `狀態：${VERDICT_LABEL[evaluation.verdict]}`),
       evaluation.purpose !== 'general'
@@ -89,7 +106,7 @@ export function openDirectionDetailSheet(
       el('section', { class: 'direction-section' },
         el('h3', {}, '五行關係'), elementList),
       el('p', { class: 'direction-detail__disclaimer' },
-        '狀態屬 TOOL_HEURISTIC；雙星 81 組只供學習參考，rankingWeight 為 0，不參與方向排序。'),
+        '狀態屬 TOOL_HEURISTIC；目前只按紫白集中作保守排序。有氣、墓絕與白中殺仍是 unknown；雙星 81 組只供學習參考，rankingWeight 為 0，不參與方向排序。'),
     ),
   });
 }

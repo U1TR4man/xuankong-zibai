@@ -16,6 +16,17 @@ export type PairContext =
 export type PairEvidenceType =
   | 'direct_pair' | 'named_pattern' | 'palace_conditioned'
   | 'related_classic' | 'derived' | 'research_summary';
+export type EvidenceForm =
+  | 'direct_ordered_pair' | 'direct_same_palace_pair' | 'named_pattern'
+  | 'classic_trigram_pair' | 'palace_conditioned' | 'shape_conditioned'
+  | 'single_star_repeated' | 'derived';
+export type UseContext =
+  | 'selection_coarrival' | 'base_plus_flow' | 'house_double_star'
+  | 'palace_specific' | 'temporal_pair_reference';
+export type PairDirectionality =
+  | 'explicit_order' | 'unordered_pair' | 'reverse_inferred' | 'unknown';
+export type EvidenceVerificationStatus =
+  | 'verified' | 'variant' | 'suspected_transcription_error' | 'awaiting_scan';
 export type DirectionVerdict = 'priority' | 'usable' | 'ordinary' | 'mixed' | 'caution';
 export type SelectionPurpose =
   | 'general' | 'writing' | 'wealth' | 'negotiation' | 'fame' | 'celebration' | 'travel';
@@ -50,6 +61,76 @@ export interface DirectionSnapshot {
   hourStar: StarNumber;
 }
 
+export type PurpleWhiteCount = 0 | 1 | 2 | 3 | 4;
+export type PurpleWhiteSignal =
+  | 'none' | 'single_arrival' | 'two_coarrival' | 'three_concentration' | 'four_coarrival';
+export type StarQiState = 'unknown' | 'has_qi' | 'lacks_qi';
+export type StarPhaseState = 'unknown' | 'prosperous' | 'resting' | 'imprisoned' | 'dead';
+export type TombState = 'unknown' | 'in_tomb' | 'not_in_tomb';
+export type AbsoluteState = 'unknown' | 'absolute' | 'not_absolute';
+export type WhiteKiller =
+  | 'ru_mu' | 'an_jian' | 'shou_ke' | 'chuan_xin' | 'jiao_jian'
+  | 'dou_niu' | 'xing_gong' | 'hai_gong' | 'kong_wang';
+
+export interface TemporalStarState {
+  level: DirectionLevel;
+  star: StarNumber;
+  qi: StarQiState;
+  phase: StarPhaseState;
+  tomb: TombState;
+  absolute: AbsoluteState;
+}
+
+export interface WhiteKillerAssessment {
+  status: 'unknown' | 'clear' | 'present';
+  killers: WhiteKiller[];
+  note: string;
+}
+
+export interface DirectionTemporalProfile {
+  direction: DirectionCode;
+  purpleWhiteHits: DirectionLevel[];
+  purpleWhiteCount: PurpleWhiteCount;
+  purpleWhiteSignal: PurpleWhiteSignal;
+  starStates: TemporalStarState[];
+  whiteKillerAssessment: WhiteKillerAssessment;
+}
+
+export interface PairEvidenceCondition {
+  palace?: number;
+  direction?: string;
+  layer?: string;
+  form?: string;
+  requiresQi?: boolean;
+  requiresWang?: boolean;
+}
+
+export interface PairTextWitness {
+  source: string;
+  evidenceForm: EvidenceForm;
+  verificationStatus: EvidenceVerificationStatus;
+  reading?: string;
+  note?: string;
+}
+
+export interface PairTextVariant {
+  reading: string;
+  source: string;
+  verificationStatus: EvidenceVerificationStatus;
+  note?: string;
+}
+
+export interface PairSourceAudit {
+  evidenceForm: EvidenceForm;
+  useContexts: UseContext[];
+  directionality: PairDirectionality;
+  verificationStatus: EvidenceVerificationStatus;
+  primarySourceVerified: boolean;
+  conditions?: PairEvidenceCondition;
+  textWitnesses: PairTextWitness[];
+  variants?: PairTextVariant[];
+}
+
 export interface PurpleWhitePairRule {
   pair: PairKey;
   firstStar: StarNumber;
@@ -63,9 +144,11 @@ export interface PurpleWhitePairRule {
   reversePair: PairKey;
   directionSensitive: boolean;
   orderSensitive: boolean;
+  /** V1 research shorthand retained for compact UI/search ordering; sourceAudit is the truth source. */
   sourceLevel: SourceLevel;
   sourceGrade: SourceGrade;
   reviewStatus: ReviewStatus;
+  /** Legacy V1 summary fields; do not use them instead of sourceAudit for evidence claims. */
   sources: {
     title: string;
     evidenceType: PairEvidenceType;
@@ -86,6 +169,7 @@ export interface PurpleWhitePairRule {
     requiresPalaceContext: boolean;
     requiresProsperityContext: boolean;
   };
+  sourceAudit: PairSourceAudit;
 }
 
 export interface PairHit {
@@ -99,9 +183,12 @@ export interface PairHit {
 
 export interface DirectionEvaluation {
   snapshot: DirectionSnapshot;
+  temporalProfile: DirectionTemporalProfile;
   hits: PairHit[];
   verdict: DirectionVerdict;
-  purpleWhiteCount: number;
+  purpleWhiteCount: PurpleWhiteCount;
+  purpleWhiteHits: DirectionLevel[];
+  purpleWhiteSignal: PurpleWhiteSignal;
   purpleWhiteStars: StarNumber[];
   favorableHits: PairHit[];
   cautionHits: PairHit[];
