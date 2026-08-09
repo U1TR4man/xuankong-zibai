@@ -7,11 +7,10 @@ import { getSolarMonthByJieqi } from '../engine/time/solarTerms';
 import type { StarNumber } from '../overlay/types';
 import { PURPLE_WHITE_STARS, STAR_QI_REFERENCE } from './researchEvidence';
 import type {
-  DirectionLevel, PalaceKiller, SeasonalState, TemporalBranchContext,
-  TemporalStarAssessment,
+  DirectionLevel, DirectionPalaceKey, Element, LayerRole, MonthAnJianAssessment,
+  PalaceElementRelation, PalaceKiller, SeasonalState, TemporalBranchContext, TemporalStarAssessment,
 } from './types';
 
-type Element = '木' | '火' | '土' | '金' | '水';
 type MonthSeason = TemporalBranchContext['monthSeason'];
 
 export const NATIVE_PALACE: Readonly<Record<StarNumber, PalaceKey>> = {
@@ -36,6 +35,26 @@ const OPPOSITE_PALACE: Readonly<Partial<Record<PalaceKey, PalaceKey>>> = {
 
 const CONTROLS: Readonly<Record<Element, Element>> = {
   木: '土', 土: '水', 水: '火', 火: '金', 金: '木',
+};
+const GENERATES: Readonly<Record<Element, Element>> = {
+  木: '火', 火: '土', 土: '金', 金: '水', 水: '木',
+};
+
+/** 第四輪修正：暗建看月白入中星；五黃入中禁四隅。 */
+export const AN_JIAN_BY_CENTER_STAR: Readonly<Record<StarNumber, readonly DirectionPalaceKey[]>> = {
+  1: ['kan'], 2: ['kun'], 3: ['zhen'], 4: ['xun'],
+  5: ['qian', 'kun', 'gen', 'xun'],
+  6: ['qian'], 7: ['dui'], 8: ['gen'], 9: ['li'],
+};
+
+/** 古表命名的受剋殺，與一般「宮五行剋星五行」分開。 */
+const CLASSICAL_SHOU_KE: Readonly<Record<StarNumber, readonly PalaceKey[]>> = {
+  1: ['center'], 2: ['zhen', 'xun'], 3: ['qian', 'dui'], 4: ['qian', 'dui'],
+  5: ['zhen', 'xun'], 6: ['li'], 7: ['li'], 8: ['zhen', 'xun'], 9: ['kan'],
+};
+
+export const LAYER_ROLE: Readonly<Record<DirectionLevel, LayerRole>> = {
+  year: 'background_or_large_scale', month: 'primary', day: 'primary', hour: 'fine_tuning',
 };
 
 const MONTH_SEASON_BY_BRANCH: Readonly<Record<Branch, MonthSeason>> = {
@@ -92,8 +111,7 @@ export function buildTemporalBranchContext(
 
 export function assessPalaceKillers(star: StarNumber, palace: PalaceKey): PalaceKiller[] {
   const killers: PalaceKiller[] = [];
-  if (NATIVE_PALACE[star] === palace) killers.push('an_jian');
-  if (CONTROLS[PALACE_ELEMENT[palace]] === STAR_ELEMENT[star]) killers.push('shou_ke');
+  if (CLASSICAL_SHOU_KE[star].includes(palace)) killers.push('shou_ke');
   if (star !== 5 && OPPOSITE_PALACE[NATIVE_PALACE[star]] === palace) killers.push('chuan_xin');
   if ((star === 6 && palace === 'dui') || (star === 7 && palace === 'qian')) {
     killers.push('jiao_jian');
@@ -102,6 +120,29 @@ export function assessPalaceKillers(star: StarNumber, palace: PalaceKey): Palace
     killers.push('dou_niu');
   }
   return killers;
+}
+
+export function assessMonthAnJian(
+  centerStar: StarNumber,
+  palace: DirectionPalaceKey,
+): MonthAnJianAssessment {
+  const forbiddenPalaces = [...AN_JIAN_BY_CENTER_STAR[centerStar]];
+  return { active: forbiddenPalaces.includes(palace), centerStar, forbiddenPalaces };
+}
+
+export function palaceElementRelationFor(
+  star: StarNumber,
+  palace: PalaceKey,
+): TemporalStarAssessment['elementRelation'] {
+  const palaceElement = PALACE_ELEMENT[palace];
+  const starElement = STAR_ELEMENT[star];
+  let relation: PalaceElementRelation;
+  if (palaceElement === starElement) relation = 'same';
+  else if (GENERATES[palaceElement] === starElement) relation = 'palace_generates_star';
+  else if (GENERATES[starElement] === palaceElement) relation = 'star_generates_palace';
+  else if (CONTROLS[palaceElement] === starElement) relation = 'palace_controls_star';
+  else relation = 'star_controls_palace';
+  return { palaceElement, starElement, relation };
 }
 
 export function seasonalStateFor(star: StarNumber, season: MonthSeason): SeasonalState {
@@ -123,7 +164,9 @@ export function assessTemporalStar(
     palace,
     periodBranch,
     isPurpleWhite: PURPLE_WHITE_STARS.has(star),
+    role: LAYER_ROLE[level],
     palaceKillers: assessPalaceKillers(star, palace),
+    elementRelation: palaceElementRelationFor(star, palace),
     temporalState: {
       liuJieTomb: reference.tombBranch === periodBranch,
       absolute: reference.absoluteBranch === periodBranch,

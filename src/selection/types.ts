@@ -60,14 +60,21 @@ export interface DirectionSnapshot {
   monthStar: StarNumber;
   dayStar: StarNumber;
   hourStar: StarNumber;
+  /** 月暗建只看月白入中星，不以目標宮內飛星代替。 */
+  monthCenterStar: StarNumber;
 }
 
 export type PurpleWhiteCount = 0 | 1 | 2 | 3 | 4;
 export type PurpleWhiteSignal =
-  | 'none' | 'single_arrival' | 'two_coarrival' | 'three_concentration' | 'four_coarrival';
+  | 'none' | 'single_arrival' | 'two_coarrival' | 'three_coarrival' | 'all_four_coarrival';
 export type BranchQiState = 'active' | 'inactive' | 'unknown';
 export type SeasonalState = 'command' | 'support' | 'rest' | 'imprisoned' | 'controlled';
 export type TemporalEvidenceLevel = 'A' | 'B';
+export type LayerRole = 'background_or_large_scale' | 'primary' | 'fine_tuning';
+export type Element = '木' | '火' | '土' | '金' | '水';
+export type PalaceElementRelation =
+  | 'same' | 'palace_generates_star' | 'star_generates_palace'
+  | 'palace_controls_star' | 'star_controls_palace';
 export type WhiteKiller =
   | 'ru_mu' | 'an_jian' | 'shou_ke' | 'chuan_xin' | 'jiao_jian'
   | 'dou_niu' | 'xing_gong' | 'hai_gong' | 'kong_wang';
@@ -82,7 +89,13 @@ export interface TemporalStarAssessment {
   palace: PalaceKey;
   periodBranch: Branch;
   isPurpleWhite: boolean;
+  role: LayerRole;
   palaceKillers: PalaceKiller[];
+  elementRelation: {
+    palaceElement: Element;
+    starElement: Element;
+    relation: PalaceElementRelation;
+  };
   temporalState: {
     liuJieTomb: boolean;
     absolute: boolean;
@@ -108,12 +121,22 @@ export interface TemporalBranchContext {
   monthSeason: 'spring' | 'summer' | 'autumn' | 'winter' | 'earth_transition';
 }
 
+export interface MonthAnJianAssessment {
+  active: boolean;
+  centerStar: StarNumber;
+  forbiddenPalaces: DirectionPalaceKey[];
+}
+
 export interface DirectionTemporalProfile {
   direction: DirectionCode;
   purpleWhiteHits: DirectionLevel[];
   purpleWhiteCount: PurpleWhiteCount;
   purpleWhiteSignal: PurpleWhiteSignal;
+  allFourPurpleWhite: boolean;
+  qualifiedPurpleWhiteHits: DirectionLevel[];
+  qualifiedPurpleWhiteCount: PurpleWhiteCount;
   starStates: TemporalStarAssessment[];
+  monthAnJian: MonthAnJianAssessment;
   whiteKillerAssessment: WhiteKillerAssessment;
   yellowBlackLayers: DirectionLevel[];
   yellowBlackThriving: boolean;
@@ -213,6 +236,8 @@ export interface DirectionEvaluation {
   purpleWhiteHits: DirectionLevel[];
   purpleWhiteSignal: PurpleWhiteSignal;
   purpleWhiteStars: StarNumber[];
+  qualifiedPurpleWhiteCount: PurpleWhiteCount;
+  qualifiedPurpleWhiteHits: DirectionLevel[];
   favorableHits: PairHit[];
   cautionHits: PairHit[];
   mixedHits: PairHit[];

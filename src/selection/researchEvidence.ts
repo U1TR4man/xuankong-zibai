@@ -7,11 +7,11 @@ import type {
 export const PURPLE_WHITE_STARS = new Set<StarNumber>([1, 6, 8, 9]);
 
 export const PURPLE_WHITE_SIGNAL_LABEL: Record<PurpleWhiteSignal, string> = {
-  none: '無紫白集中',
+  none: '無紫白到方',
   single_arrival: '紫白到方',
-  two_coarrival: '二時紫白同加',
-  three_concentration: '三時紫白集中',
-  four_coarrival: '四時紫白同到',
+  two_coarrival: '雙層紫白同到',
+  three_coarrival: '三層紫白同到',
+  all_four_coarrival: '年月日時紫白同到',
 };
 
 export interface StarQiReference {
@@ -42,7 +42,7 @@ export const STAR_QI_REFERENCE: Readonly<Record<StarNumber, StarQiReference>> = 
 
 export const WHITE_KILLER_LABEL: Record<WhiteKiller, string> = {
   ru_mu: '入墓',
-  an_jian: '暗建殺',
+  an_jian: '月暗建',
   shou_ke: '受剋殺',
   chuan_xin: '穿心殺',
   jiao_jian: '交劍殺',
@@ -53,7 +53,8 @@ export const WHITE_KILLER_LABEL: Record<WhiteKiller, string> = {
 };
 
 export interface SelectionMethodEvidence {
-  id: 'temporal_coarrival' | 'qi_tomb_killers' | 'death_retreat_variant' | 'manuscript_purpose';
+  id: 'temporal_coarrival' | 'qi_tomb_killers' | 'white_killer_tables'
+    | 'death_retreat_variant' | 'manuscript_purpose';
   summary: string;
   useContexts: UseContext[];
   verificationStatus: EvidenceVerificationStatus;
@@ -66,18 +67,23 @@ export interface SelectionMethodEvidence {
 export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
   {
     id: 'temporal_coarrival',
-    summary: '年月日時紫白同到一方可作修方／選擇主幹；二時與四時有直接研究依據，三時是工具分級。',
+    summary: '單一合格紫白到方即可成立，多層同到逐級增強，年月日時四課皆到有直接研究依據；一時／二時異文不得作固定門檻。',
     useContexts: ['selection_coarrival'],
-    verificationStatus: 'awaiting_scan',
+    verificationStatus: 'variant',
     primarySourceVerified: false,
     witnesses: [
-      { source: '《五要奇書》卷三十八相關紫白／修方材料', note: '第二輪考源摘要；未附原頁影像與頁碼。' },
-      { source: '《三元選擇歌》', note: '研究摘要提及年月日時四課與紫白二時加；待核版本原頁。' },
+      { source: '《造命宗鏡集》卷六及《三元寶海鈎玄》系傳本', note: '第四輪研究記為「紫白一時加」；仍待固定版本頁碼與原頁影像。' },
+      { source: '《五要奇書》某數位本', note: '第四輪研究見「紫白二時加」；不得獨取此本作數值門檻。' },
+      { source: '修方相關傳本', note: '保存年月日時紫白皆到所修方「尤為大利」的多層同到依據；待核原頁。' },
+    ],
+    variants: [
+      { reading: '紫白一時加', source: '《造命宗鏡集》卷六、《三元寶海鈎玄》系傳本', note: '多個重要傳本讀法；未附本專案可重跑原頁。' },
+      { reading: '紫白二時加', source: '《五要奇書》某數位本', note: '異文；禁止轉成 purpleWhiteCount >= 2 硬門檻。' },
     ],
   },
   {
     id: 'qi_tomb_killers',
-    summary: '紫白須論支序有氣、墓絕與白中有殺；第三輪已定星宮與星支公式，但原頁仍待逐條覆核。',
+    summary: '紫白須論支序有氣、墓絕與白中有殺；第四輪修正月暗建及 classical 受剋表，generic 五行關係不得冒充古殺名。',
     useContexts: ['selection_coarrival'],
     verificationStatus: 'awaiting_scan',
     primarySourceVerified: false,
@@ -85,6 +91,20 @@ export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
       { source: '《類編曆法通書大全》及《三才圖會》時令卷相關材料', note: '第三輪據研究整理星宮定局；未附原頁影像與頁碼。' },
       { source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '第三輪據研究整理季節、墓絕與白中殺；仍需人工核影印頁。' },
       { source: '《五要奇書》及《三元選擇歌》相關材料', note: '支持年月日時、紫白同加、有氣與墓絕的選擇框架；待核版本原頁。' },
+    ],
+  },
+  {
+    id: 'white_killer_tables',
+    summary: '月暗建依月白入中星反推禁修方；五黃入中禁乾坤艮巽。鬥牛採金土入木宮，水字讀法保留為 OCR／轉錄異文。',
+    useContexts: ['selection_coarrival'],
+    verificationStatus: 'variant',
+    primarySourceVerified: false,
+    witnesses: [
+      { source: '時家三元紫白相關古表', note: '第四輪整理暗建、受剋、穿心、交劍及鬥牛定局；仍待逐格原頁核影。' },
+    ],
+    variants: [
+      { reading: '金土與木同位', source: '多個傳本／轉錄及定局', note: 'V1 採用。' },
+      { reading: '金土與水同位', source: '部分 OCR／轉錄', note: '疑似 OCR 或轉錄異文，不進公式。' },
     ],
   },
   {

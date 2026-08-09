@@ -22,5 +22,6 @@ export function buildDirectionSnapshots(chart: FullChart): DirectionSnapshot[] {
     monthStar: asStarNumber(chart.month.palaceStars[palace.key]),
     dayStar: asStarNumber(chart.day.palaceStars[palace.key]),
     hourStar: asStarNumber(chart.hour.palaceStars[palace.key]),
+    monthCenterStar: asStarNumber(chart.month.centerStar),
   }));
 }

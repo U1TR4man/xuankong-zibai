@@ -6,6 +6,8 @@
 
 ### Added
 
+- 新增第四輪 co-arrival 與 Direction status V4：raw 紫白到方與合格紫白分開記錄，月／日為主要層，年為背景／大型修作參考，時為細選。
+- 新增月暗建 `centerStar -> forbiddenPalaces` 表、classical 受剋殺表及獨立的宮星五行關係；只月層套用暗建，五黃入中禁乾坤艮巽。
 - 新增第三輪白中殺／時間狀態引擎：暗建、受剋、穿心、交劍、鬥牛以星乘固定宮位判定；六捷墓、臨絕及 1／6／8／9 支序有氣以年月日時各層地支判定。
 - 新增節氣月令的得令、得生、休、囚、受制資料，以及年／月 A 級、日／時 B 級的時層套用標記；未有直接支序表的星保持未知，不自行推演。
 - 新增可重跑的 `scripts/build-font-subset.py`：掃描專案實際靜態 UI 中文、驗證既有 Noto Serif CJK TC Medium 來源 checksum，並重建／檢查離線 WOFF2 子集。
@@ -28,12 +30,17 @@
 
 ### Changed
 
+- 紫白擇吉移除「至少兩層才成立」的硬門檻；一個主要層合格紫白已可成為正面訊號，多層同到再增強。「紫白一時加／二時加」同時保存為異文。
+- Direction status 依合格主要層、墓絕、classical killers 及黃黑疊到重算；81 組 pair 仍為 `reference_only`、`rankingWeight=0`，不影響 status 或方向排序。
 - 擇吉方向判定依序納入紫白集中、白中殺、墓絕、支序有氣與黃黑值令；維持純文字分級及可解釋條件，不建立 0–100 或固定權重。
 - 擇吉宮格優先顯示白中殺／墓絕提醒；方向詳情將「時氣與白中殺」排在主要雙星參考之前，並於「為甚麼」逐層顯示地支、月令及可重疊條件。
 - 81 組雙星仍是獨立參考知識庫，`rankingWeight=0`、用途選擇與 pair 摘要不參與方向判定或排序。
 
 ### Fixed
 
+- 修正第三輪暗建過度簡化：不再把飛星回本宮視為暗建，改依月白入中星反推禁修方。
+- 修正受剋殺命名：古表定局與一般「宮五行剋星五行」分開，一白落艮只顯示五行相剋，不冒稱古法受剋殺。
+- 重建 `Zibai Serif` 離線字體子集至 892 個 UI 字元；新增第四輪說明字元已進 preload、PWA precache 與單檔 data URI。
 - 擇吉九宮不再以 8px 顯示年月日時與 pair 摘要，也不再把紫白集中數塞入宮格；重要資訊改用 secondary ink，320px 九宮維持 296×296 正方。
 - 方向詳情改為 progressive disclosure：首屏只留四星、狀態與主要參考，「為甚麼／全部六組／五行關係／研究說明」預設收起。
 - Bottom Sheet 初始焦點改到 sheet surface，避免開啟即在 X 顯示朱紅焦點框；關閉圖示統一為 1.5px inline SVG，keyboard focus 與焦點返回保持不變。
@@ -62,6 +69,7 @@
 
 ### Documentation
 
+- 收錄紫白擇吉第四輪實作紀錄、原始研究 checksum、被修正的第三輪規則、179 tests、PWA／單檔 build 與四種 iPhone 寬度 Browser 驗收。
 - 收錄紫白擇吉第三輪考源 implementation record、原始研究 checksum、白中殺／墓絕／支序有氣／月令的實際公式、178 tests、build 及四種手機寬度驗收；未有原頁的來源狀態仍保持待覆核。
 - 收錄 professional UI/UX refinement 的原始規格 checksum、Phase A–D implementation record、172 tests、production／PWA／單檔 build 與四種手機寬度驗收。
 - 收錄紫白擇吉第二輪考源 implementation record、原始研究 checksum、171 tests、production／PWA／單檔 build 與五種寬度驗收，並鎖定有氣／白中殺／81 組仍不可評分的邊界。

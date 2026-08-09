@@ -1,5 +1,7 @@
 # 紫白擇吉第三輪考源 implementation record
 
+> 歷史記錄：本文的暗建、受剋殺及 status 公式已被第四輪修正，不再是現行 truth source。請以 [第四輪考源實作紀錄](purple-white-fourth-round-coarrival-anjian.md) 為準；墓絕、1／6／8／9 支序有氣及月令部分仍繼續使用。
+
 本文件記錄 `紫白擇吉_第三輪考源_白中殺與有氣落地規則.md` 的保守落地方式。
 
 ## 原始研究規格

@@ -9,7 +9,8 @@ import {
 import { getPairRule, PURPLE_WHITE_PAIR_RULES } from '../src/selection/pairRules';
 import { SELECTION_METHOD_EVIDENCE, STAR_QI_REFERENCE } from '../src/selection/researchEvidence';
 import {
-  assessPalaceKillers, assessTemporalStar, buildTemporalBranchContext, seasonalStateFor,
+  assessMonthAnJian, assessPalaceKillers, assessTemporalStar, buildTemporalBranchContext,
+  palaceElementRelationFor, seasonalStateFor,
 } from '../src/selection/temporalRules';
 import type { StarNumber } from '../src/overlay/types';
 import type {
@@ -20,6 +21,7 @@ const AT = fromUtc8(2026, 8, 7, 11, 38);
 const EXAMPLE: DirectionSnapshot = {
   direction: 'SE', palace: 'xun', palaceNumber: 4, name: '巽', bearing: '東南', row: 0, col: 0,
   yearStar: 1, monthStar: 4, dayStar: 8, hourStar: 6,
+  monthCenterStar: 4,
 };
 const CONTEXT: TemporalBranchContext = {
   branches: { year: '申', month: '酉', day: '午', hour: '子' },
@@ -96,24 +98,37 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     ]);
   });
 
-  it('白中殺以星乘固定宮位公式化，且同層可重疊', () => {
-    expect(assessPalaceKillers(1, 'kan')).toEqual(['an_jian']);
+  it('月暗建依月白入中判定，不再把飛星回本宮當成暗建', () => {
+    expect(assessMonthAnJian(1, 'kan')).toMatchObject({ active: true, centerStar: 1 });
+    expect(assessMonthAnJian(1, 'gen').active).toBe(false);
+    expect(assessMonthAnJian(5, 'qian').active).toBe(true);
+    expect(assessMonthAnJian(5, 'kun').active).toBe(true);
+    expect(assessMonthAnJian(5, 'gen').active).toBe(true);
+    expect(assessMonthAnJian(5, 'xun').active).toBe(true);
+    expect(assessMonthAnJian(5, 'zhen').active).toBe(false);
+    expect(assessMonthAnJian(6, 'qian').active).toBe(true);
+    expect(assessPalaceKillers(1, 'kan')).toEqual([]);
+  });
+
+  it('古典白中殺可同層重疊，且一般五行相剋另列', () => {
+    expect(assessPalaceKillers(1, 'center')).toEqual(['shou_ke']);
     expect(assessPalaceKillers(6, 'li')).toEqual(['shou_ke']);
     expect(assessPalaceKillers(6, 'xun')).toEqual(['chuan_xin', 'dou_niu']);
     expect(assessPalaceKillers(6, 'dui')).toEqual(['jiao_jian']);
     expect(assessPalaceKillers(7, 'qian')).toEqual(['jiao_jian']);
     expect(assessPalaceKillers(8, 'zhen')).toEqual(['shou_ke', 'dou_niu']);
     expect(assessPalaceKillers(9, 'kan')).toEqual(['shou_ke', 'chuan_xin']);
-    expect(assessPalaceKillers(5, 'center')).toEqual(['an_jian']);
+    expect(assessPalaceKillers(5, 'center')).toEqual([]);
     expect(assessPalaceKillers(5, 'li')).toEqual([]);
+    expect(palaceElementRelationFor(1, 'gen').relation).toBe('palace_controls_star');
+    expect(assessPalaceKillers(1, 'gen')).not.toContain('shou_ke');
   });
 
-  it('白中殺五類完整矩陣逐星鎖定，沒有把本宮金星重複算成交劍', () => {
+  it('白中殺四類古表逐星鎖定，暗建不混入逐星矩陣', () => {
     const stars = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
     const palaces = ['kan', 'kun', 'zhen', 'xun', 'center', 'qian', 'dui', 'gen', 'li'] as const;
-    const native = ['kan', 'kun', 'zhen', 'xun', 'center', 'qian', 'dui', 'gen', 'li'];
     const controlled = [
-      ['kun', 'center', 'gen'], ['zhen', 'xun'], ['qian', 'dui'], ['qian', 'dui'],
+      ['center'], ['zhen', 'xun'], ['qian', 'dui'], ['qian', 'dui'],
       ['zhen', 'xun'], ['li'], ['li'], ['zhen', 'xun'], ['kan'],
     ];
     const opposite = [['li'], ['gen'], ['dui'], ['qian'], [], ['xun'], ['zhen'], ['kun'], ['kan']];
@@ -121,7 +136,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
       const matching = (killer: PalaceKiller) => (
         palaces.filter((palace) => assessPalaceKillers(star, palace).includes(killer))
       );
-      expect(matching('an_jian')).toEqual([native[index]]);
+      expect(matching('an_jian')).toEqual([]);
       expect(matching('shou_ke')).toEqual(controlled[index]);
       expect(matching('chuan_xin')).toEqual(opposite[index]);
       expect(matching('jiao_jian')).toEqual(star === 6 ? ['dui'] : star === 7 ? ['qian'] : []);
@@ -206,6 +221,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
         monthStar: chart.month.palaceStars[snapshot.palace],
         dayStar: chart.day.palaceStars[snapshot.palace],
         hourStar: chart.hour.palaceStars[snapshot.palace],
+        monthCenterStar: chart.month.centerStar,
       });
     }
   });
@@ -221,7 +237,8 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation.verdict).toBe('caution');
     expect(evaluation.purpleWhiteStars).toEqual([1, 8, 6]);
     expect(evaluation.purpleWhiteHits).toEqual(['year', 'day', 'hour']);
-    expect(evaluation.purpleWhiteSignal).toBe('three_concentration');
+    expect(evaluation.purpleWhiteSignal).toBe('three_coarrival');
+    expect(evaluation.qualifiedPurpleWhiteHits).toEqual(['year']);
     expect(evaluation.temporalProfile.starStates.map((state) => state.periodBranch))
       .toEqual(['申', '酉', '午', '子']);
     expect(evaluation.temporalProfile.whiteKillerAssessment.status).toBe('present');
@@ -234,36 +251,45 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation).not.toHaveProperty('score');
   });
 
-  it('四級判定按有氣、殺、墓絕及黃黑值令決定，無紫白保留普通 fallback', () => {
-    const safe = { ...EXAMPLE, palace: 'dui' as const, palaceNumber: 7 };
+  it('V4 判定區分主要層合格紫白、警示與無警示 fallback', () => {
+    const safe = {
+      ...EXAMPLE, palace: 'dui' as const, palaceNumber: 7, monthCenterStar: 1 as const,
+    };
     expect(evaluateDirection({
-      ...safe, yearStar: 1, monthStar: 8, dayStar: 9, hourStar: 2,
+      ...safe, yearStar: 7, monthStar: 1, dayStar: 7, hourStar: 7,
     }, CONTEXT).verdict).toBe('priority');
     expect(evaluateDirection({
-      ...safe, yearStar: 1, monthStar: 8, dayStar: 9, hourStar: 6,
+      ...safe, yearStar: 1, monthStar: 7, dayStar: 7, hourStar: 7,
+    }, CONTEXT).verdict).toBe('usable');
+    expect(evaluateDirection({
+      ...safe, yearStar: 7, monthStar: 1, dayStar: 3, hourStar: 7,
     }, CONTEXT).verdict).toBe('mixed');
     expect(evaluateDirection({
-      ...safe, yearStar: 1, monthStar: 8, dayStar: 9, hourStar: 2,
-    }, { ...CONTEXT, branches: { ...CONTEXT.branches, year: '巳' } }).verdict)
-      .toBe('caution');
-    expect(evaluateDirection({
-      ...safe, yearStar: 2, monthStar: 5, dayStar: 1, hourStar: 8,
-    }, { ...CONTEXT, monthSeason: 'earth_transition' }).verdict).toBe('caution');
+      ...safe, yearStar: 2, monthStar: 5, dayStar: 2, hourStar: 4,
+    }, CONTEXT).verdict).toBe('caution');
     expect(evaluateDirection({
       ...safe, palace: 'gen', palaceNumber: 8,
-      yearStar: 2, monthStar: 3, dayStar: 4, hourStar: 7,
+      yearStar: 7, monthStar: 7, dayStar: 7, hourStar: 7,
     }, CONTEXT).verdict).toBe('ordinary');
   });
 
-  it('0–4 顆紫白各有明確訊號，三時名稱明示為工具分級', () => {
+  it('0–4 層紫白各有明確訊號，一時／二時異文不變數值門檻', () => {
     expect([0, 1, 2, 3, 4].map((count) => purpleWhiteSignalFor(count as 0 | 1 | 2 | 3 | 4)))
-      .toEqual(['none', 'single_arrival', 'two_coarrival', 'three_concentration', 'four_coarrival']);
+      .toEqual(['none', 'single_arrival', 'two_coarrival', 'three_coarrival', 'all_four_coarrival']);
     expect(evaluateDirection({
       ...EXAMPLE, yearStar: 1, monthStar: 6, dayStar: 8, hourStar: 9,
-    }, CONTEXT).reasons[0]).toBe('四時紫白同到：4/4');
+    }, CONTEXT).reasons[0]).toBe('紫白到方：4/4（年月日時紫白同到）');
     expect(evaluateDirection({
       ...EXAMPLE, yearStar: 2, monthStar: 3, dayStar: 4, hourStar: 5,
-    }, CONTEXT).reasons[0]).toBe('無紫白集中：0/4');
+    }, CONTEXT).reasons[0]).toBe('紫白到方：0/4（無紫白到方）');
+    expect(evaluateDirection({
+      ...EXAMPLE, palace: 'dui', palaceNumber: 7, monthCenterStar: 1,
+      yearStar: 7, monthStar: 1, dayStar: 7, hourStar: 7,
+    }, CONTEXT).verdict).toBe('priority');
+    const coarrival = SELECTION_METHOD_EVIDENCE.find((item) => item.id === 'temporal_coarrival')!;
+    expect(coarrival.verificationStatus).toBe('variant');
+    expect(coarrival.variants?.map((item) => item.reading))
+      .toEqual(['紫白一時加', '紫白二時加']);
   });
 
   it('二五交加 pair 文字仍不評分；只有另立的黃黑值令條件可觸發警示', () => {
@@ -276,7 +302,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation.cautionHits).toEqual([]);
     expect(evaluation.temporalProfile.yellowBlackLayers).toEqual(['year', 'month']);
     expect(evaluation.temporalProfile.yellowBlackThriving).toBe(false);
-    expect(evaluation.verdict).toBe('usable');
+    expect(evaluation.verdict).toBe('caution');
   });
 
   it('方向排序不受 pair 用途改變，且不暴露假分數', () => {

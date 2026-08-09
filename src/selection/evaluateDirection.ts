@@ -3,7 +3,7 @@ import { buildDirectionSnapshots } from './buildDirectionSnapshots';
 import { buildPairHits } from './buildPairHits';
 import { purposeHits } from './purpose';
 import { PURPLE_WHITE_SIGNAL_LABEL, PURPLE_WHITE_STARS } from './researchEvidence';
-import { assessTemporalStar, buildTemporalBranchContext } from './temporalRules';
+import { assessMonthAnJian, assessTemporalStar, buildTemporalBranchContext } from './temporalRules';
 import type {
   DirectionEvaluation, DirectionLevel, DirectionSnapshot, DirectionTemporalProfile,
   DirectionVerdict, PairHit, PurpleWhiteCount, PurpleWhiteSignal, SelectionPurpose, SourceLevel,
@@ -33,8 +33,8 @@ export function purpleWhiteSignalFor(count: PurpleWhiteCount): PurpleWhiteSignal
   if (count === 0) return 'none';
   if (count === 1) return 'single_arrival';
   if (count === 2) return 'two_coarrival';
-  if (count === 3) return 'three_concentration';
-  return 'four_coarrival';
+  if (count === 3) return 'three_coarrival';
+  return 'all_four_coarrival';
 }
 
 export function buildDirectionTemporalProfile(
@@ -54,6 +54,19 @@ export function buildDirectionTemporalProfile(
   const starStates = layerStars.map(({ level, star }) => (
     assessTemporalStar(level, star, snapshot.palace, context)
   ));
+  const monthAnJian = assessMonthAnJian(snapshot.monthCenterStar, snapshot.palace);
+  if (monthAnJian.active) {
+    const monthState = starStates.find((state) => state.level === 'month')!;
+    monthState.palaceKillers = ['an_jian', ...monthState.palaceKillers];
+  }
+  const qualifiedPurpleWhiteHits = starStates.filter((state) => (
+    state.isPurpleWhite
+    && state.temporalState.branchQi === 'active'
+    && !state.temporalState.liuJieTomb
+    && !state.temporalState.absolute
+    && state.palaceKillers.length === 0
+  )).map((state) => state.level);
+  const qualifiedPurpleWhiteCount = qualifiedPurpleWhiteHits.length as PurpleWhiteCount;
   const killerHits = starStates
     .filter((state) => state.palaceKillers.length > 0)
     .map((state) => ({
@@ -69,11 +82,15 @@ export function buildDirectionTemporalProfile(
     purpleWhiteHits,
     purpleWhiteCount,
     purpleWhiteSignal: purpleWhiteSignalFor(purpleWhiteCount),
+    allFourPurpleWhite: purpleWhiteCount === 4,
+    qualifiedPurpleWhiteHits,
+    qualifiedPurpleWhiteCount,
     starStates,
+    monthAnJian,
     whiteKillerAssessment: {
       status: killerHits.length > 0 ? 'present' : 'clear',
       hits: killerHits,
-      note: '依星與固定宮位判定；刑宮、害宮及四空亡尚未納入。',
+      note: '月暗建依月白入中星判定；其餘採 classical 定局。一般五行生剋另列，不冒充古殺名。',
     },
     yellowBlackLayers,
     yellowBlackThriving: hasTwo && hasFive
@@ -83,29 +100,24 @@ export function buildDirectionTemporalProfile(
 }
 
 function verdictFor(profile: DirectionTemporalProfile): DirectionVerdict {
-  const purpleWhiteStates = profile.starStates.filter((state) => state.isPurpleWhite);
-  const purpleWhiteInTombOrAbsolute = purpleWhiteStates.some((state) => (
-    state.temporalState.liuJieTomb || state.temporalState.absolute
-  ));
-  const hasMultiplePalaceKillers = profile.starStates.some((state) => (
-    state.palaceKillers.length >= 2
-  ));
-  if (profile.yellowBlackThriving || hasMultiplePalaceKillers || purpleWhiteInTombOrAbsolute) {
-    return 'caution';
-  }
-
-  const hasAnyCondition = profile.starStates.some((state) => (
+  const killerCount = profile.starStates.reduce((count, state) => (
+    count + state.palaceKillers.length
+  ), 0);
+  const hasAnyWarning = profile.starStates.some((state) => (
     state.palaceKillers.length > 0
     || state.temporalState.liuJieTomb
     || state.temporalState.absolute
+  )) || profile.yellowBlackLayers.length >= 2;
+  const hasQualifiedPrimary = profile.qualifiedPurpleWhiteHits.some((level) => (
+    level === 'month' || level === 'day'
   ));
-  if (profile.purpleWhiteCount >= 2 && hasAnyCondition) return 'mixed';
 
-  const hasActivePurpleWhite = purpleWhiteStates.some((state) => (
-    state.temporalState.branchQi === 'active'
-  ));
-  if (profile.purpleWhiteCount >= 2 && hasActivePurpleWhite) return 'priority';
-  if (profile.purpleWhiteCount >= 1) return 'usable';
+  if (!hasQualifiedPrimary && (profile.yellowBlackLayers.length >= 2 || killerCount >= 2)) {
+    return 'caution';
+  }
+  if (profile.purpleWhiteCount > 0 && hasAnyWarning) return 'mixed';
+  if (hasQualifiedPrimary && !hasAnyWarning) return 'priority';
+  if (profile.qualifiedPurpleWhiteCount > 0 && !hasAnyWarning) return 'usable';
   return 'ordinary';
 }
 
@@ -127,17 +139,24 @@ export function evaluateDirection(
   const activePurpleWhite = profile.starStates.filter((state) => (
     state.isPurpleWhite && state.temporalState.branchQi === 'active'
   ));
+  const qualifiedPrimary = profile.qualifiedPurpleWhiteHits.filter((level) => (
+    level === 'month' || level === 'day'
+  ));
   const tombCount = profile.starStates.filter((state) => state.temporalState.liuJieTomb).length;
   const absoluteCount = profile.starStates.filter((state) => state.temporalState.absolute).length;
   const reasons = [
-    `${PURPLE_WHITE_SIGNAL_LABEL[profile.purpleWhiteSignal]}：${profile.purpleWhiteCount}/4`,
-    `支序有氣：${activePurpleWhite.length} 層`,
+    `紫白到方：${profile.purpleWhiteCount}/4（${PURPLE_WHITE_SIGNAL_LABEL[profile.purpleWhiteSignal]}）`,
+    `支序有氣：${activePurpleWhite.length} 層；合格紫白：${profile.qualifiedPurpleWhiteCount} 層`,
+    qualifiedPrimary.length > 0 ? `主要層合格：${qualifiedPrimary.join('、')}` : '',
     `白中殺：${profile.whiteKillerAssessment.hits.length > 0
       ? `${profile.whiteKillerAssessment.hits.length} 層命中` : '未命中'}`,
+    profile.monthAnJian.active
+      ? `月暗建：月白 ${profile.monthAnJian.centerStar} 入中，本方不宜修作` : '',
     tombCount > 0 ? `入墓：${tombCount} 層` : '',
     absoluteCount > 0 ? `臨絕：${absoluteCount} 層` : '',
     profile.yellowBlackLayers.length >= 2
       ? `二黑、五黃同到${profile.yellowBlackThriving ? '且月令值旺' : ''}` : '',
+    '月、日為主要層；年作背景／大型修作參考，時作細選',
     '月令旺相休囚只作條件顯示，不換算固定分數',
     '雙星 81 組只供參考，不參與方向排序',
   ].filter(Boolean);
@@ -151,6 +170,8 @@ export function evaluateDirection(
     purpleWhiteHits: profile.purpleWhiteHits,
     purpleWhiteSignal: profile.purpleWhiteSignal,
     purpleWhiteStars,
+    qualifiedPurpleWhiteCount: profile.qualifiedPurpleWhiteCount,
+    qualifiedPurpleWhiteHits: profile.qualifiedPurpleWhiteHits,
     favorableHits,
     cautionHits,
     mixedHits,
