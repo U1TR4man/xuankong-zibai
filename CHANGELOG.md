@@ -6,6 +6,8 @@
 
 ### Added
 
+- 新增第七輪白中殺 9 星×6 殺單一真相表：六捷墓、九宮暗建、受剋、穿心、交劍、鬥牛全部逐星鎖定，並保存還原欄序、規則級信心與原典未核 metadata。
+- 新增暗建、到方四殺與六捷墓的獨立 API 及完整矩陣測試；鎖定同層多殺、五黃中宮預設、九紫戌墓及一白艮宮不誤報受剋殺。
 - 新增第六輪四層到方政策：月／日為正式主層、年為背景、時白為同級細選；日支有氣升為 B+ 次級有效，日時白中殺仍只作參考。
 - 新增大月建 36 個月型態回歸測試、舊年干起例停用 metadata，以及大月建疊加二黑／五黃、墓絕或其他 active killer 的 caution boundary tests。
 - 新增第五輪 source-aware 規則政策：白中殺為年月正式、日時參考；支序有氣為年月正式、日層警示、時層類推。
@@ -38,6 +40,7 @@
 
 ### Changed
 
+- 一般九宮本位、受剋古表、對宮公式與鬥牛條件由分散常數改為共用第七輪矩陣；暗建讀入中星、四種宮位殺讀到方星、六捷讀時間地支，年月 active／日時 reference-only 邊界不變。
 - 大月建改由正式月紫白入中星的後天本宮直接推得；與月暗建同位時合流為一條「大月建／月暗建」警示，只計一次，五黃預設回中宮。
 - 日白到方不再被「當日地支未列直接有氣」整層取消；日支直接有氣改作次級加強。時白不單獨提升 verdict，只在同級方向間作 tie-breaker。
 - Direction status 更新為 V6：月／日建立主層結果，大月建單獨只落 mixed，與二黑／五黃、其他年月白中殺或非參考墓絕疊加才升 caution。
@@ -55,6 +58,7 @@
 
 ### Fixed
 
+- 重建 `Zibai Serif` 離線字體子集至 917 個 UI 字元／918 glyphs；第七輪研究說明新增中文已進 preload、PWA precache 與單檔 data URI。
 - 移除大月建「獨立月干支飛宮尚待核對」的過期 user-facing 說法；主盤與詳情不再將大月建、月暗建重複顯示或重複計入警示。
 - 重建 `Zibai Serif` 離線字體子集至 912 個 UI 字元／913 glyphs；第六輪新增文字已進 preload、PWA precache 與單檔 data URI。
 - 修正日、時白中殺類比過度影響 verdict：底層仍完整計算與顯示，但不再直接將方向從優先降為吉凶並見或慎用。
@@ -92,6 +96,7 @@
 
 ### Documentation
 
+- 收錄紫白擇吉第七輪實作紀錄、原始研究 checksum、9×6 矩陣、三種輸入契約、194 tests、PWA／單檔 build、離線字體與四種手機寬度 Browser 驗收；原典影像未入專案故仍保留 `primarySourceVerified=false`。
 - 收錄紫白擇吉第六輪實作紀錄、原始研究 checksum、大月建 36 月合流、日白／時白層級、194 tests、PWA／單檔 build、離線字體與四種手機寬度 Browser 驗收。
 - 收錄紫白擇吉第五輪實作紀錄、原始研究 checksum、暗建傳本分層、年月／日時證據政策、大月建／日主 Gate／月納音暫緩邊界、191 tests、PWA／單檔 build 與四種手機寬度驗收。
 - 收錄干支加入與 UI/UX refinement V2 implementation record、原始規格 checksum、188 tests、PWA／單檔 build、五種寬度及 keyboard／focus／font 驗收證據。

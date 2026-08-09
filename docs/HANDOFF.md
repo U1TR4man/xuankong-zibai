@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／搜尋 implementation **Phase 0–6**、盤面／搜尋／URL cleanup、疊盤配色補丁、紫白擇吉方向 V1 **Phase 1–4**，以及干支加入與 UI/UX refinement V2 的 **P0／P1** 均已完成。雙星 81 組已與方向 ranking 解耦；第六輪已確認大月建等於月入中星本宮、與月暗建合流，並將日白升為正式主層、時白定為同級細選。現行 Direction status 使用 source-aware V6 政策。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／搜尋 implementation **Phase 0–6**、盤面／搜尋／URL cleanup、疊盤配色補丁、紫白擇吉方向 V1 **Phase 1–4**，以及干支加入與 UI/UX refinement V2 的 **P0／P1** 均已完成。雙星 81 組已與方向 ranking 解耦；第六輪已確認大月建等於月入中星本宮、與月暗建合流，並將日白升為正式主層、時白定為同級細選；第七輪已將六捷墓、九宮暗建、受剋、穿心、交劍與鬥牛整合為唯一 9 星×6 殺矩陣。現行 Direction status 繼續使用 source-aware V6 政策。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -32,6 +32,7 @@
 - 干支加入／擇吉與搜尋 refinement code checkpoint：`927a9fd`
 - 紫白擇吉第五輪暗建／白中殺／有氣分層 code checkpoint：`b8980ae`
 - 紫白擇吉第六輪大月建合流／日白升級 code checkpoint：`9674f28`
+- 紫白擇吉第七輪白中殺 9×6 矩陣 code checkpoint：`175ee81`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -47,9 +48,10 @@
 - 紫白擇吉第四輪考源紀錄：`docs/purple-white-fourth-round-coarrival-anjian.md`
 - 紫白擇吉第五輪考源紀錄：`docs/purple-white-fifth-round-layered-anjian-qi.md`
 - 紫白擇吉第六輪考源紀錄：`docs/purple-white-sixth-round-dayuejian-daywhite.md`
+- 紫白擇吉第七輪考源紀錄：`docs/purple-white-seventh-round-white-killer-matrix.md`
 - 干支加入與 UI/UX refinement V2 紀錄：`docs/ganzhi-uiux-refinement-v2.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則及 canonical 年月日時干支均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。下一步是白中殺 authoritative 9×6 原表逐格核影、日白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式或 P2 最佳時窗。
+P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣及 canonical 年月日時干支均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。下一步是收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式或 P2 最佳時窗。
 
 ---
 
@@ -256,6 +258,17 @@ tests/fixtures/chart-snapshot.json
 - 日主／時課 Gate 與月納音仍為 `not_evaluated`／`disabled`；V6 status 是工具分級，不冒充完整通書日課。
 - 詳細 source map、測試、字體與 Browser 證據見 `docs/purple-white-sixth-round-dayuejian-daywhite.md`。
 
+### 紫白擇吉第七輪白中殺 9×6 矩陣封版
+
+- `src/selection/whiteKillerMatrix.ts` 是六捷墓、一般九宮暗建、受剋、穿心、交劍與鬥牛的單一程式真相源；不得在 `temporalRules.ts` 另建重複表或用 generic 五行公式覆寫。
+- 暗建輸入是各層入中星與目標宮；受剋／穿心／交劍／鬥牛輸入是目標宮的到方星；六捷墓輸入是到方星與該層時間地支。
+- 矩陣鎖定：1 辰／坎／中／離；2 辰／坤／震巽／艮／鬥牛震巽；3 未／震／乾兌／兌；4 未／巽／乾兌／乾；5 辰／中／震巽／無穿心／鬥牛震巽；6 丑／乾／離／巽／交劍兌／鬥牛震巽；7 丑／兌／離／震／交劍乾／鬥牛震巽；8 辰／艮／震巽／坤／鬥牛震巽；9 戌／離／坎／坎。完整逐欄表見第七輪紀錄。
+- 單層可有多殺陣列；例如八白到震／巽同時受剋、鬥牛，九紫到坎同時受剋、穿心。不得只保留第一個命中。
+- 五黃暗建預設是中宮；四隅只是傳本異法。大月建／月暗建繼續合流且只計一次。
+- 年月白中殺 active、日時 reference-only、日白主層、時白 tie-breaker 全部繼承第六輪；第七輪不改 status 權重、不依殺數線性加減。
+- 第七輪「封版」只是程式規則級；原典固定版本、頁碼、完整逐字引文與原頁影像尚未入專案，`primarySourceVerified=false` 不得擅改。
+- 詳細 source map、完整矩陣、測試、字體與 Browser 證據見 `docs/purple-white-seventh-round-white-killer-matrix.md`。
+
 #### Reserved future capability — 最佳時窗
 
 尋星模組的長期目標包含「最佳時窗」搜尋與排序。
@@ -277,8 +290,8 @@ test files  25 passed
 tests       194 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（455.01 KiB）success
-single file 玄空紫白.html（538,436 bytes；font data URI）success
+PWA precache 11 entries（457.64 KiB）success
+single file 玄空紫白.html（541,632 bytes；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -297,7 +310,7 @@ single file 玄空紫白.html（538,436 bytes；font data URI）success
 - 日期 Sheet apply、Esc、focus return
 - 320 / 375 / 390 / 430 native date/time shell 無 clipping；兩個 input 都維持 `appearance:auto`
 - date/time focus：shell 1px border + 2px outline；input 0 border + no outline
-- 品牌字體 `document.fonts.check()` 對「大月建／月暗建／詳情／舊／靠／翻」等新增字串命中；912 個 UI 字元／913 glyphs／243,128 bytes，production font 與 public font SHA-256 均為 `15d965d847acff86b6df05129923038bb383c66a49e076768da6fe56bc04fcac`
+- 品牌字體 `document.fonts.check()` 命中；917 個 UI 字元／918 glyphs／244,620 bytes，production font 與 public font SHA-256 均為 `5db7f01b9af6f76e2c25aeb7fe3225b4cc1d09d4042030ed4b35e14f8b42acfc`
 - 日期時間列在 320／375／390／430px 均無 overflow；右側「今／回到今」維持 64px 並以 baseline 對齊，左側日期位置不因文案長度跳動
 - TopBar 兩個 SVG 均為 1.5px stroke
 - 主頁一個「今」、無常駐 UTC+8；TimePicker／Settings 仍顯示 UTC+8
@@ -337,6 +350,10 @@ single file 玄空紫白.html（538,436 bytes；font data URI）success
 - production 最終 bundle `index-BewAo_Zn.js`；月暗建所在只顯示一條「大月建／月暗建」，年暗建仍獨立顯示，日時白中殺不出現在主盤警示
 - production 320px：Direction Detail client／scroll width 均為 318px；合流推導、只計一次、日支次級有效、時白同級細選及日主 Gate 邊界均可讀，無 internal terminology
 - 第六輪 Browser `document.fonts.check()` 命中新增字串；console 為 0 warning／0 error
+- production 320／375／390／430px：第七輪成品的 `clientWidth` 與 `scrollWidth` 全部相等，日期列、九宮、擇吉宮格及方向詳情無 horizontal overflow
+- production 最終 bundle `index-D0vKkmIb.js`／`index-TKfxGAsd.css`；PWA precache 11 entries／457.64 KiB，新 WOFF2 已進 cache
+- production `2026-08-09 14:18` 坤方：「大月建／月暗建」及「月八白→穿心殺」並列；東方年八白同時顯示受剋、鬥牛，證明同層多殺未被截斷
+- production 320px Direction Detail client／scroll width 均為 318px；九星×六殺研究說明完整，`document.fonts.check()` 為 true，console 為 0 warning／0 error
 - 本機 Browser 320／375／390／430／560px：擇吉干支 metadata、九宮及 Direction Sheet 均無 horizontal overflow；320–430px 顯示日時，560px 顯示完整四柱，44px touch target 保持不變
 - 本機 Browser 五種寬度：Direction Detail 年月日時四欄均顯示 canonical 干支且無重疊；「時間干支」Sheet focus return 正常；搜尋 tabs 的完整鍵盤測試通過，Browser 另實測 ArrowRight／Home、focus 與 tabpanel 同步
 
@@ -371,6 +388,6 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - 進階搜尋 URL serialization、recent search、多宮／任一宮與入中星搜尋均未實作；簡易搜尋 URL restore 已完成。
 - 頂層「搜尋」及內層 keyboard tabs 已完成；九宮式宮位 selector 仍只記錄為 P2 構想，本輪未實作。
 - Search result 干支與最佳時窗仍為 P2；不得讓天干、旬空、納音或其他新條件在沒有獨立研究與規格前進入 verdict／ranking。
-- 雙星 81 組第二輪 source audit 及第三至六輪時間規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
+- 雙星 81 組第二輪 source audit 及第三至七輪時間／白中殺規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
 - 第三輪「飛星回本宮＝暗建」、第四輪「暗建只套月層／五黃四隅是唯一答案」與 generic 宮剋星＝受剋殺均已廢止；不可從歷史文件回復。
-- 大月建公式已由第六輪封版；仍暫緩的是五黃傳本 selector、日／時白中殺 active 化、時支有氣直接表、白中殺 9×6 原頁矩陣、月納音作用範圍、periodElement、完整日主／時課 Gate、修造／日常獨立模式與固定百分比。
+- 大月建公式已由第六輪封版，白中殺 9×6 程式矩陣已由第七輪封版；仍暫緩的是五黃傳本 selector、日／時白中殺 active 化與直接實例、時支有氣直接表、第七輪各書固定版本原頁證據包、月納音作用範圍、periodElement、完整日主／時課 Gate、修造／日常獨立模式與固定百分比。
