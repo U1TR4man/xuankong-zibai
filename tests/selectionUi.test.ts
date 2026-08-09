@@ -118,7 +118,7 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('[data-selection-palace="xun"] .selection-cell__condition')?.textContent)
       .toContain('鬥牛');
     expect($('[data-selection-palace="zhen"] .selection-cell__condition')?.textContent)
-      .toContain('月暗建');
+      .toContain('九宮暗建');
     const disclosures = Array.from(document.querySelectorAll<HTMLDetailsElement>('.direction-disclosure'));
     expect(disclosures).toHaveLength(4);
     expect(disclosures.every((item) => !item.open)).toBe(true);
@@ -132,6 +132,8 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-branch-conditions')?.textContent).toContain('丑支 →');
     expect($('.direction-killers')?.textContent).toContain('鬥牛殺');
     expect($('.direction-killers')?.textContent).toContain('到巽宮 →');
+    expect($('.direction-killers')?.textContent).toContain('白中殺類比');
+    expect($('.direction-killers')?.textContent).toContain('研究參考');
     expect(document.querySelectorAll('.direction-pairs .direction-pair')).toHaveLength(6);
     expect($('.direction-main-pairs')?.parentElement?.textContent).toContain('雙星參考');
     expect($('.direction-reasons')?.textContent?.length).toBeGreaterThan(0);
@@ -143,11 +145,17 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-research')?.textContent)
       .toContain('雙星組合僅供研究參考，不參與方向排序。');
     expect($('.direction-research')?.textContent)
-      .toContain('月暗建依月白入中星反推禁修方');
+      .toContain('一般九宮暗建與大月建分開保存');
+    expect($('.direction-research')?.textContent)
+      .toContain('五黃為中宮');
+    expect($('.direction-research')?.textContent)
+      .toContain('年、月白中殺正式參與判定');
     expect($('.direction-research')?.textContent)
       .toContain('紫白一時加／二時加');
     expect($('.direction-research')?.textContent)
-      .toContain('刑宮、害宮、四空亡、納音及固定數值權重尚未納入');
+      .toContain('日支只作警示，時支只作類推參考');
+    expect($('.direction-research')?.textContent)
+      .toContain('日主與時課 Gate 尚未建立完整日課規則');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('TOOL_HEURISTIC');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('unknown');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('rankingWeight');

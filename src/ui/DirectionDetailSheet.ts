@@ -4,7 +4,7 @@ import { PURPLE_WHITE_SIGNAL_LABEL, WHITE_KILLER_LABEL } from '../selection/rese
 import {
   VERDICT_LABEL, type BranchQiState, type DirectionEvaluation, type DirectionLevel,
   type LayerRole, type PairHit, type PalaceElementRelation, type SeasonalState,
-  type SourceGrade,
+  type SourceGrade, type TemporalStarAssessment,
 } from '../selection/types';
 import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
@@ -24,7 +24,10 @@ const QI_LABEL: Record<BranchQiState, string> = {
   active: '支序有氣', inactive: '支序未列有氣', unknown: '支序有氣未建表',
 };
 const ROLE_LABEL: Record<LayerRole, string> = {
-  background_or_large_scale: '背景／大型修作', primary: '主要層', fine_tuning: '細選',
+  background_or_large_scale: '長期背景',
+  seasonal_command: '月令核心',
+  day_gate: '日主 Gate',
+  fine_tuning: '細選／扶日',
 };
 const ELEMENT_RELATION_LABEL: Record<PalaceElementRelation, (
   palace: string, star: string,
@@ -80,7 +83,7 @@ function temporalConditions(evaluation: DirectionEvaluation): HTMLElement {
       const qualified = evaluation.qualifiedPurpleWhiteHits.includes(state.level);
       const conditions = [
         state.isPurpleWhite ? qualified ? '✓ 合格紫白' : '紫白條件未齊' : '',
-        QI_LABEL[state.temporalState.branchQi],
+        branchQiLabel(state),
         state.temporalState.liuJieTomb ? '入墓' : '',
         state.temporalState.absolute ? '臨絕' : '',
         `月令${SEASONAL_LABEL[state.seasonalState]}`,
@@ -88,8 +91,21 @@ function temporalConditions(evaluation: DirectionEvaluation): HTMLElement {
       return el('li', {},
         el('strong', {}, `${LEVEL_LABEL[state.level]} · ${state.ganzhi.text} · ${starName(state.star)}`),
         el('span', {}, `${state.periodBranch}支 → ${conditions.join(' · ')}`),
-        el('small', {}, `${ROLE_LABEL[state.role]} · 星與時間地支判讀`));
+        el('small', {}, `${ROLE_LABEL[state.role]} · ${qiUseLabel(state)} · 星與時間地支判讀`));
     }));
+}
+
+function branchQiLabel(state: TemporalStarAssessment): string {
+  const label = QI_LABEL[state.temporalState.branchQi];
+  if (state.temporalState.qiRankingUse === 'reference_only') return `${label}（類推參考）`;
+  if (state.temporalState.qiRankingUse === 'warning_only') return `${label}（研究判讀）`;
+  return label;
+}
+
+function qiUseLabel(state: TemporalStarAssessment): string {
+  if (state.temporalState.qiRankingUse === 'active') return '年月正式運用';
+  if (state.temporalState.qiRankingUse === 'warning_only') return '日支只作警示';
+  return '時支只作類推參考';
 }
 
 function killerConditions(evaluation: DirectionEvaluation): HTMLElement {
@@ -99,15 +115,23 @@ function killerConditions(evaluation: DirectionEvaluation): HTMLElement {
   }
   return el('ul', { class: 'direction-killer-list' },
     ...hits.flatMap((hit) => hit.killers.map((killer) => {
+      const referenceOnly = hit.rankingUse === 'reference_only';
       if (killer === 'an_jian') {
-        const centerStar = evaluation.temporalProfile.monthAnJian.centerStar;
+        const assessment = evaluation.temporalProfile.anJian.genericWhiteKiller[hit.level];
+        const centerStar = assessment.centerStar;
         return el('li', {},
-          el('strong', {}, `月白 · ${starName(centerStar)}入中`),
-          el('span', {}, `月白入中 → ${evaluation.snapshot.name}宮為月暗建禁修方`));
+          el('strong', {}, `${LEVEL_LABEL[hit.level]}白 · ${starName(centerStar)}入中${
+            referenceOnly ? ' · 研究參考' : ''}`),
+          el('span', {}, `${LEVEL_LABEL[hit.level]}白入中 → ${
+            referenceOnly ? '白中殺類比：' : ''}${evaluation.snapshot.name}宮為一般九宮暗建方`),
+          assessment.hasVariantReading
+            ? el('small', {}, '⚑ 此條有傳本異法') : null);
       }
       return el('li', {},
-        el('strong', {}, `${LEVEL_LABEL[hit.level]} · ${starName(hit.star)}`),
-        el('span', {}, `到${evaluation.snapshot.name}宮 → ${WHITE_KILLER_LABEL[killer]}`));
+        el('strong', {}, `${LEVEL_LABEL[hit.level]} · ${starName(hit.star)}${
+          referenceOnly ? ' · 研究參考' : ''}`),
+        el('span', {}, `到${evaluation.snapshot.name}宮 → ${
+          referenceOnly ? '白中殺類比：' : ''}${WHITE_KILLER_LABEL[killer]}`));
     })));
 }
 
@@ -121,7 +145,7 @@ export function openDirectionDetailSheet(
   const returnSelector = `[data-selection-palace="${snapshot.palace}"]`;
   const otherReasons = evaluation.reasons.filter((reason) => ![
     '紫白到方：', '支序有氣：', '主要層合格：', '白中殺：',
-    '月暗建：', '入墓：', '臨絕：',
+    '日時白中殺參考：', '一般九宮暗建：', '入墓：', '臨絕：',
   ].some((prefix) => reason.startsWith(prefix)));
   const reasons = el('ul', { class: 'direction-reasons' },
     ...otherReasons.map((reason) => el('li', {}, reason)));
@@ -193,10 +217,13 @@ export function openDirectionDetailSheet(
         disclosure('研究說明',
           el('div', { class: 'direction-research' },
             el('p', {}, '雙星組合僅供研究參考，不參與方向排序。'),
-            el('p', {}, '月暗建依月白入中星反推禁修方；不是宮內飛星回本宮。受剋殺只採古表定局，一般宮星五行相剋另列。'),
+            el('p', {}, '一般九宮暗建與大月建分開保存；大月建的月干支飛宮尚待逐月核對，目前不參與方向判定。'),
+            el('p', {}, '一般暗建預設採九宮本位，五黃為中宮；《三元寶海》的五黃四隅只作傳本異文，不與預設規則疊加。'),
+            el('p', {}, '年、月白中殺正式參與判定；日、時只顯示類比參考。受剋殺只採古表定局，一般宮星五行相剋另列。'),
             el('p', {}, '「紫白一時加／二時加」存在異文，不作至少兩層才成立的門檻；單一合格紫白亦可成為正面訊號。'),
-            el('p', {}, '目前日常擇吉方是本工具對傳統修方紫白邏輯的延伸應用；月、日為主要層，年作背景，時作細選。'),
-            el('p', {}, '月令狀態只作條件顯示；刑宮、害宮、四空亡、納音及固定數值權重尚未納入。'),
+            el('p', {}, '支序有氣只對年、月正式運用；日支只作警示，時支只作類推參考。五行生扶型有氣未封版，不參與排序。'),
+            el('p', {}, '月令是核心；日主與時課 Gate 尚未建立完整日課規則，目前不宣稱日期本身已通過古法篩選。'),
+            el('p', {}, '月建納音的作用範圍、刑宮、害宮、四空亡及二十四山尚未納入判定。'),
             el('p', {}, '目前判定名稱屬工具分級，不是古籍原有等級。'))),
       ),
     ),

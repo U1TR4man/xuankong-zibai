@@ -3,7 +3,10 @@ import { buildDirectionSnapshots } from './buildDirectionSnapshots';
 import { buildPairHits } from './buildPairHits';
 import { purposeHits } from './purpose';
 import { PURPLE_WHITE_SIGNAL_LABEL, PURPLE_WHITE_STARS } from './researchEvidence';
-import { assessMonthAnJian, assessTemporalStar, buildTemporalBranchContext } from './temporalRules';
+import {
+  assessGenericWhiteKillerAnJian, assessTemporalStar, buildMonthlyCenterStarState,
+  buildTemporalBranchContext, buildTimeGateAssessment, computeDaYueJian,
+} from './temporalRules';
 import type {
   DirectionEvaluation, DirectionLevel, DirectionSnapshot, DirectionTemporalProfile,
   DirectionVerdict, PairHit, PurpleWhiteCount, PurpleWhiteSignal, SelectionPurpose, SourceLevel,
@@ -41,11 +44,15 @@ export function buildDirectionTemporalProfile(
   snapshot: DirectionSnapshot,
   context: TemporalBranchContext,
 ): DirectionTemporalProfile {
-  const layerStars: readonly { level: DirectionLevel; star: DirectionSnapshot[`${DirectionLevel}Star`] }[] = [
-    { level: 'year', star: snapshot.yearStar },
-    { level: 'month', star: snapshot.monthStar },
-    { level: 'day', star: snapshot.dayStar },
-    { level: 'hour', star: snapshot.hourStar },
+  const layerStars: readonly {
+    level: DirectionLevel;
+    star: DirectionSnapshot[`${DirectionLevel}Star`];
+    centerStar: DirectionSnapshot[`${DirectionLevel}CenterStar`];
+  }[] = [
+    { level: 'year', star: snapshot.yearStar, centerStar: snapshot.yearCenterStar },
+    { level: 'month', star: snapshot.monthStar, centerStar: snapshot.monthCenterStar },
+    { level: 'day', star: snapshot.dayStar, centerStar: snapshot.dayCenterStar },
+    { level: 'hour', star: snapshot.hourStar, centerStar: snapshot.hourCenterStar },
   ];
   const purpleWhiteHits = layerStars
     .filter(({ star }) => PURPLE_WHITE_STARS.has(star))
@@ -54,24 +61,35 @@ export function buildDirectionTemporalProfile(
   const starStates = layerStars.map(({ level, star }) => (
     assessTemporalStar(level, star, snapshot.palace, context)
   ));
-  const monthAnJian = assessMonthAnJian(snapshot.monthCenterStar, snapshot.palace);
-  if (monthAnJian.active) {
-    const monthState = starStates.find((state) => state.level === 'month')!;
-    monthState.palaceKillers = ['an_jian', ...monthState.palaceKillers];
+  const genericWhiteKiller = Object.fromEntries(layerStars.map(({ level, centerStar }) => [
+    level,
+    assessGenericWhiteKillerAnJian(level, centerStar, snapshot.palace),
+  ])) as DirectionTemporalProfile['anJian']['genericWhiteKiller'];
+  for (const assessment of Object.values(genericWhiteKiller)) {
+    if (!assessment.active) continue;
+    const state = starStates.find((item) => item.level === assessment.level)!;
+    state.palaceKillers = ['an_jian', ...state.palaceKillers];
   }
   const qualifiedPurpleWhiteHits = starStates.filter((state) => (
     state.isPurpleWhite
+    && state.temporalState.qiRankingUse !== 'reference_only'
     && state.temporalState.branchQi === 'active'
     && !state.temporalState.liuJieTomb
     && !state.temporalState.absolute
-    && state.palaceKillers.length === 0
+    && (state.whiteKillerRule.rankingUse !== 'active' || state.palaceKillers.length === 0)
   )).map((state) => state.level);
   const qualifiedPurpleWhiteCount = qualifiedPurpleWhiteHits.length as PurpleWhiteCount;
   const killerHits = starStates
     .filter((state) => state.palaceKillers.length > 0)
     .map((state) => ({
-      level: state.level, star: state.star, killers: state.palaceKillers,
+      level: state.level,
+      star: state.star,
+      killers: state.palaceKillers,
+      evidence: state.whiteKillerRule.layerEvidence[state.level]!,
+      rankingUse: state.whiteKillerRule.rankingUse,
     }));
+  const activeKillerHits = killerHits.filter((hit) => hit.rankingUse === 'active');
+  const referenceKillerHits = killerHits.filter((hit) => hit.rankingUse === 'reference_only');
   const yellowBlackLayers = starStates
     .filter((state) => state.star === 2 || state.star === 5)
     .map((state) => state.level);
@@ -86,11 +104,20 @@ export function buildDirectionTemporalProfile(
     qualifiedPurpleWhiteHits,
     qualifiedPurpleWhiteCount,
     starStates,
-    monthAnJian,
+    timeGate: buildTimeGateAssessment(),
+    anJian: {
+      genericWhiteKiller,
+      daYueJian: computeDaYueJian(context.pillars.month, snapshot.palace),
+    },
+    monthlyCenterStarState: buildMonthlyCenterStarState(
+      snapshot.monthCenterStar, context.pillars.month,
+    ),
     whiteKillerAssessment: {
       status: killerHits.length > 0 ? 'present' : 'clear',
       hits: killerHits,
-      note: '月暗建依月白入中星判定；其餘採 classical 定局。一般五行生剋另列，不冒充古殺名。',
+      activeHits: activeKillerHits,
+      referenceHits: referenceKillerHits,
+      note: '年、月白中殺正式參與判定；日、時只作類比參考。一般宮星五行生剋另列。',
     },
     yellowBlackLayers,
     yellowBlackThriving: hasTwo && hasFive
@@ -100,13 +127,14 @@ export function buildDirectionTemporalProfile(
 }
 
 function verdictFor(profile: DirectionTemporalProfile): DirectionVerdict {
-  const killerCount = profile.starStates.reduce((count, state) => (
-    count + state.palaceKillers.length
+  const killerCount = profile.whiteKillerAssessment.activeHits.reduce((count, hit) => (
+    count + hit.killers.length
   ), 0);
   const hasAnyWarning = profile.starStates.some((state) => (
-    state.palaceKillers.length > 0
-    || state.temporalState.liuJieTomb
-    || state.temporalState.absolute
+    (state.whiteKillerRule.rankingUse === 'active' && state.palaceKillers.length > 0)
+    || (state.temporalState.qiRankingUse !== 'reference_only' && (
+      state.temporalState.liuJieTomb || state.temporalState.absolute
+    ))
   )) || profile.yellowBlackLayers.length >= 2;
   const hasQualifiedPrimary = profile.qualifiedPurpleWhiteHits.some((level) => (
     level === 'month' || level === 'day'
@@ -137,7 +165,14 @@ export function evaluateDirection(
   const verdict = verdictFor(profile);
   const matchedPurpose = purposeHits(hits, purpose);
   const activePurpleWhite = profile.starStates.filter((state) => (
-    state.isPurpleWhite && state.temporalState.branchQi === 'active'
+    state.isPurpleWhite
+    && state.temporalState.qiRankingUse === 'active'
+    && state.temporalState.branchQi === 'active'
+  ));
+  const referencePurpleWhite = profile.starStates.filter((state) => (
+    state.isPurpleWhite
+    && state.temporalState.qiRankingUse !== 'active'
+    && state.temporalState.branchQi === 'active'
   ));
   const qualifiedPrimary = profile.qualifiedPurpleWhiteHits.filter((level) => (
     level === 'month' || level === 'day'
@@ -146,17 +181,20 @@ export function evaluateDirection(
   const absoluteCount = profile.starStates.filter((state) => state.temporalState.absolute).length;
   const reasons = [
     `紫白到方：${profile.purpleWhiteCount}/4（${PURPLE_WHITE_SIGNAL_LABEL[profile.purpleWhiteSignal]}）`,
-    `支序有氣：${activePurpleWhite.length} 層；合格紫白：${profile.qualifiedPurpleWhiteCount} 層`,
+    `支序有氣：年月正式 ${activePurpleWhite.length} 層；日時參考 ${referencePurpleWhite.length} 層`,
     qualifiedPrimary.length > 0 ? `主要層合格：${qualifiedPrimary.join('、')}` : '',
-    `白中殺：${profile.whiteKillerAssessment.hits.length > 0
-      ? `${profile.whiteKillerAssessment.hits.length} 層命中` : '未命中'}`,
-    profile.monthAnJian.active
-      ? `月暗建：月白 ${profile.monthAnJian.centerStar} 入中，本方不宜修作` : '',
+    `白中殺：年月${profile.whiteKillerAssessment.activeHits.length > 0
+      ? `${profile.whiteKillerAssessment.activeHits.length} 層命中` : '未命中'}`,
+    profile.whiteKillerAssessment.referenceHits.length > 0
+      ? `日時白中殺參考：${profile.whiteKillerAssessment.referenceHits.length} 層命中` : '',
+    ...Object.values(profile.anJian.genericWhiteKiller)
+      .filter((assessment) => assessment.active && assessment.rankingUse === 'active')
+      .map((assessment) => `一般九宮暗建：${assessment.level} 白 ${assessment.centerStar} 入中，本方不宜修作`),
     tombCount > 0 ? `入墓：${tombCount} 層` : '',
     absoluteCount > 0 ? `臨絕：${absoluteCount} 層` : '',
     profile.yellowBlackLayers.length >= 2
       ? `二黑、五黃同到${profile.yellowBlackThriving ? '且月令值旺' : ''}` : '',
-    '月、日為主要層；年作背景／大型修作參考，時作細選',
+    '月令是方向判讀核心；日主 Gate 尚未評估，年作長期背景，時作細選',
     '月令旺相休囚只作條件顯示，不換算固定分數',
     '雙星 81 組只供參考，不參與方向排序',
   ].filter(Boolean);

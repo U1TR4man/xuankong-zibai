@@ -25,24 +25,24 @@ export interface StarQiReference {
 }
 
 /**
- * 第二、第三輪考源整理出的研究參考表。支序有氣、墓與絕可依第三輪規則
- * 套入各層地支；五行支持型有氣仍未決定 periodElement，不能自行加權。
+ * 第二至第五輪考源整理出的研究參考表。支序有氣只對年、月正式運用；
+ * 日層只作警示，時層只作類推參考。五行支持型有氣仍未決定 periodElement，不能自行加權。
  */
 export const STAR_QI_REFERENCE: Readonly<Record<StarNumber, StarQiReference>> = {
-  1: { star: 1, element: '水', qiElements: ['金', '水'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣可套年／月／日／時地支；證據級別依次 A／A／B／B。' },
+  1: { star: 1, element: '水', qiElements: ['金', '水'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣層級為年 A／月 A／日 B 警示／時 C 類推。' },
   2: { star: 2, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
   3: { star: 3, element: '木', qiElements: ['水', '木'], tombBranch: '未', absoluteBranch: '申', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
   4: { star: 4, element: '木', qiElements: ['水', '木'], tombBranch: '未', absoluteBranch: '申', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
   5: { star: 5, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
-  6: { star: 6, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', directQiBranches: ['巳', '午', '未', '申', '酉'], auditNote: '支序有氣可套年／月／日／時地支；證據級別依次 A／A／B／B。' },
+  6: { star: 6, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', directQiBranches: ['巳', '午', '未', '申', '酉'], auditNote: '支序有氣層級為年 A／月 A／日 B 警示／時 C 類推。' },
   7: { star: 7, element: '金', qiElements: ['土', '金'], tombBranch: '丑', absoluteBranch: '寅', auditNote: '墓絕可套各層地支；支序有氣未取得直接表，不硬推。' },
-  8: { star: 8, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣可套年／月／日／時地支；證據級別依次 A／A／B／B。' },
-  9: { star: 9, element: '火', qiElements: ['木', '火'], tombBranch: '戌', absoluteBranch: '亥', directQiBranches: ['寅', '卯', '辰', '巳', '午'], auditNote: '第三輪採戌墓並套各層地支；早期「辰入墓」轉錄衝突仍待原頁核對。' },
+  8: { star: 8, element: '土', qiElements: ['火', '土'], tombBranch: '辰', absoluteBranch: '巳', directQiBranches: ['申', '酉', '戌', '亥', '子'], auditNote: '支序有氣層級為年 A／月 A／日 B 警示／時 C 類推。' },
+  9: { star: 9, element: '火', qiElements: ['木', '火'], tombBranch: '戌', absoluteBranch: '亥', directQiBranches: ['寅', '卯', '辰', '巳', '午'], auditNote: '支序有氣層級為年 A／月 A／日 B 警示／時 C 類推；早期「辰入墓」轉錄衝突仍待原頁核對。' },
 };
 
 export const WHITE_KILLER_LABEL: Record<WhiteKiller, string> = {
   ru_mu: '入墓',
-  an_jian: '月暗建',
+  an_jian: '九宮暗建',
   shou_ke: '受剋殺',
   chuan_xin: '穿心殺',
   jiao_jian: '交劍殺',
@@ -54,6 +54,7 @@ export const WHITE_KILLER_LABEL: Record<WhiteKiller, string> = {
 
 export interface SelectionMethodEvidence {
   id: 'temporal_coarrival' | 'qi_tomb_killers' | 'white_killer_tables'
+    | 'da_yue_jian_boundary' | 'element_support_qi_boundary' | 'time_gate_boundary'
     | 'death_retreat_variant' | 'manuscript_purpose';
   summary: string;
   useContexts: UseContext[];
@@ -83,7 +84,7 @@ export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
   },
   {
     id: 'qi_tomb_killers',
-    summary: '紫白須論支序有氣、墓絕與白中有殺；第四輪修正月暗建及 classical 受剋表，generic 五行關係不得冒充古殺名。',
+    summary: '支序生旺型有氣對年月正式運用、日層警示、時層類推；白中殺及 generic 五行關係繼續分開。',
     useContexts: ['selection_coarrival'],
     verificationStatus: 'awaiting_scan',
     primarySourceVerified: false,
@@ -95,16 +96,44 @@ export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
   },
   {
     id: 'white_killer_tables',
-    summary: '月暗建依月白入中星反推禁修方；五黃入中禁乾坤艮巽。鬥牛採金土入木宮，水字讀法保留為 OCR／轉錄異文。',
+    summary: '一般九宮暗建預設依九星本位，五黃為中宮；五黃四隅及本宮加中宮另存傳本，不疊加。年月白中殺正式運用，日時只作參考。',
     useContexts: ['selection_coarrival'],
     verificationStatus: 'variant',
     primarySourceVerified: false,
     witnesses: [
-      { source: '時家三元紫白相關古表', note: '第四輪整理暗建、受剋、穿心、交劍及鬥牛定局；仍待逐格原頁核影。' },
+      { source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '保存一般九宮暗建與白中殺總論架構；完整表仍待逐格核影。' },
+      { source: '《三元寶海鈎玄》下卷', note: '修方操作文直接列山頭、年頭及月白殺；五黃四隅只作傳本異文。' },
     ],
     variants: [
-      { reading: '金土與木同位', source: '多個傳本／轉錄及定局', note: 'V1 採用。' },
-      { reading: '金土與水同位', source: '部分 OCR／轉錄', note: '疑似 OCR 或轉錄異文，不進公式。' },
+      { reading: '五黃入中→中宮', source: '《九宮紫白》一般定局', note: 'V1 預設。' },
+      { reading: '五黃入中→乾坤艮巽', source: '《三元寶海鈎玄》', note: '只作傳本異文，不與預設規則疊加。' },
+    ],
+  },
+  {
+    id: 'da_yue_jian_boundary',
+    summary: '大月建屬月家神煞，以月干支飛宮獨立保存；未完成多年逐月比對前，不 alias 現有月紫白入中星。',
+    useContexts: ['selection_coarrival'],
+    verificationStatus: 'awaiting_scan',
+    primarySourceVerified: false,
+    witnesses: [{ source: '《欽定協紀辨方書》卷三十四', note: '記大月建為月干支飛宮，取當月入中一星本宮；尚待與現行月紫白逐月比對。' }],
+  },
+  {
+    id: 'element_support_qi_boundary',
+    summary: '五行生扶型有氣與支序生旺分開；月建干支納音作用範圍未封版，不以地支五行或單一納音套全盤。',
+    useContexts: ['selection_coarrival'],
+    verificationStatus: 'awaiting_scan',
+    primarySourceVerified: false,
+    witnesses: [{ source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '月白論及月建支干納音對星氣變化；未直接證明同月八方飛星全部改為一種五行。' }],
+  },
+  {
+    id: 'time_gate_boundary',
+    summary: '日主為擇吉 Gate，時課用來扶日與細選；完整通書日課未建立前，狀態明示為尚未評估。',
+    useContexts: ['selection_coarrival'],
+    verificationStatus: 'awaiting_scan',
+    primarySourceVerified: false,
+    witnesses: [
+      { source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '記「大抵至重者，日主也」與月令提綱。' },
+      { source: '《造命宗鏡集》', note: '用日宜擇旺相，用時宜扶日主、幫四柱。' },
     ],
   },
   {

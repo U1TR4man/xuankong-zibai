@@ -12,7 +12,7 @@ const LEVELS = [
   { key: 'day', label: '日' }, { key: 'hour', label: '時' },
 ] as const;
 const KILLER_SHORT_LABEL: Record<PalaceKiller, string> = {
-  an_jian: '月暗建', shou_ke: '受剋', chuan_xin: '穿心',
+  an_jian: '九宮暗建', shou_ke: '受剋', chuan_xin: '穿心',
   jiao_jian: '交劍', dou_niu: '鬥牛',
 };
 const LEVEL_SHORT_LABEL = { year: '年', month: '月', day: '日', hour: '時' } as const;
@@ -33,20 +33,21 @@ function matchedHit(evaluation: DirectionEvaluation, state: AppState): PairHit |
 
 function primaryCondition(evaluation: DirectionEvaluation): string | undefined {
   const states = evaluation.temporalProfile.starStates;
-  const monthAnJian = states.find((state) => state.palaceKillers.includes('an_jian'));
-  if (monthAnJian) {
-    const others = monthAnJian.palaceKillers.filter((killer) => killer !== 'an_jian');
-    return `⚠ 月暗建${others.length > 0
+  const activeHits = evaluation.temporalProfile.whiteKillerAssessment.activeHits;
+  const genericAnJian = activeHits.find((hit) => hit.killers.includes('an_jian'));
+  if (genericAnJian) {
+    const others = genericAnJian.killers.filter((killer) => killer !== 'an_jian');
+    return `⚠ ${LEVEL_SHORT_LABEL[genericAnJian.level]}九宮暗建${others.length > 0
       ? `、${others.map((item) => KILLER_SHORT_LABEL[item]).join('、')}` : ''}`;
   }
-  const killer = states.find((state) => state.palaceKillers.length >= 2)
-    ?? states.find((state) => state.palaceKillers.length > 0);
+  const killer = activeHits.find((hit) => hit.killers.length >= 2) ?? activeHits[0];
   if (killer) {
-    return `⚠ ${LEVEL_SHORT_LABEL[killer.level]}${starName(killer.star)}：${killer.palaceKillers
+    return `⚠ ${LEVEL_SHORT_LABEL[killer.level]}${starName(killer.star)}：${killer.killers
       .map((item) => KILLER_SHORT_LABEL[item]).join('、')}`;
   }
   const branchWarning = states.find((state) => (
-    state.temporalState.liuJieTomb || state.temporalState.absolute
+    state.temporalState.qiRankingUse !== 'reference_only'
+    && (state.temporalState.liuJieTomb || state.temporalState.absolute)
   ));
   if (branchWarning) {
     return `⚠ ${LEVEL_SHORT_LABEL[branchWarning.level]}${starName(branchWarning.star)}：${

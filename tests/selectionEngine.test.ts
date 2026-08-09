@@ -10,8 +10,10 @@ import {
 import { getPairRule, PURPLE_WHITE_PAIR_RULES } from '../src/selection/pairRules';
 import { SELECTION_METHOD_EVIDENCE, STAR_QI_REFERENCE } from '../src/selection/researchEvidence';
 import {
-  assessMonthAnJian, assessPalaceKillers, assessTemporalStar, buildTemporalBranchContext,
-  palaceElementRelationFor, seasonalStateFor,
+  AN_JIAN_VARIANTS, BRANCH_QI_POLICY, ELEMENT_SUPPORT_QI_POLICY,
+  WHITE_KILLER_LAYER_POLICY, assessGenericWhiteKillerAnJian, assessPalaceKillers,
+  assessTemporalStar, buildMonthlyCenterStarState, buildTemporalBranchContext,
+  buildTimeGateAssessment, computeDaYueJian, palaceElementRelationFor, seasonalStateFor,
 } from '../src/selection/temporalRules';
 import type { StarNumber } from '../src/overlay/types';
 import type {
@@ -22,14 +24,14 @@ const AT = fromUtc8(2026, 8, 7, 11, 38);
 const EXAMPLE: DirectionSnapshot = {
   direction: 'SE', palace: 'xun', palaceNumber: 4, name: '巽', bearing: '東南', row: 0, col: 0,
   yearStar: 1, monthStar: 4, dayStar: 8, hourStar: 6,
-  monthCenterStar: 4,
+  yearCenterStar: 1, monthCenterStar: 4, dayCenterStar: 1, hourCenterStar: 1,
 };
 const CONTEXT: TemporalBranchContext = {
   pillars: {
     year: ganzhiFromIndex60(8), month: ganzhiFromIndex60(9),
     day: ganzhiFromIndex60(6), hour: ganzhiFromIndex60(0),
   },
-  evidence: { year: 'A', month: 'A', day: 'B', hour: 'B' },
+  evidence: { year: 'A', month: 'A', day: 'B', hour: 'C' },
   monthSeason: 'autumn',
 };
 
@@ -102,16 +104,37 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     ]);
   });
 
-  it('月暗建依月白入中判定，不再把飛星回本宮當成暗建', () => {
-    expect(assessMonthAnJian(1, 'kan')).toMatchObject({ active: true, centerStar: 1 });
-    expect(assessMonthAnJian(1, 'gen').active).toBe(false);
-    expect(assessMonthAnJian(5, 'qian').active).toBe(true);
-    expect(assessMonthAnJian(5, 'kun').active).toBe(true);
-    expect(assessMonthAnJian(5, 'gen').active).toBe(true);
-    expect(assessMonthAnJian(5, 'xun').active).toBe(true);
-    expect(assessMonthAnJian(5, 'zhen').active).toBe(false);
-    expect(assessMonthAnJian(6, 'qian').active).toBe(true);
+  it('一般九宮暗建預設與五黃四隅異文分層，不疊加', () => {
+    expect(assessGenericWhiteKillerAnJian('year', 1, 'kan'))
+      .toMatchObject({ level: 'year', active: true, centerStar: 1, variantId: 'generic_jiugong' });
+    expect(assessGenericWhiteKillerAnJian('year', 1, 'gen').active).toBe(false);
+    expect(assessGenericWhiteKillerAnJian('month', 5, 'qian')).toMatchObject({
+      active: false, forbiddenPalaces: ['center'], hasVariantReading: true,
+    });
+    expect(assessGenericWhiteKillerAnJian('month', 5, 'qian', 'san_yuan_bao_hai')).toMatchObject({
+      active: true, forbiddenPalaces: ['qian', 'kun', 'gen', 'xun'],
+    });
+    expect(AN_JIAN_VARIANTS.jiyao_native_and_center[1]).toEqual(['kan', 'center']);
+    expect(assessGenericWhiteKillerAnJian('hour', 6, 'qian')).toMatchObject({
+      active: true, evidence: 'B', rankingUse: 'reference_only',
+    });
     expect(assessPalaceKillers(1, 'kan')).toEqual([]);
+  });
+
+  it('大月建、日主 Gate 與月納音保留獨立未評估介面', () => {
+    const daYueJian = computeDaYueJian(CONTEXT.pillars.month, 'xun');
+    expect(daYueJian).toMatchObject({
+      status: 'not_evaluated', active: false, palace: null,
+      calculationMethod: 'month_ganzhi_flying_palace', rankingUse: 'disabled',
+    });
+    expect(daYueJian).not.toHaveProperty('centerStar');
+    expect(buildTimeGateAssessment()).toMatchObject({
+      dayStatus: 'not_evaluated', hourStatus: 'not_evaluated', rankingUse: 'disabled',
+    });
+    expect(buildMonthlyCenterStarState(4, CONTEXT.pillars.month)).toMatchObject({
+      centerStar: 4, monthNayin: null, transformedElement: null,
+      mode: 'research', rankingUse: 'disabled',
+    });
   });
 
   it('古典白中殺可同層重疊，且一般五行相剋另列', () => {
@@ -167,7 +190,10 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     });
     expect(active.temporalState.branchQi).toBe('active');
     expect(active.temporalState.qiEvidence).toBe('B');
+    expect(active.temporalState.qiRankingUse).toBe('warning_only');
     expect(unknown.temporalState.branchQi).toBe('unknown');
+    expect(unknown.temporalState.qiEvidence).toBe('C');
+    expect(unknown.temporalState.qiRankingUse).toBe('reference_only');
     expect([1, 2, 3, 4, 5, 6, 7, 8, 9].map((star) => STAR_QI_REFERENCE[star as StarNumber].tombBranch))
       .toEqual(['辰', '辰', '未', '未', '辰', '丑', '丑', '辰', '戌']);
     expect([1, 2, 3, 4, 5, 6, 7, 8, 9].map((star) => STAR_QI_REFERENCE[star as StarNumber].absoluteBranch))
@@ -192,9 +218,42 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
       [level, pillar.text]
     )))).toEqual({ year: '丙午', month: '乙未', day: '癸丑', hour: '戊午' });
     expect(context).toMatchObject({
-      evidence: { year: 'A', month: 'A', day: 'B', hour: 'B' },
+      evidence: { year: 'A', month: 'A', day: 'B', hour: 'C' },
       monthSeason: 'earth_transition',
     });
+  });
+
+  it('白中殺與支序有氣依來源強度分層，五行生扶不參與排序', () => {
+    expect(WHITE_KILLER_LAYER_POLICY).toMatchObject({
+      year: { rankingUse: 'active', layerEvidence: { year: 'A' } },
+      month: { rankingUse: 'active', layerEvidence: { month: 'A' } },
+      day: { rankingUse: 'reference_only', layerEvidence: { day: 'B' } },
+      hour: { rankingUse: 'reference_only', layerEvidence: { hour: 'B' } },
+    });
+    expect(BRANCH_QI_POLICY).toMatchObject({
+      year: { rankingUse: 'active', layerEvidence: { year: 'A' } },
+      month: { rankingUse: 'active', layerEvidence: { month: 'A' } },
+      day: { rankingUse: 'warning_only', layerEvidence: { day: 'B' } },
+      hour: { rankingUse: 'reference_only', layerEvidence: { hour: 'C' } },
+    });
+    expect(ELEMENT_SUPPORT_QI_POLICY.rankingUse).toBe('disabled');
+  });
+
+  it('一般九宮暗建按各層入中星計算，年月正式、日時參考', () => {
+    const evaluation = evaluateDirection({
+      ...EXAMPLE,
+      palace: 'kan', palaceNumber: 1,
+      yearCenterStar: 1, monthCenterStar: 1, dayCenterStar: 1, hourCenterStar: 1,
+    }, CONTEXT);
+    const anJianHits = evaluation.temporalProfile.whiteKillerAssessment.hits
+      .filter((hit) => hit.killers.includes('an_jian'));
+    expect(anJianHits.map((hit) => [hit.level, hit.rankingUse])).toEqual([
+      ['year', 'active'], ['month', 'active'],
+      ['day', 'reference_only'], ['hour', 'reference_only'],
+    ]);
+    expect(evaluation.temporalProfile.whiteKillerAssessment.activeHits
+      .filter((hit) => hit.killers.includes('an_jian')).map((hit) => hit.level))
+      .toEqual(['year', 'month']);
   });
 
   it('研究摘要入庫但不猜吉凶、不假裝已校對', () => {
@@ -230,7 +289,10 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
         monthStar: chart.month.palaceStars[snapshot.palace],
         dayStar: chart.day.palaceStars[snapshot.palace],
         hourStar: chart.hour.palaceStars[snapshot.palace],
+        yearCenterStar: chart.year.centerStar,
         monthCenterStar: chart.month.centerStar,
+        dayCenterStar: chart.day.centerStar,
+        hourCenterStar: chart.hour.centerStar,
       });
     }
   });
@@ -243,7 +305,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
 
   it('方向判定加入白中殺與時間狀態，雙星參考仍不產生數值分數', () => {
     const evaluation = evaluateDirection(EXAMPLE, CONTEXT, 'writing');
-    expect(evaluation.verdict).toBe('caution');
+    expect(evaluation.verdict).toBe('mixed');
     expect(evaluation.purpleWhiteStars).toEqual([1, 8, 6]);
     expect(evaluation.purpleWhiteHits).toEqual(['year', 'day', 'hour']);
     expect(evaluation.purpleWhiteSignal).toBe('three_coarrival');
@@ -253,6 +315,10 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation.temporalProfile.whiteKillerAssessment.status).toBe('present');
     expect(evaluation.temporalProfile.whiteKillerAssessment.hits.find((hit) => hit.level === 'day'))
       .toMatchObject({ star: 8, killers: ['shou_ke', 'dou_niu'] });
+    expect(evaluation.temporalProfile.whiteKillerAssessment.activeHits.map((hit) => hit.level))
+      .toEqual(['month']);
+    expect(evaluation.temporalProfile.whiteKillerAssessment.referenceHits.map((hit) => hit.level))
+      .toEqual(['day', 'hour']);
     expect(evaluation.favorableHits).toEqual([]);
     expect(evaluation.cautionHits).toEqual([]);
     expect(evaluation.purposeHits.map((hit) => hit.pair)).toContain('14');
@@ -260,7 +326,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation).not.toHaveProperty('score');
   });
 
-  it('V4 判定區分主要層合格紫白、警示與無警示 fallback', () => {
+  it('V5 判定只讓年月白中殺影響方向，日時類比不降級', () => {
     const safe = {
       ...EXAMPLE, palace: 'dui' as const, palaceNumber: 7, monthCenterStar: 1 as const,
     };
@@ -272,7 +338,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     }, CONTEXT).verdict).toBe('usable');
     expect(evaluateDirection({
       ...safe, yearStar: 7, monthStar: 1, dayStar: 3, hourStar: 7,
-    }, CONTEXT).verdict).toBe('mixed');
+    }, CONTEXT).verdict).toBe('priority');
     expect(evaluateDirection({
       ...safe, yearStar: 2, monthStar: 5, dayStar: 2, hourStar: 4,
     }, CONTEXT).verdict).toBe('caution');

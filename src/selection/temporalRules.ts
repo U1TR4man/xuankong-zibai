@@ -1,13 +1,15 @@
 import type { PalaceKey } from '../engine/flyingStar/types';
 import type { YearBoundary } from '../engine/flyingStar/yearStar';
-import type { Branch } from '../engine/time/ganzhi';
+import type { Branch, Ganzhi } from '../engine/time/ganzhi';
 import type { DayChangeMode } from '../engine/time/ganzhiDay';
 import type { StarNumber } from '../overlay/types';
 import { PURPLE_WHITE_STARS, STAR_QI_REFERENCE } from './researchEvidence';
 import { buildTemporalPillars } from './temporalPillars';
 import type {
-  DirectionLevel, DirectionPalaceKey, Element, LayerRole, MonthAnJianAssessment,
-  PalaceElementRelation, PalaceKiller, SeasonalState, TemporalBranchContext, TemporalStarAssessment,
+  AnJianVariantId, DaYueJianAssessment, DirectionLevel, DirectionPalaceKey, Element,
+  GenericWhiteKillerAnJianAssessment, LayerRole, MonthlyCenterStarState,
+  PalaceElementRelation, PalaceKiller, RuleEvidence, SeasonalState, TemporalBranchContext,
+  TemporalStarAssessment, TimeGateAssessment,
 } from './types';
 
 type MonthSeason = TemporalBranchContext['monthSeason'];
@@ -39,11 +41,59 @@ const GENERATES: Readonly<Record<Element, Element>> = {
   木: '火', 火: '土', 土: '金', 金: '水', 水: '木',
 };
 
-/** 第四輪修正：暗建看月白入中星；五黃入中禁四隅。 */
-export const AN_JIAN_BY_CENTER_STAR: Readonly<Record<StarNumber, readonly DirectionPalaceKey[]>> = {
-  1: ['kan'], 2: ['kun'], 3: ['zhen'], 4: ['xun'],
-  5: ['qian', 'kun', 'gen', 'xun'],
-  6: ['qian'], 7: ['dui'], 8: ['gen'], 9: ['li'],
+type AnJianVariantTable = Readonly<Partial<Record<StarNumber, readonly PalaceKey[]>>>;
+
+/** 第五輪修正：一般九宮暗建、《三元寶海》五黃四隅及《選擇紀要》異文分層保存。 */
+export const AN_JIAN_VARIANTS: Readonly<Record<AnJianVariantId, AnJianVariantTable>> = {
+  generic_jiugong: {
+    1: ['kan'], 2: ['kun'], 3: ['zhen'], 4: ['xun'], 5: ['center'],
+    6: ['qian'], 7: ['dui'], 8: ['gen'], 9: ['li'],
+  },
+  san_yuan_bao_hai: {
+    1: ['kan'], 2: ['kun'], 3: ['zhen'], 4: ['xun'],
+    5: ['qian', 'kun', 'gen', 'xun'],
+    6: ['qian'], 7: ['dui'], 8: ['gen'], 9: ['li'],
+  },
+  jiyao_native_and_center: {
+    1: ['kan', 'center'], 6: ['qian', 'center'],
+    8: ['gen', 'center'], 9: ['li', 'center'],
+  },
+};
+
+export const WHITE_KILLER_LAYER_POLICY: Readonly<Record<DirectionLevel, RuleEvidence>> = {
+  year: {
+    sourceClass: 'direct_operational', layerEvidence: { year: 'A' }, rankingUse: 'active',
+  },
+  month: {
+    sourceClass: 'direct_operational', layerEvidence: { month: 'A' }, rankingUse: 'active',
+  },
+  day: {
+    sourceClass: 'direct_theoretical', layerEvidence: { day: 'B' }, rankingUse: 'reference_only',
+  },
+  hour: {
+    sourceClass: 'direct_theoretical', layerEvidence: { hour: 'B' }, rankingUse: 'reference_only',
+  },
+};
+
+export const BRANCH_QI_POLICY: Readonly<Record<DirectionLevel, RuleEvidence>> = {
+  year: {
+    sourceClass: 'direct_operational', layerEvidence: { year: 'A' }, rankingUse: 'active',
+  },
+  month: {
+    sourceClass: 'direct_operational', layerEvidence: { month: 'A' }, rankingUse: 'active',
+  },
+  day: {
+    sourceClass: 'direct_theoretical', layerEvidence: { day: 'B' }, rankingUse: 'warning_only',
+  },
+  hour: {
+    sourceClass: 'derived', layerEvidence: { hour: 'C' }, rankingUse: 'reference_only',
+  },
+};
+
+export const ELEMENT_SUPPORT_QI_POLICY: RuleEvidence = {
+  sourceClass: 'direct_theoretical',
+  layerEvidence: { year: 'B', month: 'A', day: 'B', hour: 'B' },
+  rankingUse: 'disabled',
 };
 
 /** 古表命名的受剋殺，與一般「宮五行剋星五行」分開。 */
@@ -53,7 +103,10 @@ const CLASSICAL_SHOU_KE: Readonly<Record<StarNumber, readonly PalaceKey[]>> = {
 };
 
 export const LAYER_ROLE: Readonly<Record<DirectionLevel, LayerRole>> = {
-  year: 'background_or_large_scale', month: 'primary', day: 'primary', hour: 'fine_tuning',
+  year: 'background_or_large_scale',
+  month: 'seasonal_command',
+  day: 'day_gate',
+  hour: 'fine_tuning',
 };
 
 const MONTH_SEASON_BY_BRANCH: Readonly<Record<Branch, MonthSeason>> = {
@@ -97,7 +150,7 @@ export function buildTemporalBranchContext(
   const pillars = buildTemporalPillars(date, options);
   return {
     pillars,
-    evidence: { year: 'A', month: 'A', day: 'B', hour: 'B' },
+    evidence: { year: 'A', month: 'A', day: 'B', hour: 'C' },
     monthSeason: MONTH_SEASON_BY_BRANCH[pillars.month.branch],
   };
 }
@@ -115,12 +168,87 @@ export function assessPalaceKillers(star: StarNumber, palace: PalaceKey): Palace
   return killers;
 }
 
-export function assessMonthAnJian(
+function samePalaces(first: readonly PalaceKey[], second: readonly PalaceKey[]): boolean {
+  return first.length === second.length && first.every((palace) => second.includes(palace));
+}
+
+export function assessGenericWhiteKillerAnJian(
+  level: DirectionLevel,
   centerStar: StarNumber,
   palace: DirectionPalaceKey,
-): MonthAnJianAssessment {
-  const forbiddenPalaces = [...AN_JIAN_BY_CENTER_STAR[centerStar]];
-  return { active: forbiddenPalaces.includes(palace), centerStar, forbiddenPalaces };
+  variantId: AnJianVariantId = 'generic_jiugong',
+): GenericWhiteKillerAnJianAssessment {
+  const selected = AN_JIAN_VARIANTS[variantId][centerStar];
+  if (!selected) {
+    throw new Error(`An-jian variant ${variantId} has no reading for star ${centerStar}`);
+  }
+  const forbiddenPalaces = [...selected];
+  const variantReadings = (Object.entries(AN_JIAN_VARIANTS) as [AnJianVariantId, AnJianVariantTable][])
+    .flatMap(([readingId, table]) => {
+      const reading = table[centerStar];
+      return reading ? [{
+        variantId: readingId,
+        forbiddenPalaces: [...reading],
+        sourceClass: readingId === 'generic_jiugong' ? 'direct_theoretical' as const : 'variant' as const,
+      }] : [];
+    });
+  return {
+    level,
+    active: forbiddenPalaces.includes(palace),
+    centerStar,
+    forbiddenPalaces,
+    evidence: WHITE_KILLER_LAYER_POLICY[level].layerEvidence[level]!,
+    rankingUse: WHITE_KILLER_LAYER_POLICY[level].rankingUse,
+    variantId,
+    variantReadings,
+    hasVariantReading: variantReadings.some((reading) => (
+      !samePalaces(reading.forbiddenPalaces, forbiddenPalaces)
+    )),
+  };
+}
+
+/**
+ * 大月建只保留獨立月干支飛宮介面。未完成逐月對照前，不得以月紫白入中星 alias。
+ */
+export function computeDaYueJian(
+  monthGanzhi: Ganzhi,
+  _palace: DirectionPalaceKey,
+): DaYueJianAssessment {
+  return {
+    status: 'not_evaluated',
+    active: false,
+    palace: null,
+    hitsThisDirection: false,
+    monthGanzhi,
+    evidence: 'A',
+    rankingUse: 'disabled',
+    calculationMethod: 'month_ganzhi_flying_palace',
+    note: '月干支飛宮公式尚未完成多年逐月對照，不參與方向判定。',
+  };
+}
+
+export function buildTimeGateAssessment(): TimeGateAssessment {
+  return {
+    dayStatus: 'not_evaluated',
+    hourStatus: 'not_evaluated',
+    rankingUse: 'disabled',
+    note: '日主與時課 Gate 尚未建立完整通書日課規則，不參與方向判定。',
+  };
+}
+
+export function buildMonthlyCenterStarState(
+  centerStar: StarNumber,
+  monthGanzhi: Ganzhi,
+): MonthlyCenterStarState {
+  return {
+    centerStar,
+    monthGanzhi,
+    monthNayin: null,
+    transformedElement: null,
+    mode: 'research',
+    rankingUse: 'disabled',
+    note: '月建納音如何作用於值月星與八方飛星尚未封版，不參與方向判定。',
+  };
 }
 
 export function palaceElementRelationFor(
@@ -151,6 +279,8 @@ export function assessTemporalStar(
   const reference = STAR_QI_REFERENCE[star];
   const periodBranch = context.pillars[level].branch;
   const activeBranches = reference.directQiBranches;
+  const whiteKillerRule = WHITE_KILLER_LAYER_POLICY[level];
+  const branchQiRule = BRANCH_QI_POLICY[level];
   return {
     level,
     star,
@@ -160,6 +290,7 @@ export function assessTemporalStar(
     isPurpleWhite: PURPLE_WHITE_STARS.has(star),
     role: LAYER_ROLE[level],
     palaceKillers: assessPalaceKillers(star, palace),
+    whiteKillerRule,
     elementRelation: palaceElementRelationFor(star, palace),
     temporalState: {
       liuJieTomb: reference.tombBranch === periodBranch,
@@ -167,7 +298,8 @@ export function assessTemporalStar(
       branchQi: activeBranches
         ? activeBranches.includes(periodBranch) ? 'active' : 'inactive'
         : 'unknown',
-      qiEvidence: context.evidence[level],
+      qiEvidence: branchQiRule.layerEvidence[level] ?? context.evidence[level],
+      qiRankingUse: branchQiRule.rankingUse,
     },
     seasonalState: seasonalStateFor(star, context.monthSeason),
   };

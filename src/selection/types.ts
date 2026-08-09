@@ -61,8 +61,11 @@ export interface DirectionSnapshot {
   monthStar: StarNumber;
   dayStar: StarNumber;
   hourStar: StarNumber;
-  /** 月暗建只看月白入中星，不以目標宮內飛星代替。 */
+  /** 一般九宮暗建看各層入中星，不以目標宮內飛星代替。 */
+  yearCenterStar: StarNumber;
   monthCenterStar: StarNumber;
+  dayCenterStar: StarNumber;
+  hourCenterStar: StarNumber;
 }
 
 export type PurpleWhiteCount = 0 | 1 | 2 | 3 | 4;
@@ -70,8 +73,12 @@ export type PurpleWhiteSignal =
   | 'none' | 'single_arrival' | 'two_coarrival' | 'three_coarrival' | 'all_four_coarrival';
 export type BranchQiState = 'active' | 'inactive' | 'unknown';
 export type SeasonalState = 'command' | 'support' | 'rest' | 'imprisoned' | 'controlled';
-export type TemporalEvidenceLevel = 'A' | 'B';
-export type LayerRole = 'background_or_large_scale' | 'primary' | 'fine_tuning';
+export type TemporalEvidenceLevel = 'A' | 'B' | 'C';
+export type LayerRole =
+  | 'background_or_large_scale' | 'seasonal_command' | 'day_gate' | 'fine_tuning';
+export type RuleSourceClass =
+  | 'direct_operational' | 'direct_theoretical' | 'variant' | 'derived';
+export type RankingUse = 'active' | 'warning_only' | 'reference_only' | 'disabled';
 export type Element = '木' | '火' | '土' | '金' | '水';
 export type PalaceElementRelation =
   | 'same' | 'palace_generates_star' | 'star_generates_palace'
@@ -84,6 +91,12 @@ export type PalaceKiller = Extract<
   'an_jian' | 'shou_ke' | 'chuan_xin' | 'jiao_jian' | 'dou_niu'
 >;
 
+export interface RuleEvidence {
+  sourceClass: RuleSourceClass;
+  layerEvidence: Partial<Record<DirectionLevel, TemporalEvidenceLevel>>;
+  rankingUse: RankingUse;
+}
+
 export interface TemporalStarAssessment {
   level: DirectionLevel;
   star: StarNumber;
@@ -93,6 +106,7 @@ export interface TemporalStarAssessment {
   isPurpleWhite: boolean;
   role: LayerRole;
   palaceKillers: PalaceKiller[];
+  whiteKillerRule: RuleEvidence;
   elementRelation: {
     palaceElement: Element;
     starElement: Element;
@@ -103,18 +117,25 @@ export interface TemporalStarAssessment {
     absolute: boolean;
     branchQi: BranchQiState;
     qiEvidence: TemporalEvidenceLevel;
+    qiRankingUse: RankingUse;
   };
   seasonalState: SeasonalState;
 }
 
 export interface WhiteKillerAssessment {
   status: 'clear' | 'present';
-  hits: {
-    level: DirectionLevel;
-    star: StarNumber;
-    killers: PalaceKiller[];
-  }[];
+  hits: WhiteKillerLayerHit[];
+  activeHits: WhiteKillerLayerHit[];
+  referenceHits: WhiteKillerLayerHit[];
   note: string;
+}
+
+export interface WhiteKillerLayerHit {
+  level: DirectionLevel;
+  star: StarNumber;
+  killers: PalaceKiller[];
+  evidence: TemporalEvidenceLevel;
+  rankingUse: RankingUse;
 }
 
 export interface TemporalBranchContext {
@@ -123,10 +144,58 @@ export interface TemporalBranchContext {
   monthSeason: 'spring' | 'summer' | 'autumn' | 'winter' | 'earth_transition';
 }
 
-export interface MonthAnJianAssessment {
+export type AnJianVariantId = 'generic_jiugong' | 'san_yuan_bao_hai' | 'jiyao_native_and_center';
+
+export interface AnJianVariantReading {
+  variantId: AnJianVariantId;
+  forbiddenPalaces: PalaceKey[];
+  sourceClass: RuleSourceClass;
+}
+
+export interface GenericWhiteKillerAnJianAssessment {
+  level: DirectionLevel;
   active: boolean;
   centerStar: StarNumber;
-  forbiddenPalaces: DirectionPalaceKey[];
+  forbiddenPalaces: PalaceKey[];
+  evidence: TemporalEvidenceLevel;
+  rankingUse: RankingUse;
+  variantId: AnJianVariantId;
+  variantReadings: AnJianVariantReading[];
+  hasVariantReading: boolean;
+}
+
+export interface DaYueJianAssessment {
+  status: 'not_evaluated';
+  active: false;
+  palace: null;
+  hitsThisDirection: false;
+  monthGanzhi: Ganzhi;
+  evidence: 'A';
+  rankingUse: 'disabled';
+  calculationMethod: 'month_ganzhi_flying_palace';
+  note: string;
+}
+
+export interface AnJianAssessment {
+  genericWhiteKiller: Record<DirectionLevel, GenericWhiteKillerAnJianAssessment>;
+  daYueJian: DaYueJianAssessment;
+}
+
+export interface TimeGateAssessment {
+  dayStatus: 'pass' | 'mixed' | 'reject' | 'not_evaluated';
+  hourStatus: 'pass' | 'mixed' | 'not_evaluated';
+  rankingUse: 'disabled';
+  note: string;
+}
+
+export interface MonthlyCenterStarState {
+  centerStar: StarNumber;
+  monthGanzhi: Ganzhi;
+  monthNayin: Element | null;
+  transformedElement: Element | null;
+  mode: 'research';
+  rankingUse: 'disabled';
+  note: string;
 }
 
 export interface DirectionTemporalProfile {
@@ -138,7 +207,9 @@ export interface DirectionTemporalProfile {
   qualifiedPurpleWhiteHits: DirectionLevel[];
   qualifiedPurpleWhiteCount: PurpleWhiteCount;
   starStates: TemporalStarAssessment[];
-  monthAnJian: MonthAnJianAssessment;
+  timeGate: TimeGateAssessment;
+  anJian: AnJianAssessment;
+  monthlyCenterStarState: MonthlyCenterStarState;
   whiteKillerAssessment: WhiteKillerAssessment;
   yellowBlackLayers: DirectionLevel[];
   yellowBlackThriving: boolean;

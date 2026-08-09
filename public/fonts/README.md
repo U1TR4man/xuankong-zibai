@@ -5,10 +5,10 @@
 - 授權：SIL Open Font License 1.1，全文見 `OFL.txt`
 - 官方來源：<https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif>
 - 原始 OTF SHA-256：`da0a79ee44322329dd9ff87d2cc878dc897c5180195e3f9b6cd4c8569781e887`
-- WOFF2 SHA-256：`a7891692093046c36f88c17c30797b80be1d2b0eddaa261cd7792e6cd680f9db`
+- WOFF2 SHA-256：`08a3edaf5ed88b1747a7fd130c30b7852eab76a7cac9ebf20f3b5ea9c7735fd8`
 
 此檔是針對本專案 TypeScript／TSX 靜態字串、`index.html`、PWA manifest 名稱及
-常用標點製作的 500 字重子集，保留 864 個 UI 字元、865 個 glyph，檔案約 227 KB。
+常用標點製作的 500 字重子集，保留 910 個 UI 字元、911 個 glyph，檔案 242,356 bytes。
 產物使用自訂 CSS family 名稱 `Zibai Serif`，避免把修改後的子集誤認為官方完整字體。
 
 ## 重建與檢查
