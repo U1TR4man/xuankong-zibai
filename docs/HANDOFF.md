@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／搜尋 implementation **Phase 0–6**、盤面／搜尋／URL cleanup、疊盤配色補丁、紫白擇吉方向 V1 **Phase 1–4**，以及干支加入與 UI/UX refinement V2 的 **P0／P1** 均已完成。雙星 81 組已與方向 ranking 解耦；第五輪已將一般九宮暗建、大月建、白中殺層級及支序有氣分開，現行 Direction status 使用 source-aware V5 政策。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／搜尋 implementation **Phase 0–6**、盤面／搜尋／URL cleanup、疊盤配色補丁、紫白擇吉方向 V1 **Phase 1–4**，以及干支加入與 UI/UX refinement V2 的 **P0／P1** 均已完成。雙星 81 組已與方向 ranking 解耦；第六輪已確認大月建等於月入中星本宮、與月暗建合流，並將日白升為正式主層、時白定為同級細選。現行 Direction status 使用 source-aware V6 政策。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -31,6 +31,7 @@
 - 紫白擇吉第四輪 co-arrival／月暗建修正 checkpoint：`a20587f`
 - 干支加入／擇吉與搜尋 refinement code checkpoint：`927a9fd`
 - 紫白擇吉第五輪暗建／白中殺／有氣分層 code checkpoint：`b8980ae`
+- 紫白擇吉第六輪大月建合流／日白升級 code checkpoint：`9674f28`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -45,9 +46,10 @@
 - 紫白擇吉第三輪考源紀錄：`docs/purple-white-third-round-temporal-rules.md`
 - 紫白擇吉第四輪考源紀錄：`docs/purple-white-fourth-round-coarrival-anjian.md`
 - 紫白擇吉第五輪考源紀錄：`docs/purple-white-fifth-round-layered-anjian-qi.md`
+- 紫白擇吉第六輪考源紀錄：`docs/purple-white-sixth-round-dayuejian-daywhite.md`
 - 干支加入與 UI/UX refinement V2 紀錄：`docs/ganzhi-uiux-refinement-v2.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第五輪時間規則及 canonical 年月日時干支均已完成；下一步是大月建逐月比對、白中殺原表逐格核影、月納音作用範圍與 deploy，不應擅自發明暫緩公式或 P2 最佳時窗。
+P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則及 canonical 年月日時干支均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。下一步是白中殺 authoritative 9×6 原表逐格核影、日白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式或 P2 最佳時窗。
 
 ---
 
@@ -212,18 +214,18 @@ tests/fixtures/chart-snapshot.json
 
 ### 紫白擇吉第三輪白中殺與時間狀態
 
-- 本節的暗建、白中殺層級、支序有氣層級及 status 公式已被第四／五輪取代；墓絕、1／6／8／9 支序表及月令矩陣繼續使用
+- 本節的暗建、白中殺層級、支序有氣層級及 status 公式已被第四至六輪取代；墓絕、1／6／8／9 支序表及月令矩陣繼續使用
 - `src/selection/temporalRules.ts` 集中保存星本宮、星宮五行、對宮、白中殺、墓絕、支序有氣及月令矩陣；只讀正式時間 API，不修改 Engine
 - 穿心、六／七交劍、鬥牛及 classical 受剋的星宮定局繼續使用；一般宮星五行關係仍另列
-- 墓、絕及支序有氣仍使用四層地支，但現行證據／用途是年 A active、月 A active、日 B warning only、時 C reference only
-- 月令保存得令、得生、休、囚、受制，不換算固定分數；現行 status 見下方第五輪
+- 墓、絕及支序有氣仍使用四層地支，但現行證據／用途是年 A active、月 A active、日 B+ active-secondary、時 C reference only
+- 月令保存得令、得生、休、囚、受制，不換算固定分數；現行 status 見下方第六輪
 - 宮格優先顯示白中殺／墓絕提示；方向詳情首屏顯示紫白主幹與雙星參考，時序條件及白中殺移到「為甚麼」，尋組合 deep-link 仍優先顯示命中 pair
 - 刑宮、害宮、四空亡、24 山、納音、統臨／專臨、未有直接表的 active branches、81 pair 評分及固定權重均未實作
 - 第三輪研究文件仍未附精確頁碼、逐字引文與原頁影像；`primarySourceVerified`／`verified` 不得因此提升
 
 ### 紫白擇吉第四輪 co-arrival 與月暗建修正
 
-- 本節是歷史記錄。co-arrival、raw／qualified 及 classical 受剋分離繼續有效；暗建、layer role、白中殺層級及 status 已由第五輪修正。
+- 本節是歷史記錄。co-arrival、raw／qualified 及 classical 受剋分離繼續有效；暗建、layer role、白中殺層級及 status 已由第五／六輪修正。
 - 移除 `purpleWhiteCount >= 2` 硬門檻；一個合格紫白已可成為正面訊號，多層同到再增強，一時／二時只保存為異文
 - raw 到方與 qualified arrival 分開；合格條件為 1／6／8／9、支序有氣、無墓絕且無 classical killer
 - classical 受剋殺與 generic 宮星五行關係分開；穿心、六七交劍、鬥牛定局保留
@@ -231,6 +233,7 @@ tests/fixtures/chart-snapshot.json
 
 ### 紫白擇吉第五輪暗建、白中殺與有氣分層
 
+- 本節是歷史記錄。四層暗建、日時白中殺 reference-only、時支 C 級參考及傳本分層繼續有效；大月建、日白到方、日支有氣及 status 已由第六輪修正。
 - `DirectionSnapshot` 保存年月日時各自的入中星；一般九宮暗建四層都計算，年月正式、日時類比參考。
 - 暗建預設 `generic_jiugong`：1–9 分別為坎坤震巽中乾兌艮離。五黃四隅及 1／6／8／9 本宮加中宮另存異文，不與預設疊加，現階段沒有 UI selector。
 - `computeDaYueJian()` 是獨立月干支飛宮介面；多年逐月比對未完成，固定為尚未評估、不 alias 月紫白入中星、不參與 ranking。
@@ -240,6 +243,18 @@ tests/fixtures/chart-snapshot.json
 - 日主／時課 Gate 與月納音轉化介面已建立，但目前明示 `not_evaluated` / `research` / `disabled`，不假裝日課已完成。
 - status V5 只讓年、月白中殺與 active／warning temporal state 影響 verdict；日、時白中殺類比不直接降級。`ordinary` 繼續是無正面訊號且無警示的中性 fallback。
 - 詳細 source map、測試、字體與 Browser 證據見 `docs/purple-white-fifth-round-layered-anjian-qi.md`。
+
+### 紫白擇吉第六輪大月建合流與日白升級
+
+- `computeDaYueJian()` 不再另算月干支序列，直接使用正式 `monthCenterStar` 的 `NATIVE_PALACE`；三組十二月共 36 / 36 型態由測試鎖定，五黃固定落中宮。
+- 舊按年干起大月建法保留為 `enabled:false`／`deprecated_by_xieji` metadata，不提供錯盤 selector。
+- 月暗建與大月建在方位結果上同位；底層術語來源分開保存，但只建立一個 `an_jian` active warning，主盤及詳情合流顯示「大月建／月暗建」，禁止 double count。
+- 紫白到方與支序有氣分開：月、日是主層，年是背景，時白是 `active_light` tie-breaker；日白不再因當日地支未列直接有氣而整層失效。
+- 支序有氣為年 A active、月 A active、日 B+ active-secondary、時 C reference-only；日支直接有氣可在無警示時將主層由可用細分為優先，時支只作同級細選參考。
+- 白中殺維持年／月 active、日／時 reference-only；日、時 killer 不因本輪升級而變成 veto。
+- 大月建單一 warning 不直落慎用；與二黑／五黃、其他年月 active killer 或非參考層墓絕疊加才升 caution。二黑五黃多層 safeguard 保留。
+- 日主／時課 Gate 與月納音仍為 `not_evaluated`／`disabled`；V6 status 是工具分級，不冒充完整通書日課。
+- 詳細 source map、測試、字體與 Browser 證據見 `docs/purple-white-sixth-round-dayuejian-daywhite.md`。
 
 #### Reserved future capability — 最佳時窗
 
@@ -259,11 +274,11 @@ tests/fixtures/chart-snapshot.json
 
 ```text
 test files  25 passed
-tests       191 passed
+tests       194 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（451.87 KiB）success
-single file 玄空紫白.html（534,970 bytes；font data URI）success
+PWA precache 11 entries（455.01 KiB）success
+single file 玄空紫白.html（538,436 bytes；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -282,7 +297,7 @@ single file 玄空紫白.html（534,970 bytes；font data URI）success
 - 日期 Sheet apply、Esc、focus return
 - 320 / 375 / 390 / 430 native date/time shell 無 clipping；兩個 input 都維持 `appearance:auto`
 - date/time focus：shell 1px border + 2px outline；input 0 border + no outline
-- 品牌字體 `document.fonts.check()` 對「大月建／九宮暗建／白中殺類比／日主／時課」等新增字串命中；production font 與 public font SHA-256 均為 `08a3edaf5ed88b1747a7fd130c30b7852eab76a7cac9ebf20f3b5ea9c7735fd8`
+- 品牌字體 `document.fonts.check()` 對「大月建／月暗建／詳情／舊／靠／翻」等新增字串命中；912 個 UI 字元／913 glyphs／243,128 bytes，production font 與 public font SHA-256 均為 `15d965d847acff86b6df05129923038bb383c66a49e076768da6fe56bc04fcac`
 - 日期時間列在 320／375／390／430px 均無 overflow；右側「今／回到今」維持 64px 並以 baseline 對齊，左側日期位置不因文案長度跳動
 - TopBar 兩個 SVG 均為 1.5px stroke
 - 主頁一個「今」、無常駐 UTC+8；TimePicker／Settings 仍顯示 UTC+8
@@ -318,6 +333,10 @@ single file 玄空紫白.html（534,970 bytes；font data URI）success
 - production 320／375／390／430px：第五輪擇吉盤頁面、九宮與各宮均無 horizontal overflow；最窄 320px 為 296px 九宮、8 個可選及 8 個排序方向、0 宮格溢出
 - production 以全新 PWA scope 確認最終 `index-CbAV7O3j.js`；主盤只顯示「年九宮暗建／月九宮暗建」與其他年月 active killers，日時類比不出現在主盤警示
 - production 320px：Direction Detail 顯示日時「白中殺類比／研究參考」、時支「類推參考」、五黃異文、大月建、日主 Gate 及月納音邊界；無 internal terminology
+- production 320／375／390／430px：第六輪主盤頁面、九宮與 9 個宮格均無 horizontal overflow；九宮分別為 294／341／356／396px，各寬度均有 8 個可選及 8 個排序方向、0 宮格溢出
+- production 最終 bundle `index-BewAo_Zn.js`；月暗建所在只顯示一條「大月建／月暗建」，年暗建仍獨立顯示，日時白中殺不出現在主盤警示
+- production 320px：Direction Detail client／scroll width 均為 318px；合流推導、只計一次、日支次級有效、時白同級細選及日主 Gate 邊界均可讀，無 internal terminology
+- 第六輪 Browser `document.fonts.check()` 命中新增字串；console 為 0 warning／0 error
 - 本機 Browser 320／375／390／430／560px：擇吉干支 metadata、九宮及 Direction Sheet 均無 horizontal overflow；320–430px 顯示日時，560px 顯示完整四柱，44px touch target 保持不變
 - 本機 Browser 五種寬度：Direction Detail 年月日時四欄均顯示 canonical 干支且無重疊；「時間干支」Sheet focus return 正常；搜尋 tabs 的完整鍵盤測試通過，Browser 另實測 ArrowRight／Home、focus 與 tabpanel 同步
 
@@ -348,10 +367,10 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - 刻盤目前仍只有「八刻十五分鐘制」一種策略。
 - Dark Mode 明確留待 V3。
 - IndexedDB 目前沒有必要，設定繼續使用 localStorage。
-- 跨時段最佳時窗、個人化吉凶評分與 Future filters 尚未實作；現有擇吉方向 status 雖已加入第五輪分層條件，仍是可解釋工具分級，不得冒充古法原有等級。
+- 跨時段最佳時窗、個人化吉凶評分與 Future filters 尚未實作；現有擇吉方向 status 雖已加入第六輪分層條件，仍是可解釋工具分級，不得冒充古法原有等級。
 - 進階搜尋 URL serialization、recent search、多宮／任一宮與入中星搜尋均未實作；簡易搜尋 URL restore 已完成。
 - 頂層「搜尋」及內層 keyboard tabs 已完成；九宮式宮位 selector 仍只記錄為 P2 構想，本輪未實作。
 - Search result 干支與最佳時窗仍為 P2；不得讓天干、旬空、納音或其他新條件在沒有獨立研究與規格前進入 verdict／ranking。
-- 雙星 81 組第二輪 source audit 及第三至五輪時間規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
+- 雙星 81 組第二輪 source audit 及第三至六輪時間規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
 - 第三輪「飛星回本宮＝暗建」、第四輪「暗建只套月層／五黃四隅是唯一答案」與 generic 宮剋星＝受剋殺均已廢止；不可從歷史文件回復。
-- 大月建、五黃傳本 selector、月納音作用範圍、periodElement、完整日主／時課 Gate、修造／日常獨立模式與固定百分比仍屬暫緩。
+- 大月建公式已由第六輪封版；仍暫緩的是五黃傳本 selector、日／時白中殺 active 化、時支有氣直接表、白中殺 9×6 原頁矩陣、月納音作用範圍、periodElement、完整日主／時課 Gate、修造／日常獨立模式與固定百分比。

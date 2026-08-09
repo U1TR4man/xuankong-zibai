@@ -93,7 +93,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 
 這 81 組全部是「雙星參考」：`needs-review`、`verified=false`、`rankingWeight=0`。研究版沒有附古籍版本頁碼與逐字引文，工具不會把摘要假裝成原文，也不會讓 pair 斷語或用途 tags 直接改變八方排序。
 
-第二輪考源加入 `sourceAudit`，分開記錄證據形式、原始使用情境、次序可信度、宮位／方位條件、異文與原頁核對狀態。第三輪建立墓絕、1／6／8／9 支序有氣及月令狀態；第四輪修正 co-arrival 與 classical 受剋表；第五輪再將一般九宮暗建、大月建、白中殺層級及支序有氣分開。現行規則是一個合格紫白亦可成立；年、月白中殺正式參與方向判定，日、時只作類比參考。一般暗建預設依九星本位，五黃為中宮；四隅版本只作異文。大月建、日主 Gate 與月納音在公式未封版前不參與 ranking。詳見 [第二輪](docs/purple-white-second-round-source-audit.md)、[第三輪](docs/purple-white-third-round-temporal-rules.md)、[第四輪](docs/purple-white-fourth-round-coarrival-anjian.md) 及 [第五輪考源紀錄](docs/purple-white-fifth-round-layered-anjian-qi.md)。
+第二輪考源加入 `sourceAudit`，分開記錄證據形式、原始使用情境、次序可信度、宮位／方位條件、異文與原頁核對狀態。第三輪建立墓絕、1／6／8／9 支序有氣及月令狀態；第四輪修正 co-arrival 與 classical 受剋表；第五輪再將一般九宮暗建、白中殺層級及支序有氣分開；第六輪確認大月建等於月入中星本宮，並把日白升為正式主層、時白定為同級細選。現行年、月白中殺正式參與方向判定，日、時仍只作類比參考。月暗建與大月建合流顯示且只計一次，五黃預設為中宮；四隅版本只作異文。日主 Gate 與月納音在公式未封版前不參與 ranking。詳見 [第二輪](docs/purple-white-second-round-source-audit.md)、[第三輪](docs/purple-white-third-round-temporal-rules.md)、[第四輪](docs/purple-white-fourth-round-coarrival-anjian.md)、[第五輪](docs/purple-white-fifth-round-layered-anjian-qi.md) 及 [第六輪考源紀錄](docs/purple-white-sixth-round-dayuejian-daywhite.md)。
 
 ## 架構
 
@@ -173,7 +173,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 191 個測試，涵蓋算法、1,200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第五輪暗建／白中殺／有氣分層、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
+- `npm test` — 194 個測試，涵蓋算法、1,200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第六輪大月建合流／日白升級、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
@@ -182,8 +182,8 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 ## 尚未做的事
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
-- 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前方向 status 即使已加入第五輪分層條件，仍只是工具分級。
-- 雙星古訣及第三／四輪時間規則仍需以可追溯版本、頁碼／章節與原頁影像逐條校對；未核對條目必須繼續保持 `needs-review`、`verified=false`、`primarySourceVerified=false`、`rankingWeight=0`。
+- 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前方向 status 即使已加入第六輪分層條件，仍只是工具分級。
+- 雙星古訣及第三至六輪時間規則仍需以可追溯版本、頁碼／章節與原頁影像逐條校對；未核對條目必須繼續保持 `needs-review`、`verified=false`、`primarySourceVerified=false`、`rankingWeight=0`。
 - 進階搜尋條件尚未序列化到 URL，也未加入 recent search；簡易搜尋已支援 URL restore，切回尋星仍會保留本次頁面生命週期內的上一輪結果。
 - 已用真實 production 瀏覽器驗證 320 / 375 / 390 / 430 / 768，iPhone 實機使用亦回報無問題；如需 release-grade 證據，可再補 Safari／PWA standalone／iOS Chrome 分項紀錄。
 - 未做 IndexedDB（目前資料量小，設定用 localStorage 已足夠）。
