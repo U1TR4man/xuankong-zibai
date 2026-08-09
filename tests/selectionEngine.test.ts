@@ -11,7 +11,8 @@ import { getPairRule, PURPLE_WHITE_PAIR_RULES } from '../src/selection/pairRules
 import { SELECTION_METHOD_EVIDENCE, STAR_QI_REFERENCE } from '../src/selection/researchEvidence';
 import {
   AN_JIAN_VARIANTS, BRANCH_QI_POLICY, ELEMENT_SUPPORT_QI_POLICY,
-  WHITE_KILLER_LAYER_POLICY, assessGenericWhiteKillerAnJian, assessPalaceKillers,
+  PURPLE_WHITE_ARRIVAL_POLICY, WHITE_KILLER_LAYER_POLICY,
+  assessGenericWhiteKillerAnJian, assessPalaceKillers,
   assessTemporalStar, buildMonthlyCenterStarState, buildTemporalBranchContext,
   buildTimeGateAssessment, computeDaYueJian, palaceElementRelationFor, seasonalStateFor,
 } from '../src/selection/temporalRules';
@@ -121,13 +122,36 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(assessPalaceKillers(1, 'kan')).toEqual([]);
   });
 
-  it('大月建、日主 Gate 與月納音保留獨立未評估介面', () => {
-    const daYueJian = computeDaYueJian(CONTEXT.pillars.month, 'xun');
+  it('大月建由月入中星本宮推得，舊年干起例停用', () => {
+    const daYueJian = computeDaYueJian(4, CONTEXT.pillars.month, 'xun');
     expect(daYueJian).toMatchObject({
-      status: 'not_evaluated', active: false, palace: null,
-      calculationMethod: 'month_ganzhi_flying_palace', rankingUse: 'disabled',
+      status: 'evaluated', centerStar: 4, palace: 'xun', hitsThisDirection: true,
+      calculationMethod: 'month_center_star_native_palace', rankingUse: 'warning_only',
+      samePositionAsMonthAnJian: true,
+      legacyYearStemRule: { enabled: false, status: 'deprecated_by_xieji' },
     });
-    expect(daYueJian).not.toHaveProperty('centerStar');
+    expect(computeDaYueJian(5, CONTEXT.pillars.month, 'xun')).toMatchObject({
+      centerStar: 5, palace: 'center', hitsThisDirection: false,
+    });
+  });
+
+  it('36 個月型態共用月紫白入中星的九星本宮定位', () => {
+    const groups = [
+      [8, 7, 6, 5, 4, 3, 2, 1, 9, 8, 7, 6],
+      [5, 4, 3, 2, 1, 9, 8, 7, 6, 5, 4, 3],
+      [2, 1, 9, 8, 7, 6, 5, 4, 3, 2, 1, 9],
+    ] as const;
+    const expected = [
+      ['gen', 'dui', 'qian', 'center', 'xun', 'zhen', 'kun', 'kan', 'li', 'gen', 'dui', 'qian'],
+      ['center', 'xun', 'zhen', 'kun', 'kan', 'li', 'gen', 'dui', 'qian', 'center', 'xun', 'zhen'],
+      ['kun', 'kan', 'li', 'gen', 'dui', 'qian', 'center', 'xun', 'zhen', 'kun', 'kan', 'li'],
+    ];
+    expect(groups.map((group) => group.map((centerStar) => (
+      computeDaYueJian(centerStar, CONTEXT.pillars.month, 'xun').palace
+    )))).toEqual(expected);
+  });
+
+  it('日主 Gate 與月納音繼續保留未評估介面', () => {
     expect(buildTimeGateAssessment()).toMatchObject({
       dayStatus: 'not_evaluated', hourStatus: 'not_evaluated', rankingUse: 'disabled',
     });
@@ -189,8 +213,8 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
       liuJieTomb: false, absolute: true, branchQi: 'inactive', qiEvidence: 'A',
     });
     expect(active.temporalState.branchQi).toBe('active');
-    expect(active.temporalState.qiEvidence).toBe('B');
-    expect(active.temporalState.qiRankingUse).toBe('warning_only');
+    expect(active.temporalState.qiEvidence).toBe('B+');
+    expect(active.temporalState.qiRankingUse).toBe('active_secondary');
     expect(unknown.temporalState.branchQi).toBe('unknown');
     expect(unknown.temporalState.qiEvidence).toBe('C');
     expect(unknown.temporalState.qiRankingUse).toBe('reference_only');
@@ -233,8 +257,14 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(BRANCH_QI_POLICY).toMatchObject({
       year: { rankingUse: 'active', layerEvidence: { year: 'A' } },
       month: { rankingUse: 'active', layerEvidence: { month: 'A' } },
-      day: { rankingUse: 'warning_only', layerEvidence: { day: 'B' } },
+      day: { rankingUse: 'active_secondary', layerEvidence: { day: 'B+' } },
       hour: { rankingUse: 'reference_only', layerEvidence: { hour: 'C' } },
+    });
+    expect(PURPLE_WHITE_ARRIVAL_POLICY).toEqual({
+      year: { arrival: 'active', rankingUse: 'active', role: 'background' },
+      month: { arrival: 'active', rankingUse: 'active', role: 'primary' },
+      day: { arrival: 'active', rankingUse: 'active', role: 'primary' },
+      hour: { arrival: 'active', rankingUse: 'active_light', role: 'tie_breaker' },
     });
     expect(ELEMENT_SUPPORT_QI_POLICY.rankingUse).toBe('disabled');
   });
@@ -254,6 +284,26 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation.temporalProfile.whiteKillerAssessment.activeHits
       .filter((hit) => hit.killers.includes('an_jian')).map((hit) => hit.level))
       .toEqual(['year', 'month']);
+  });
+
+  it('月暗建與大月建同位合流，只產生一次 active warning', () => {
+    const evaluation = evaluateDirection({
+      ...EXAMPLE, palace: 'xun', palaceNumber: 4,
+      yearCenterStar: 1, monthCenterStar: 4, dayCenterStar: 1, hourCenterStar: 1,
+      yearStar: 9, monthStar: 1, dayStar: 9, hourStar: 7,
+    }, CONTEXT);
+    expect(evaluation.temporalProfile.anJian.daYueJian).toMatchObject({
+      palace: 'xun', hitsThisDirection: true, samePositionAsMonthAnJian: true,
+    });
+    expect(evaluation.temporalProfile.whiteKillerAssessment.activeHits).toEqual([
+      expect.objectContaining({ level: 'month', killers: ['an_jian'] }),
+    ]);
+    expect(evaluation.reasons.filter((reason) => reason.startsWith('大月建／月暗建：')))
+      .toHaveLength(1);
+    expect(evaluation.verdict).toBe('mixed');
+    expect(evaluateDirection({
+      ...evaluation.snapshot, hourStar: 2,
+    }, CONTEXT).verdict).toBe('caution');
   });
 
   it('研究摘要入庫但不猜吉凶、不假裝已校對', () => {
@@ -309,7 +359,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation.purpleWhiteStars).toEqual([1, 8, 6]);
     expect(evaluation.purpleWhiteHits).toEqual(['year', 'day', 'hour']);
     expect(evaluation.purpleWhiteSignal).toBe('three_coarrival');
-    expect(evaluation.qualifiedPurpleWhiteHits).toEqual(['year']);
+    expect(evaluation.qualifiedPurpleWhiteHits).toEqual(['year', 'day', 'hour']);
     expect(evaluation.temporalProfile.starStates.map((state) => state.periodBranch))
       .toEqual(['申', '酉', '午', '子']);
     expect(evaluation.temporalProfile.whiteKillerAssessment.status).toBe('present');
@@ -326,7 +376,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(evaluation).not.toHaveProperty('score');
   });
 
-  it('V5 判定只讓年月白中殺影響方向，日時類比不降級', () => {
+  it('V6 判定讓月日作主層、時白只作細選，日時白中殺仍不降級', () => {
     const safe = {
       ...EXAMPLE, palace: 'dui' as const, palaceNumber: 7, monthCenterStar: 1 as const,
     };
@@ -335,7 +385,7 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     }, CONTEXT).verdict).toBe('priority');
     expect(evaluateDirection({
       ...safe, yearStar: 1, monthStar: 7, dayStar: 7, hourStar: 7,
-    }, CONTEXT).verdict).toBe('usable');
+    }, CONTEXT).verdict).toBe('ordinary');
     expect(evaluateDirection({
       ...safe, yearStar: 7, monthStar: 1, dayStar: 3, hourStar: 7,
     }, CONTEXT).verdict).toBe('priority');
@@ -346,6 +396,22 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
       ...safe, palace: 'gen', palaceNumber: 8,
       yearStar: 7, monthStar: 7, dayStar: 7, hourStar: 7,
     }, CONTEXT).verdict).toBe('ordinary');
+    const dayWithoutDirectQi = evaluateDirection({
+      ...safe, yearStar: 7, monthStar: 7, dayStar: 1, hourStar: 7,
+    }, CONTEXT);
+    expect(dayWithoutDirectQi.qualifiedPurpleWhiteHits).toEqual(['day']);
+    expect(dayWithoutDirectQi.verdict).toBe('usable');
+    expect(evaluateDirection({
+      ...safe, yearStar: 7, monthStar: 7, dayStar: 9, hourStar: 7,
+    }, CONTEXT).verdict).toBe('priority');
+    const hourOnly = evaluateDirection({
+      ...safe, yearStar: 7, monthStar: 7, dayStar: 7, hourStar: 1,
+    }, CONTEXT);
+    const noWhite = evaluateDirection({
+      ...safe, yearStar: 7, monthStar: 7, dayStar: 7, hourStar: 7,
+    }, CONTEXT);
+    expect(hourOnly.verdict).toBe('ordinary');
+    expect(rankDirections([noWhite, hourOnly])[0]).toBe(hourOnly);
   });
 
   it('0–4 層紫白各有明確訊號，一時／二時異文不變數值門檻', () => {

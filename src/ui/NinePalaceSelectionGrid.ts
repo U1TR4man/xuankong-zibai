@@ -37,7 +37,9 @@ function primaryCondition(evaluation: DirectionEvaluation): string | undefined {
   const genericAnJian = activeHits.find((hit) => hit.killers.includes('an_jian'));
   if (genericAnJian) {
     const others = genericAnJian.killers.filter((killer) => killer !== 'an_jian');
-    return `⚠ ${LEVEL_SHORT_LABEL[genericAnJian.level]}九宮暗建${others.length > 0
+    const label = genericAnJian.level === 'month'
+      ? '大月建／月暗建' : `${LEVEL_SHORT_LABEL[genericAnJian.level]}九宮暗建`;
+    return `⚠ ${label}${others.length > 0
       ? `、${others.map((item) => KILLER_SHORT_LABEL[item]).join('、')}` : ''}`;
   }
   const killer = activeHits.find((hit) => hit.killers.length >= 2) ?? activeHits[0];

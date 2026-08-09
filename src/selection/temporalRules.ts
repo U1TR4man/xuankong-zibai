@@ -9,7 +9,7 @@ import type {
   AnJianVariantId, DaYueJianAssessment, DirectionLevel, DirectionPalaceKey, Element,
   GenericWhiteKillerAnJianAssessment, LayerRole, MonthlyCenterStarState,
   PalaceElementRelation, PalaceKiller, RuleEvidence, SeasonalState, TemporalBranchContext,
-  TemporalStarAssessment, TimeGateAssessment,
+  TemporalStarAssessment, TimeGateAssessment, PurpleWhiteArrivalRule,
 } from './types';
 
 type MonthSeason = TemporalBranchContext['monthSeason'];
@@ -83,11 +83,19 @@ export const BRANCH_QI_POLICY: Readonly<Record<DirectionLevel, RuleEvidence>> = 
     sourceClass: 'direct_operational', layerEvidence: { month: 'A' }, rankingUse: 'active',
   },
   day: {
-    sourceClass: 'direct_theoretical', layerEvidence: { day: 'B' }, rankingUse: 'warning_only',
+    sourceClass: 'direct_operational', layerEvidence: { day: 'B+' }, rankingUse: 'active_secondary',
   },
   hour: {
     sourceClass: 'derived', layerEvidence: { hour: 'C' }, rankingUse: 'reference_only',
   },
+};
+
+/** 第六輪：到方本身與支序有氣分開；日白是主層，時白只作同級細選。 */
+export const PURPLE_WHITE_ARRIVAL_POLICY: Readonly<Record<DirectionLevel, PurpleWhiteArrivalRule>> = {
+  year: { arrival: 'active', rankingUse: 'active', role: 'background' },
+  month: { arrival: 'active', rankingUse: 'active', role: 'primary' },
+  day: { arrival: 'active', rankingUse: 'active', role: 'primary' },
+  hour: { arrival: 'active', rankingUse: 'active_light', role: 'tie_breaker' },
 };
 
 export const ELEMENT_SUPPORT_QI_POLICY: RuleEvidence = {
@@ -207,23 +215,25 @@ export function assessGenericWhiteKillerAnJian(
   };
 }
 
-/**
- * 大月建只保留獨立月干支飛宮介面。未完成逐月對照前，不得以月紫白入中星 alias。
- */
+/** 第六輪校正：大月建即本月入中紫白星的後天本宮。 */
 export function computeDaYueJian(
+  monthCenterStar: StarNumber,
   monthGanzhi: Ganzhi,
-  _palace: DirectionPalaceKey,
+  palace: DirectionPalaceKey,
 ): DaYueJianAssessment {
+  const daYueJianPalace = NATIVE_PALACE[monthCenterStar];
   return {
-    status: 'not_evaluated',
-    active: false,
-    palace: null,
-    hitsThisDirection: false,
+    status: 'evaluated',
+    centerStar: monthCenterStar,
+    palace: daYueJianPalace,
+    hitsThisDirection: daYueJianPalace === palace,
     monthGanzhi,
     evidence: 'A',
-    rankingUse: 'disabled',
-    calculationMethod: 'month_ganzhi_flying_palace',
-    note: '月干支飛宮公式尚未完成多年逐月對照，不參與方向判定。',
+    rankingUse: 'warning_only',
+    calculationMethod: 'month_center_star_native_palace',
+    samePositionAsMonthAnJian: true,
+    legacyYearStemRule: { enabled: false, status: 'deprecated_by_xieji' },
+    note: '本月入中星的後天本宮，同時是大月建與月九宮暗建所在；合流顯示且只計一次警示。',
   };
 }
 
@@ -289,6 +299,7 @@ export function assessTemporalStar(
     ganzhi: context.pillars[level],
     isPurpleWhite: PURPLE_WHITE_STARS.has(star),
     role: LAYER_ROLE[level],
+    arrivalRule: PURPLE_WHITE_ARRIVAL_POLICY[level],
     palaceKillers: assessPalaceKillers(star, palace),
     whiteKillerRule,
     elementRelation: palaceElementRelationFor(star, palace),

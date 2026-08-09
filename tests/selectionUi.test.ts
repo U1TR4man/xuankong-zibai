@@ -118,14 +118,14 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('[data-selection-palace="xun"] .selection-cell__condition')?.textContent)
       .toContain('鬥牛');
     expect($('[data-selection-palace="zhen"] .selection-cell__condition')?.textContent)
-      .toContain('九宮暗建');
+      .toContain('大月建／月暗建');
     const disclosures = Array.from(document.querySelectorAll<HTMLDetailsElement>('.direction-disclosure'));
     expect(disclosures).toHaveLength(4);
     expect(disclosures.every((item) => !item.open)).toBe(true);
     expect(disclosures.map((item) => item.querySelector('summary')?.textContent))
       .toEqual(['為甚麼', '全部六組', '五行關係', '研究說明']);
     expect($('.direction-temporal')?.textContent).toContain('三層紫白同到');
-    expect($('.direction-temporal')?.textContent).toContain('合格');
+    expect($('.direction-temporal')?.textContent).toContain('有效');
     expect(document.querySelectorAll('.direction-condition-list li')).toHaveLength(4);
     expect($('.direction-branch-conditions')?.textContent).toContain('時序條件');
     expect($('.direction-branch-conditions')?.textContent).toContain('日 · 癸丑');
@@ -145,15 +145,15 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-research')?.textContent)
       .toContain('雙星組合僅供研究參考，不參與方向排序。');
     expect($('.direction-research')?.textContent)
-      .toContain('一般九宮暗建與大月建分開保存');
+      .toContain('大月建取本月入中星的後天本宮');
     expect($('.direction-research')?.textContent)
-      .toContain('五黃為中宮');
+      .toContain('五黃預設在中宮');
     expect($('.direction-research')?.textContent)
       .toContain('年、月白中殺正式參與判定');
     expect($('.direction-research')?.textContent)
       .toContain('紫白一時加／二時加');
     expect($('.direction-research')?.textContent)
-      .toContain('日支只作警示，時支只作類推參考');
+      .toContain('日支為次級有效條件，時支仍只作類推參考');
     expect($('.direction-research')?.textContent)
       .toContain('日主與時課 Gate 尚未建立完整日課規則');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('TOOL_HEURISTIC');

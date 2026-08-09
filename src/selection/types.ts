@@ -73,12 +73,19 @@ export type PurpleWhiteSignal =
   | 'none' | 'single_arrival' | 'two_coarrival' | 'three_coarrival' | 'all_four_coarrival';
 export type BranchQiState = 'active' | 'inactive' | 'unknown';
 export type SeasonalState = 'command' | 'support' | 'rest' | 'imprisoned' | 'controlled';
-export type TemporalEvidenceLevel = 'A' | 'B' | 'C';
+export type TemporalEvidenceLevel = 'A' | 'B+' | 'B' | 'C';
 export type LayerRole =
   | 'background_or_large_scale' | 'seasonal_command' | 'day_gate' | 'fine_tuning';
 export type RuleSourceClass =
   | 'direct_operational' | 'direct_theoretical' | 'variant' | 'derived';
-export type RankingUse = 'active' | 'warning_only' | 'reference_only' | 'disabled';
+export type RankingUse =
+  | 'active' | 'active_secondary' | 'warning_only' | 'reference_only' | 'disabled';
+export type PurpleWhiteArrivalRole = 'background' | 'primary' | 'tie_breaker';
+export interface PurpleWhiteArrivalRule {
+  arrival: 'active';
+  rankingUse: 'active' | 'active_light';
+  role: PurpleWhiteArrivalRole;
+}
 export type Element = '木' | '火' | '土' | '金' | '水';
 export type PalaceElementRelation =
   | 'same' | 'palace_generates_star' | 'star_generates_palace'
@@ -105,6 +112,7 @@ export interface TemporalStarAssessment {
   ganzhi: Ganzhi;
   isPurpleWhite: boolean;
   role: LayerRole;
+  arrivalRule: PurpleWhiteArrivalRule;
   palaceKillers: PalaceKiller[];
   whiteKillerRule: RuleEvidence;
   elementRelation: {
@@ -165,14 +173,19 @@ export interface GenericWhiteKillerAnJianAssessment {
 }
 
 export interface DaYueJianAssessment {
-  status: 'not_evaluated';
-  active: false;
-  palace: null;
-  hitsThisDirection: false;
+  status: 'evaluated';
+  centerStar: StarNumber;
+  palace: PalaceKey;
+  hitsThisDirection: boolean;
   monthGanzhi: Ganzhi;
   evidence: 'A';
-  rankingUse: 'disabled';
-  calculationMethod: 'month_ganzhi_flying_palace';
+  rankingUse: 'warning_only';
+  calculationMethod: 'month_center_star_native_palace';
+  samePositionAsMonthAnJian: true;
+  legacyYearStemRule: {
+    enabled: false;
+    status: 'deprecated_by_xieji';
+  };
   note: string;
 }
 

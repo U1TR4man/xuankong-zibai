@@ -72,8 +72,6 @@ export function buildDirectionTemporalProfile(
   }
   const qualifiedPurpleWhiteHits = starStates.filter((state) => (
     state.isPurpleWhite
-    && state.temporalState.qiRankingUse !== 'reference_only'
-    && state.temporalState.branchQi === 'active'
     && !state.temporalState.liuJieTomb
     && !state.temporalState.absolute
     && (state.whiteKillerRule.rankingUse !== 'active' || state.palaceKillers.length === 0)
@@ -107,7 +105,9 @@ export function buildDirectionTemporalProfile(
     timeGate: buildTimeGateAssessment(),
     anJian: {
       genericWhiteKiller,
-      daYueJian: computeDaYueJian(context.pillars.month, snapshot.palace),
+      daYueJian: computeDaYueJian(
+        snapshot.monthCenterStar, context.pillars.month, snapshot.palace,
+      ),
     },
     monthlyCenterStarState: buildMonthlyCenterStarState(
       snapshot.monthCenterStar, context.pillars.month,
@@ -130,6 +130,11 @@ function verdictFor(profile: DirectionTemporalProfile): DirectionVerdict {
   const killerCount = profile.whiteKillerAssessment.activeHits.reduce((count, hit) => (
     count + hit.killers.length
   ), 0);
+  const hasTemporalWarning = profile.starStates.some((state) => (
+    state.temporalState.qiRankingUse !== 'reference_only' && (
+      state.temporalState.liuJieTomb || state.temporalState.absolute
+    )
+  ));
   const hasAnyWarning = profile.starStates.some((state) => (
     (state.whiteKillerRule.rankingUse === 'active' && state.palaceKillers.length > 0)
     || (state.temporalState.qiRankingUse !== 'reference_only' && (
@@ -139,13 +144,28 @@ function verdictFor(profile: DirectionTemporalProfile): DirectionVerdict {
   const hasQualifiedPrimary = profile.qualifiedPurpleWhiteHits.some((level) => (
     level === 'month' || level === 'day'
   ));
+  const hasSupportedPrimary = profile.starStates.some((state) => (
+    (state.level === 'month' || state.level === 'day')
+    && profile.qualifiedPurpleWhiteHits.includes(state.level)
+    && state.temporalState.branchQi === 'active'
+    && (state.temporalState.qiRankingUse === 'active'
+      || state.temporalState.qiRankingUse === 'active_secondary')
+  ));
+  const daYueJianHit = profile.anJian.daYueJian.hitsThisDirection;
+  const hasOtherActiveKiller = profile.whiteKillerAssessment.activeHits.some((hit) => (
+    hit.killers.some((killer) => killer !== 'an_jian')
+  ));
+  const daYueJianCompoundWarning = daYueJianHit && (
+    profile.yellowBlackLayers.length > 0 || hasOtherActiveKiller || hasTemporalWarning
+  );
 
-  if (!hasQualifiedPrimary && (profile.yellowBlackLayers.length >= 2 || killerCount >= 2)) {
-    return 'caution';
-  }
+  if (daYueJianCompoundWarning) return 'caution';
+  if (profile.yellowBlackLayers.length >= 2) return 'caution';
+  if (!hasQualifiedPrimary && killerCount >= 2) return 'caution';
   if (profile.purpleWhiteCount > 0 && hasAnyWarning) return 'mixed';
-  if (hasQualifiedPrimary && !hasAnyWarning) return 'priority';
-  if (profile.qualifiedPurpleWhiteCount > 0 && !hasAnyWarning) return 'usable';
+  if (hasQualifiedPrimary && !hasAnyWarning) {
+    return hasSupportedPrimary ? 'priority' : 'usable';
+  }
   return 'ordinary';
 }
 
@@ -169,9 +189,14 @@ export function evaluateDirection(
     && state.temporalState.qiRankingUse === 'active'
     && state.temporalState.branchQi === 'active'
   ));
+  const secondaryPurpleWhite = profile.starStates.filter((state) => (
+    state.isPurpleWhite
+    && state.temporalState.qiRankingUse === 'active_secondary'
+    && state.temporalState.branchQi === 'active'
+  ));
   const referencePurpleWhite = profile.starStates.filter((state) => (
     state.isPurpleWhite
-    && state.temporalState.qiRankingUse !== 'active'
+    && state.temporalState.qiRankingUse === 'reference_only'
     && state.temporalState.branchQi === 'active'
   ));
   const qualifiedPrimary = profile.qualifiedPurpleWhiteHits.filter((level) => (
@@ -181,7 +206,7 @@ export function evaluateDirection(
   const absoluteCount = profile.starStates.filter((state) => state.temporalState.absolute).length;
   const reasons = [
     `紫白到方：${profile.purpleWhiteCount}/4（${PURPLE_WHITE_SIGNAL_LABEL[profile.purpleWhiteSignal]}）`,
-    `支序有氣：年月正式 ${activePurpleWhite.length} 層；日時參考 ${referencePurpleWhite.length} 層`,
+    `支序有氣：年月正式 ${activePurpleWhite.length} 層；日次級有效 ${secondaryPurpleWhite.length} 層；時參考 ${referencePurpleWhite.length} 層`,
     qualifiedPrimary.length > 0 ? `主要層合格：${qualifiedPrimary.join('、')}` : '',
     `白中殺：年月${profile.whiteKillerAssessment.activeHits.length > 0
       ? `${profile.whiteKillerAssessment.activeHits.length} 層命中` : '未命中'}`,
@@ -189,12 +214,14 @@ export function evaluateDirection(
       ? `日時白中殺參考：${profile.whiteKillerAssessment.referenceHits.length} 層命中` : '',
     ...Object.values(profile.anJian.genericWhiteKiller)
       .filter((assessment) => assessment.active && assessment.rankingUse === 'active')
-      .map((assessment) => `一般九宮暗建：${assessment.level} 白 ${assessment.centerStar} 入中，本方不宜修作`),
+      .map((assessment) => assessment.level === 'month'
+        ? `大月建／月暗建：月白 ${assessment.centerStar} 入中，本方為其本宮，只計一次警示`
+        : `一般九宮暗建：${assessment.level} 白 ${assessment.centerStar} 入中，本方不宜修作`),
     tombCount > 0 ? `入墓：${tombCount} 層` : '',
     absoluteCount > 0 ? `臨絕：${absoluteCount} 層` : '',
     profile.yellowBlackLayers.length >= 2
       ? `二黑、五黃同到${profile.yellowBlackThriving ? '且月令值旺' : ''}` : '',
-    '月令是方向判讀核心；日主 Gate 尚未評估，年作長期背景，時作細選',
+    '月、日白是方向主層；日主 Gate 尚未評估，年作長期背景，時白只作同級細選',
     '月令旺相休囚只作條件顯示，不換算固定分數',
     '雙星 81 組只供參考，不參與方向排序',
   ].filter(Boolean);
@@ -232,8 +259,26 @@ export function evaluateDirections(
 }
 
 export function rankDirections(evaluations: readonly DirectionEvaluation[]): DirectionEvaluation[] {
+  const qualifiedRoleCount = (
+    evaluation: DirectionEvaluation,
+    role: 'primary' | 'background' | 'tie_breaker',
+  ): number => evaluation.temporalProfile.starStates.filter((state) => (
+    state.arrivalRule.role === role
+    && evaluation.qualifiedPurpleWhiteHits.includes(state.level)
+  )).length;
+  const activeSecondaryQiCount = (evaluation: DirectionEvaluation): number => (
+    evaluation.temporalProfile.starStates.filter((state) => (
+      state.isPurpleWhite
+      && state.temporalState.qiRankingUse === 'active_secondary'
+      && state.temporalState.branchQi === 'active'
+    )).length
+  );
   return [...evaluations].sort((a, b) => (
     VERDICT_RANK[b.verdict] - VERDICT_RANK[a.verdict]
+    || qualifiedRoleCount(b, 'primary') - qualifiedRoleCount(a, 'primary')
+    || activeSecondaryQiCount(b) - activeSecondaryQiCount(a)
+    || qualifiedRoleCount(b, 'background') - qualifiedRoleCount(a, 'background')
+    || qualifiedRoleCount(b, 'tie_breaker') - qualifiedRoleCount(a, 'tie_breaker')
     || b.purpleWhiteCount - a.purpleWhiteCount
   ));
 }
