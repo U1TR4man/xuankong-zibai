@@ -6,6 +6,8 @@
 
 ### Added
 
+- 新增第三輪白中殺／時間狀態引擎：暗建、受剋、穿心、交劍、鬥牛以星乘固定宮位判定；六捷墓、臨絕及 1／6／8／9 支序有氣以年月日時各層地支判定。
+- 新增節氣月令的得令、得生、休、囚、受制資料，以及年／月 A 級、日／時 B 級的時層套用標記；未有直接支序表的星保持未知，不自行推演。
 - 新增可重跑的 `scripts/build-font-subset.py`：掃描專案實際靜態 UI 中文、驗證既有 Noto Serif CJK TC Medium 來源 checksum，並重建／檢查離線 WOFF2 子集。
 - 新增第二輪考源資料層：方向的四時紫白 profile、九星有氣／墓絕研究參考、白中殺 schema、方法層證據與異文，以及 81 組的 `sourceAudit`、條件與次序可信度。
 - 收錄雙星 81 組研究版的現代精簡摘要與 A／A/B／B／B/C／C 級別；每條均保留 `needs-review`、`verified=false`、`temporalUse=reference_only` 與 `rankingWeight=0`。
@@ -23,6 +25,12 @@
 - 新增「尋星 · 進階」：每層可複選飛星（同層 OR）、不同層固定 AND，結果逐層標示命中並顯示 deterministic 日時／時刻組合摘要。
 - 尋星加入可見的本機計算狀態、日期分組、空結果、長範圍／大量結果提示與一年上限；結果不會靜默截斷，320px controls 維持至少 44px touch target。
 - 大量搜尋結果改為保留完整總數並每次明示載入 50 筆，避免一次建立過多 mobile DOM nodes。
+
+### Changed
+
+- 擇吉方向判定依序納入紫白集中、白中殺、墓絕、支序有氣與黃黑值令；維持純文字分級及可解釋條件，不建立 0–100 或固定權重。
+- 擇吉宮格優先顯示白中殺／墓絕提醒；方向詳情將「時氣與白中殺」排在主要雙星參考之前，並於「為甚麼」逐層顯示地支、月令及可重疊條件。
+- 81 組雙星仍是獨立參考知識庫，`rankingWeight=0`、用途選擇與 pair 摘要不參與方向判定或排序。
 
 ### Fixed
 
@@ -54,6 +62,7 @@
 
 ### Documentation
 
+- 收錄紫白擇吉第三輪考源 implementation record、原始研究 checksum、白中殺／墓絕／支序有氣／月令的實際公式、178 tests、build 及四種手機寬度驗收；未有原頁的來源狀態仍保持待覆核。
 - 收錄 professional UI/UX refinement 的原始規格 checksum、Phase A–D implementation record、172 tests、production／PWA／單檔 build 與四種手機寬度驗收。
 - 收錄紫白擇吉第二輪考源 implementation record、原始研究 checksum、171 tests、production／PWA／單檔 build 與五種寬度驗收，並鎖定有氣／白中殺／81 組仍不可評分的邊界。
 - 收錄擇吉盤四星橫排 UI 修正的原始規格 checksum、166 tests、production／PWA／單檔 build，以及 320／375／390／430／768px responsive 驗收結果。
