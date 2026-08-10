@@ -1,6 +1,17 @@
 import { starName } from '../engine/flyingStar/types';
+import type { Ganzhi } from '../engine/time/ganzhi';
+import {
+  type DirectionShaRule,
+} from '../selection/directionGate';
+import {
+  type DirectionAssessmentReason, type DirectionSelectionAssessmentV2,
+  buildDirectionSelectionAssessment, buildDirectionSelectionContext,
+} from '../selection/directionSelection';
+import type { DirectionVirtueCode, DirectionVirtueEvidence } from '../selection/directionVirtues';
+import { type HourGate, type HourGateStatus, buildHourGate } from '../selection/hourGate';
 import { purposeLabel } from '../selection/purpose';
 import { PURPLE_WHITE_SIGNAL_LABEL, WHITE_KILLER_LABEL } from '../selection/researchEvidence';
+import type { TemporalPillars } from '../selection/temporalPillars';
 import {
   VERDICT_LABEL, type BranchQiState, type DirectionEvaluation, type DirectionLevel,
   type DayGateStatus, type DayMasterSeasonState, type LayerRole, type PairHit, type PalaceElementRelation, type SeasonalState,
@@ -43,6 +54,32 @@ const ELEMENT_RELATION_LABEL: Record<PalaceElementRelation, (
   star_generates_palace: (palace, star) => `星${star}生宮${palace}`,
   palace_controls_star: (palace, star) => `宮${palace}剋星${star}`,
   star_controls_palace: (palace, star) => `星${star}剋宮${palace}`,
+};
+
+const HOUR_STATUS_LABEL: Record<HourGateStatus, string> = {
+  preferred: '宜用', pass: '可用', mixed: '吉凶並見', caution: '慎用', reject: '不用',
+};
+const HOUR_CONFLICT_LABEL: Record<string, string> = {
+  hourBreak: '時破', clashMonth: '時沖月令', clashYear: '時沖歲君',
+  fiveBuYu: '五不遇', punishment: '時刑', harm: '日害',
+};
+const HOUR_SUPPORT_LABEL: Record<string, string> = {
+  build: '時建', liuHe: '六合', sanHe: '三合', stem: '時干扶日', dayLu: '日祿',
+};
+const SHA_LABEL: Record<DirectionShaRule, string> = {
+  sui_po: '歲破', month_break: '月破方',
+  year_san_sha: '年三煞', month_san_sha: '月三煞', day_san_sha: '日三煞',
+};
+const VIRTUE_LABEL: Record<DirectionVirtueCode, string> = {
+  sui_de: '歲德', sui_de_he: '歲德合', tian_de: '天德',
+  tian_de_he: '天德合', yue_de: '月德', yue_de_he: '月德合',
+};
+const REASON_LABEL: Record<DirectionAssessmentReason, string> = {
+  constraint_sui_po: '歲破', constraint_month_break: '月破方',
+  constraint_year_san_sha: '年三煞', constraint_month_san_sha: '月三煞',
+  constraint_day_san_sha: '日三煞',
+  positive_virtue: '得德', positive_san_de_cong_ju: '三德叢聚',
+  reference_month_jin_kui: '月金匱',
 };
 
 function starItem(label: string, ganzhi: string, value: number): HTMLElement {
@@ -178,6 +215,111 @@ function dayGateSection(evaluation: DirectionEvaluation): HTMLElement {
     'V1 只判日干與月令；四柱沖合、時辰扶日尚未納入。'));
 }
 
+/** 由既有四星的 canonical 干支還原四柱；不另建第二套四柱。 */
+function pillarsOf(evaluation: DirectionEvaluation): TemporalPillars | null {
+  const byLevel = new Map<DirectionLevel, Ganzhi>(
+    evaluation.temporalProfile.starStates.map((state) => [state.level, state.ganzhi]),
+  );
+  const year = byLevel.get('year');
+  const month = byLevel.get('month');
+  const day = byLevel.get('day');
+  const hour = byLevel.get('hour');
+  if (!year || !month || !day || !hour) return null;
+  return { year, month, day, hour };
+}
+
+function hourGateSection(gate: HourGate): HTMLElement {
+  const conflicts = Object.entries({
+    hourBreak: gate.conflicts.hourBreak,
+    clashMonth: gate.conflicts.clashMonth.active,
+    clashYear: gate.conflicts.clashYear.active,
+    fiveBuYu: gate.conflicts.fiveBuYu,
+    punishment: gate.conflicts.punishment,
+    harm: gate.conflicts.harm,
+  }).filter(([, active]) => active).map(([key]) => HOUR_CONFLICT_LABEL[key]!);
+  const supports = Object.entries({
+    build: gate.support.build,
+    liuHe: gate.support.liuHe,
+    sanHe: gate.support.sanHe,
+    stem: gate.support.stemSupport === 'same_element' || gate.support.stemSupport === 'generates_day',
+    dayLu: gate.support.dayLu,
+  }).filter(([, active]) => active).map(([key]) => HOUR_SUPPORT_LABEL[key]!);
+  return el('section', {
+    class: `direction-section direction-hour-gate hour-gate--${gate.status}`,
+    'aria-labelledby': 'direction-hour-gate-title',
+  },
+  el('h3', { id: 'direction-hour-gate-title' }, '時課'),
+  el('div', { class: 'direction-hour-gate__facts' },
+    el('p', {}, el('small', {}, '時柱'), el('strong', {}, `${gate.hourStem}${gate.hourBranch}`)),
+    el('p', { class: 'direction-hour-gate__state' },
+      el('small', {}, '狀態'), el('strong', {}, HOUR_STATUS_LABEL[gate.status]))),
+  el('p', { class: 'direction-hour-gate__row' },
+    el('small', {}, '不利'), el('span', {}, conflicts.length > 0 ? conflicts.join('、') : '無')),
+  el('p', { class: 'direction-hour-gate__row' },
+    el('small', {}, '有利'), el('span', {}, supports.length > 0 ? supports.join('、') : '無')),
+  el('small', { class: 'direction-hour-gate__boundary' },
+    '時為日之用。正負兩邊並列保存，不相抵；時課只作顯示，不改方向排序。'));
+}
+
+function shaSection(assessment: DirectionSelectionAssessmentV2): HTMLElement {
+  const { constraints } = assessment;
+  const byMountain = new Map<string, string[]>();
+  for (const hit of constraints.hits) {
+    for (const mountain of hit.matched) {
+      byMountain.set(mountain, [...(byMountain.get(mountain) ?? []), SHA_LABEL[hit.rule]]);
+    }
+  }
+  const clear = constraints.mountains.filter((mountain) => !byMountain.has(mountain));
+  return el('section', { class: 'direction-section direction-sha' },
+    el('h3', {}, '方位神煞'),
+    el('p', { class: 'direction-sha__mountains' },
+      el('small', {}, '本宮三山'), el('span', {}, constraints.mountains.join(' '))),
+    byMountain.size === 0
+      ? el('p', {}, '本宮三山未受方位神煞影響。')
+      : el('ul', { class: 'direction-sha__hits' },
+        ...[...byMountain].map(([mountain, rules]) => el('li', {},
+          el('strong', {}, `${mountain}山`), el('span', {}, rules.join('、'))))),
+    byMountain.size > 0 && clear.length > 0
+      ? el('p', { class: 'direction-sha__clear' }, `未受影響：${clear.join('、')}`)
+      : null);
+}
+
+function virtueLine(virtue: DirectionVirtueEvidence): string {
+  const label = VIRTUE_LABEL[virtue.code];
+  if (virtue.position.kind === 'mountain') return `${label}：${virtue.position.mountain}山`;
+  if (virtue.position.kind === 'outside_24_mountains') {
+    return `${label}：${virtue.position.stem}，此值不在二十四山`;
+  }
+  return `${label}：本月官方曆例無合`;
+}
+
+function virtueSection(
+  assessment: DirectionSelectionAssessmentV2,
+  allVirtues: readonly DirectionVirtueEvidence[],
+  jinKuiBranch: string,
+): HTMLElement {
+  const here = assessment.positives.virtues;
+  const elsewhere = allVirtues.filter((virtue) => !here.includes(virtue));
+  const pattern = assessment.positives.patterns.sanDeCongJu;
+  return el('section', { class: 'direction-section direction-virtue' },
+    el('h3', {}, '六德'),
+    here.length === 0
+      ? el('p', {}, '本宮三山未得六德。')
+      : el('ul', { class: 'direction-virtue__hits' },
+        ...here.map((virtue) => el('li', {},
+          el('strong', {}, `${(virtue.position.kind === 'mountain' ? virtue.position.mountain : '')}山`),
+          el('span', {}, `${VIRTUE_LABEL[virtue.code]}${virtue.role === 'combined_virtue' ? '（次吉）' : ''}`)))),
+    pattern ? el('p', { class: 'direction-virtue__pattern' }, `三德叢聚於${pattern.mountain}山。`) : null,
+    elsewhere.length > 0
+      ? el('details', { class: 'direction-virtue__others' },
+        el('summary', {}, '本盤其餘六德'),
+        el('ul', {}, ...elsewhere.map((virtue) => el('li', {}, virtueLine(virtue)))))
+      : null,
+    el('p', { class: 'direction-virtue__reference' },
+      `月金匱：${jinKuiBranch}山${
+        assessment.positives.references.monthJinKui ? '（在本宮）' : ''}，只作參考。`));
+}
+
 export function openDirectionDetailSheet(
   trigger: HTMLElement,
   evaluation: DirectionEvaluation,
@@ -205,6 +347,21 @@ export function openDirectionDetailSheet(
     ...mainHits(evaluation).map((hit) => pairRow(
       hit, hit.pair === matchedPair, returnSelector,
     )));
+  // Gate 資料由 canonical 四柱另行計算，不寫回 DirectionEvaluation，
+  // 因此 verdictFor()／rankDirections() 仍讀不到任何 Gate 欄位。
+  const pillars = pillarsOf(evaluation);
+  const hourGate = pillars ? buildHourGate(pillars) : null;
+  const selectionContext = pillars ? buildDirectionSelectionContext({
+    yearStem: pillars.year.stem,
+    yearBranch: pillars.year.branch,
+    monthBranch: pillars.month.branch,
+    dayBranch: pillars.day.branch,
+  }) : null;
+  const directionAssessment = selectionContext
+    ? buildDirectionSelectionAssessment(selectionContext, snapshot.palace)
+    : null;
+  const gateReasons = directionAssessment?.reasons.map((reason) => REASON_LABEL[reason]) ?? [];
+
   const purpleWhiteLayers = evaluation.temporalProfile.purpleWhiteHits.map((level) => {
     const state = evaluation.temporalProfile.starStates.find((item) => item.level === level)!;
     const qualified = evaluation.qualifiedPurpleWhiteHits.includes(level);
@@ -224,6 +381,7 @@ export function openDirectionDetailSheet(
           starItem(LEVEL_LABEL[state.level], state.ganzhi.text, state.star)
         ))),
       dayGateSection(evaluation),
+      hourGate ? hourGateSection(hourGate) : null,
       el('h2', { class: 'direction-detail__section-label' }, '方向'),
       el('p', { class: `direction-detail__verdict verdict--${evaluation.verdict}` },
         VERDICT_LABEL[evaluation.verdict]),
@@ -259,6 +417,21 @@ export function openDirectionDetailSheet(
                   state.elementRelation.palaceElement, state.elementRelation.starElement,
                 )}`))),
             reasons)),
+        directionAssessment && selectionContext
+          ? disclosure('方位神煞與六德',
+            shaSection(directionAssessment),
+            virtueSection(directionAssessment, selectionContext.virtues,
+              selectionContext.monthJinKui.branch),
+            el('section', { class: 'direction-section direction-gate-boundary' },
+              el('h3', {}, '本層邊界'),
+              gateReasons.length > 0
+                ? el('p', {}, `本宮條目：${gateReasons.join('、')}`)
+                : el('p', {}, '本宮沒有方位神煞或六德條目。'),
+              el('p', {}, '三煞橫跨三宮，通常每宮只有一山受影響，不可當作整宮受煞。'),
+              el('p', {}, '正面條目不會抵銷方位神煞；兩邊並列保存，不做加減。'),
+              el('p', {}, '古法另有制化之理，本版本不判定是否已制化成功。'),
+              el('p', {}, '方位神煞與六德目前只作顯示，不參與八方排序。')))
+          : null,
         disclosure('全部六組', pairList),
         disclosure('五行關係', elementList),
         disclosure('研究說明',

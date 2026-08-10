@@ -193,10 +193,16 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.selection-cell__reference')?.textContent).toMatch(/^參考 · [1-9]{2} /u);
     expect($('#app')?.textContent).not.toMatch(/[⚠✦✓⚑]/u);
     const disclosures = Array.from(document.querySelectorAll<HTMLDetailsElement>('.direction-disclosure'));
-    expect(disclosures).toHaveLength(4);
+    expect(disclosures).toHaveLength(5);
     expect(disclosures.every((item) => !item.open)).toBe(true);
     expect(disclosures.map((item) => item.querySelector('summary')?.textContent))
-      .toEqual(['為甚麼', '全部六組', '五行關係', '研究說明']);
+      .toEqual(['為甚麼', '方位神煞與六德', '全部六組', '五行關係', '研究說明']);
+    // 時課與方位層只作顯示，不得改動方向 verdict 與排序
+    expect($('.direction-hour-gate h3')?.textContent).toBe('時課');
+    expect($('.direction-hour-gate')?.textContent).toContain('時柱戊午');
+    expect($('.direction-sha')?.textContent).toContain('本宮三山');
+    expect($('.direction-gate-boundary')?.textContent).toContain('不參與八方排序');
+    expect($('.direction-detail__verdict')?.textContent).toBe('慎用');
     expect($('.direction-temporal')?.textContent).toContain('三層紫白同到');
     expect($('.direction-temporal')?.textContent).toContain('有效');
     expect(document.querySelectorAll('.direction-condition-list li')).toHaveLength(4);

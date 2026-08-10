@@ -41,7 +41,9 @@
 - 六德／三德叢聚 checkpoint：`e68ff09`（`src/selection/directionVirtues.ts`）
 - Direction Selection V2 組裝 checkpoint：`3c9e9df`（`src/selection/directionSelection.ts`）
 - Hour Gate 三張表 checkpoint：`eb0cc59`（`src/selection/hourGateTables.ts`）
-- Hour Gate 組裝 checkpoint：見本輪 commit（`src/selection/hourGate.ts`）
+- Hour Gate 組裝 checkpoint：`e635b35`（`src/selection/hourGate.ts`）
+- 固定版本原文核對 checkpoint：`b385a26`、`536d43b`
+- Gate UI 首次上線／字體 subset 重建 checkpoint：見本輪 commit
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -335,6 +337,45 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### Gate UI 首次上線 + 字體 subset 重建（2026-08-10）
+
+- 方向詳情新增「時課」區塊與「方位神煞與六德」disclosure。**Day / Hour / Direction 三個 Gate 至此首次有使用者可見輸出。**
+- 時課：顯示時柱、`HourGateStatus`（宜用／可用／吉凶並見／慎用／不用），不利與有利兩欄並列不相抵。
+- 方位神煞：逐山列出本宮三山中哪幾山受哪條規則影響，並標明未受影響的山；無命中時明說「本宮三山未受方位神煞影響」。
+- 六德：逐山列出，合德標「次吉」；三德叢聚另行標示；本盤其餘六德（含戊己「此值不在二十四山」、四仲「本月官方曆例無合」）收在次層 disclosure；月金匱只作參考。
+- 新 disclosure **預設收合，主九宮完全未動**。邊界文字明示三煞跨三宮不可當整宮受煞、正面不抵銷負面、本版本不判定制化成功、不參與八方排序。
+- **架構關鍵**：Gate 資料由既有四星的 canonical 干支在 UI 層以 `pillarsOf()` 還原四柱後另行計算，**不寫回 `DirectionEvaluation`**。因此 `verdictFor()`／`rankDirections()` 仍讀不到任何 Gate 欄位，既有 regression 全部維持通過。下一位接手者若要改成寫回 evaluation，等同解除 ranking 邊界，屬 stop condition。
+- **字體 subset 已重建**（使用者提供來源 OTF 後）：
+
+```text
+source      NotoSerifCJKtc-Medium.otf 2.003
+source SHA  da0a79ee44322329dd9ff87d2cc878dc897c5180195e3f9b6cd4c8569781e887（腳本核對通過）
+UI 字元     914 → 928
+cmap/glyph  928 / 929
+WOFF2       243,864 → 248,584 bytes
+WOFF2 SHA   298a8d3460e1992d739ad7b18fc680b95309e73348687921315cfefc41cc099b
+```
+
+- 四個管道均已確認含新字體：`index.html` preload、CSS `@font-face`、`dist/sw.js` precache、single-file data URI（解碼後 248,584 bytes、SHA-256 相符）。
+- **連續七輪以來 production bundle 首次改變**：`index-dJJc6V2G.js` 176.69 kB（原 164.33），precache 11 entries／479.50 KiB（原 461.53），single file 565,340 bytes（原 545,356）。先前不變是因 Gate 模組無 UI 消費端被 tree-shake。
+- 來源 OTF 目錄 `10_NotoSerifCJKtc/` 已加入 `.gitignore`，不進 repo。
+
+#### 尚未完成：四寬度 Browser QA
+
+接手指南 §10 要求 UI 有變時實測 320／375／390／430px 無 horizontal overflow、console 0 error、keyboard 與 dialog 行為。
+
+**本輪未能完成**：Chrome 擴充功能未開啟「允許存取檔案網址」，無法以 `file://` 開啟 `玄空紫白.html`，沙箱亦無法對使用者瀏覽器提供 localhost。
+
+需要人工補做，步驟：
+
+1. 直接開啟專案根目錄的 `玄空紫白.html`（單檔版，已含字體）。
+2. 四個寬度各檢查 `document.documentElement.scrollWidth === clientWidth`。
+3. 點入任一方向詳情，展開「方位神煞與六德」與「為甚麼」，確認 sheet 內 `clientWidth === scrollWidth`。
+4. `document.fonts.check('1em "Zibai Serif"')` 應為 true，且新增字（歲德、三德叢聚、時課等）不出現逐字 fallback。
+5. console 應為 0 error／0 warning。
+
+在完成前，本輪的 UI 不應視為已通過 QA。
+
 ### 固定版本原文核對（2026-08-10，無規則變更）
 
 - 產出 `docs/primary-source-verification-2026-08.md`。已讀《欽定協紀辨方書》四庫全書本**卷十四、卷二十至三十一、卷三十四**與《御定星厯考原》四庫全書本**卷三**，皆為維基文庫公有領域全文。
@@ -497,7 +538,7 @@ Noto Serif CJK **Regular／Bold 的 .ttc**，沒有 Medium `.otf`。
 test files  32 passed
 tests       340 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate
             + 23 directionVirtues + 15 directionSelection + 16 hourGateTables + 24 hourGate）
-build       production success
+build       production success（index-dJJc6V2G.js 176.69 kB）
 PWA font    preload + precache（單一 entry）success
 PWA precache 11 entries（461.53 KiB）success
 single file 玄空紫白.html（545,356 bytes；font data URI）success

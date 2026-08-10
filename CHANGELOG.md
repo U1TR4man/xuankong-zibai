@@ -6,6 +6,12 @@
 
 ### Added
 
+- 方向詳情新增「時課」區塊與「方位神煞與六德」disclosure：Day / Hour / Direction 三個 Gate 至此**首次有使用者可見輸出**。時課顯示時柱、狀態與不利／有利兩欄並列；方位神煞逐山列出本宮三山中哪幾山受哪條規則影響，並標明未受影響的山；六德逐山列出，三德叢聚另行標示，本盤其餘六德（含戊己無外方、四仲無合）收在次層 disclosure。
+- 新 disclosure 預設收合，主九宮完全未動。邊界文字明示：三煞橫跨三宮通常每宮只有一山受影響、不可當作整宮受煞；正面條目不抵銷方位神煞；本版本不判定制化是否成功；方位神煞與六德不參與八方排序。
+- Gate 資料由既有四星的 canonical 干支在 UI 層另行計算，**不寫回 `DirectionEvaluation`**，因此 `verdictFor()`／`rankDirections()` 仍讀不到任何 Gate 欄位，既有 regression 測試全部維持通過。
+- 重建自帶字體 subset：來源 `NotoSerifCJKtc-Medium.otf` 2.003，source SHA-256 `da0a79ee44322329dd9ff87d2cc878dc897c5180195e3f9b6cd4c8569781e887` 經腳本核對通過。UI 字元由 914 增為 **928**，cmap 928／glyphs 929，WOFF2 由 243,864 增為 **248,584 bytes**，SHA-256 `298a8d3460e1992d739ad7b18fc680b95309e73348687921315cfefc41cc099b`。preload、CSS `@font-face`、PWA precache 與 single-file data URI 四個管道均已確認含新字體。
+- **這是連續七輪以來 production bundle 首次改變**：`index-dJJc6V2G.js` 176.69 kB（原 164.33 kB），PWA precache 11 entries／479.50 KiB（原 461.53 KiB），single file 565,340 bytes（原 545,356 bytes）。先前各輪 byte 不變是因為 Gate 模組尚無 UI 消費端而被 tree-shake。
+
 - 新增 `docs/primary-source-verification-2026-08.md`：**首次大規模核到固定版本原文**。已讀《欽定協紀辨方書》四庫全書本卷十四、卷二十至三十一、卷三十四，以及《御定星厯考原》四庫全書本卷三（皆為維基文庫公有領域全文）。本輪**沒有任何規則變更**，只把證據狀態由「轉述／篇名」升級為「逐字核對」，並登記發現的落差。
 - 六德六張表**全部**核到原文：歲德、歲德合見卷十四〈年表一〉甲子至癸酉（恰涵蓋十天干）；天德、天德合、月德、月德合另有卷二十至三十一〈月表〉逐月佐證，形成第二個固定版本的獨立驗證。四仲月的月表根本沒有列天德合欄位，與《星厯考原》「四仲之月天德居四維故無合也」互相印證。
 - Direction Gate 的歲破與三煞由證據最弱升為已核對：卷十四〈年表一〉逐年列出歲破與三煞，十組全數相符，且三煞以「巳午未」這樣的三個地支列出而非「南方」整宮，佐證 partial hit 模型。`evidenceLevel` 由 `C` 升為 `A`，但 `rankingUse` 仍為 `disabled`——升級的只是證據，不是強度。
