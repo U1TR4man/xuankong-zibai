@@ -316,6 +316,17 @@ tests/fixtures/chart-snapshot.json
 - 架構決策：紫白飛星用八宮 45°、方位神煞用 24 山 15°，兩套 spatial resolution 共存；八方 UI 只能顯示「本宮含受影響山」，不得把整宮等同犯煞
 - `src/` 目前完全沒有六沖、24 山或三煞程式碼，Direction Gate 為全新實作；下一輪順序見規則文件 §11
 
+### Hour Gate V1 規則封版 + 三 Gate 整合契約（尚未實作）
+
+- 產出 `docs/hour-gate-v1-authoritative-rules.md` 與 `docs/gates-v1-integration.md`；同為 read-only 考源封版，**沒有任何 production code 變更**
+- 原始研究 `紫白擇吉_第九輪考源_HourGate_V1封版.md`，SHA-256 `176c41c2b5fc721b6c70d6e9d95f8ab262eae512564aeb3e7170b9c50f5d9468`
+- 使用者原以為已交付「Day／Hour／Direction 三 Gate 整合稿」；經比對該檔（`181f2cef…`）與第十輪 Direction Gate byte 相同、Gate 標題出現次數一致（Day 5／Hour 3／Direction 16），內容只有 Direction Gate。第九輪 Hour Gate 由磁碟原檔補齊，三 Gate 至此齊備
+- Hour Gate 可封版：時＝日之用（時白不得推翻不合格時辰）、時破＝日支沖時支且為 structural veto、時沖月令／歲君有明文「小事可勿論」豁免故不得全域 reject、五不遇＝時干剋日干十組定局且不混入時支剋日支、時刑為有向關係、日害列 mild caution、時建／六合／三合／時干扶日／十干日祿時、正負關係可並存不做分數抵消、祿時不凌駕時破與五不遇、旬空與截路空亡只作 activity-specific
+- **整合契約最重要的成果**：同一組六沖被六個名目消費（破日 `dayMonthBreak`、時破 `hourBreak`、時沖月令 `clashMonth`、時沖歲君 `clashYear`、歲破方 `suiPoMountain`、月破方 `monthBreakMountain`）。全部共用單一 `isClash()` primitive，同一 clash fact 只登記一次，Gate 間不做數值相加，且禁用 `yuePo` 這個曾指涉兩種不同概念的名字
+- 三 Gate 一律 `rankingUse: 'disabled'`；`verdictFor()`／`rankDirections()` 不得讀取任何 Gate 欄位，實作時須附 regression test
+- 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
+- `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
+
 ## 驗證結果
 
 ```text
