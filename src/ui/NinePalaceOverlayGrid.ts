@@ -78,9 +78,6 @@ export function NinePalaceOverlayGrid(
           el('span', { class: 'overlay-cell__label' }, LEVEL_LABEL[level]),
           el('span', { class: 'overlay-cell__value' },
             String(palace.stars[level]),
-            searchMatch
-              ? el('span', { class: 'overlay-cell__match', 'aria-label': '命中' }, '✓')
-              : null,
           ),
           );
         }),

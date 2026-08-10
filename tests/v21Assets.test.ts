@@ -73,8 +73,16 @@ describe('V2.1 離線品牌字體', () => {
         .filter((character) => /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/u.test(character)),
     );
     expect([...uiChinese].filter((character) => !inventory.includes(character))).toEqual([]);
-    for (const sample of ['雙星參考', '回到今', '全部六組', '交劍煞', '九七相會']) {
+    for (const sample of [
+      '雙星用途參考', '僅篩選相關雙星斷語', '警示', '公曆元旦', '子初',
+      '回到今', '全部六組', '交劍煞', '九七相會',
+    ]) {
       expect([...sample].every((character) => inventory.includes(character))).toBe(true);
     }
+    const staticUiText = sourceFiles.map((path) => {
+      const source = readFileSync(path, 'utf8');
+      return path.endsWith('.html') ? source : typescriptStringLiterals(source);
+    }).join('');
+    expect(staticUiText).not.toMatch(/[⚠✦✓⚑]/u);
   });
 });

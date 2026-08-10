@@ -29,6 +29,7 @@ export function ChartHeader(
       el('span', { class: 'card__result' },
         `${starName(result.centerStar)}入中 · ${DIRECTION_LABEL[result.direction]}`)),
     ChartModeControl(state),
-    state.selectionMode && temporalContext ? TemporalGanzhiMeta(temporalContext) : null,
+    state.selectionMode && temporalContext
+      ? TemporalGanzhiMeta(temporalContext, state.settings) : null,
   );
 }

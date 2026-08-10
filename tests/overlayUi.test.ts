@@ -31,7 +31,7 @@ beforeAll(async () => {
 
 describe('Phase 2 疊盤 UI', () => {
   it('預設關閉並完整保留原有單層九宮', () => {
-    expect($('.overlay-toggle')?.getAttribute('aria-checked')).toBe('false');
+    expect($('.overlay-toggle')?.getAttribute('aria-selected')).toBe('false');
     expect($('.card__head .overlay-toggle')).not.toBeNull();
     expect($('.overlay-controls')).toBeNull();
     expect(document.querySelectorAll('.grid:not(.overlay-grid) .cell')).toHaveLength(9);

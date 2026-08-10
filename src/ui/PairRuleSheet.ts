@@ -126,7 +126,7 @@ export function openPairRuleSheet(
         el('h3', {}, '來源'), sourceList(rule)),
       rule.sourceAudit.variants && rule.sourceAudit.variants.length > 0
         ? el('section', { class: 'pair-rule__section pair-rule__variants' },
-          el('h3', {}, '⚑ 此句有異文／轉錄疑點'),
+          el('h3', {}, '此句有異文／轉錄疑點'),
           ...rule.sourceAudit.variants.map((variant) => el('article', {},
             el('p', {}, variant.reading),
             el('small', {}, `${variant.source} · ${VERIFICATION_LABEL[variant.verificationStatus]}`),

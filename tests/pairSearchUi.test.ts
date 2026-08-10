@@ -94,6 +94,8 @@ describe('紫白擇吉 Phase 3 尋組合 UI', () => {
     expect(state.selectedPalace).toBeDefined();
     expect($('.selection-cell.is-selected.is-search-match')).not.toBeNull();
     expect($('.selection-cell.is-search-match .selection-cell__top')?.textContent).toContain(pair!);
+    expect($('.selection-cell.is-search-match .selection-cell__reference')?.textContent)
+      .toMatch(/^參考 · /u);
     const params = new URLSearchParams(location.search);
     expect(params.get('selection')).toBe('1');
     expect(params.get('selectedPair')).toBe(pair);

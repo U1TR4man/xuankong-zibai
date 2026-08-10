@@ -51,6 +51,10 @@ describe('Phase 3 搜尋 UI', () => {
     expect($('.search-advanced-toggle')?.textContent).toContain('進階條件');
     expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('false');
     expect($('.search-form__submit')?.textContent).toBe('開始尋星');
+    const toggleBeforeSubmit = $('.search-advanced-toggle')?.compareDocumentPosition(
+      $('.search-form__submit')!,
+    ) ?? 0;
+    expect(toggleBeforeSubmit & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(document.querySelectorAll('.search-date-range input[type="date"]')).toHaveLength(2);
     expect(document.querySelectorAll('select[name="palace"] option')).toHaveLength(10);
     expect(document.querySelectorAll('input[name="level"]')).toHaveLength(3);
@@ -81,6 +85,7 @@ describe('Phase 3 搜尋 UI', () => {
     const firstResult = $('.search-result')!;
     expect(firstResult.querySelectorAll('.search-result__layer')).toHaveLength(4);
     expect(firstResult.querySelectorAll('.search-result__layer.is-match')).toHaveLength(1);
+    expect(firstResult.querySelector('.search-result__match')).toBeNull();
     expect($('.search-results__summary')?.textContent).toContain('離 · 南 · 流時 九紫');
     expect(document.querySelectorAll('.search-result-group').length).toBeGreaterThan(0);
     const params = new URLSearchParams(location.search);
@@ -108,7 +113,10 @@ describe('Phase 3 搜尋 UI', () => {
     expect(document.querySelectorAll(
       '[data-palace="li"] .overlay-cell__layer.is-search-match',
     )).toHaveLength(1);
-    expect($('[data-palace="li"] [data-layer="hour"] .overlay-cell__match')?.textContent).toBe('✓');
+    expect($('[data-palace="li"] [data-layer="hour"]')?.classList.contains('is-search-match'))
+      .toBe(true);
+    expect($('[data-palace="li"] [data-layer="hour"] .overlay-cell__match')).toBeNull();
+    expect($('#app')?.textContent).not.toMatch(/[⚠✦✓⚑]/u);
     expect(document.querySelectorAll(
       '.overlay-cell:not([data-palace="li"]) .overlay-cell__layer.is-search-match',
     )).toHaveLength(0);

@@ -15,14 +15,32 @@ function currentMode(state: AppState): ChartMode {
 
 export function ChartModeControl(state: AppState): HTMLElement {
   const active = currentMode(state);
-  return el('div', { class: 'chart-mode', role: 'radiogroup', 'aria-label': '盤面模式' },
-    ...MODES.map((mode) => el('button', {
+  const activate = (mode: ChartMode, focus = false) => {
+    setChartMode(mode, { push: true });
+    if (focus) queueMicrotask(() => document.getElementById(`chart-mode-${mode}`)?.focus());
+  };
+  return el('div', { class: 'chart-mode', role: 'tablist', 'aria-label': '盤面模式' },
+    ...MODES.map((mode, index) => el('button', {
+      id: `chart-mode-${mode.value}`,
       class: `chart-mode__item ${mode.className}${active === mode.value ? ' is-active' : ''}`,
       type: 'button',
-      role: 'radio',
-      'aria-checked': String(active === mode.value),
+      role: 'tab',
+      tabindex: active === mode.value ? '0' : '-1',
+      'aria-selected': String(active === mode.value),
+      'aria-controls': 'chart-mode-panel',
       'data-chart-mode': mode.value,
-      onclick: () => setChartMode(mode.value, { push: true }),
+      onclick: () => activate(mode.value),
+      onkeydown: (rawEvent: Event) => {
+        const event = rawEvent as KeyboardEvent;
+        let nextIndex: number | undefined;
+        if (event.key === 'ArrowLeft') nextIndex = (index - 1 + MODES.length) % MODES.length;
+        if (event.key === 'ArrowRight') nextIndex = (index + 1) % MODES.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = MODES.length - 1;
+        if (nextIndex === undefined) return;
+        event.preventDefault();
+        activate(MODES[nextIndex]!.value, true);
+      },
     }, mode.label)),
   );
 }

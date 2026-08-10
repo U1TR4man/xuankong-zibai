@@ -177,7 +177,7 @@ export function returnToNow(): void {
 
 /** App 開著跨分鐘／刻／時辰時，只更新仍在 follow-now 的使用者。 */
 export function refreshFollowedNow(): void {
-  if (!state.followNow) return;
+  if (!state.followNow || state.view !== 'chart') return;
   state.selectedDateTime = nowUtc8();
   if (!state.home) syncUrl();
   emit();
@@ -190,7 +190,9 @@ export function updateSettings(patch: Partial<Settings>): void {
 }
 
 export function setView(view: AppView, opts: { push?: boolean } = {}): void {
+  const resumeFollowedNow = view === 'chart' && state.view !== 'chart' && state.followNow;
   state.view = view;
+  if (resumeFollowedNow) state.selectedDateTime = nowUtc8();
   state.home = false;
   syncUrl(opts.push);
   emit();

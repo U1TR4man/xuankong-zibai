@@ -193,10 +193,6 @@ function SearchForm(
     form.append(el('p', { class: 'search-form__error', role: 'alert' }, viewModel.error));
   }
   form.append(el('button', {
-    class: 'btn btn--primary search-form__submit', type: 'submit',
-    disabled: viewModel.searching,
-  }, viewModel.searching ? '尋星中…' : '開始尋星'));
-  form.append(el('button', {
     class: 'search-advanced-toggle',
     type: 'button',
     disabled: viewModel.searching,
@@ -204,6 +200,10 @@ function SearchForm(
     'aria-controls': 'search-advanced-fields',
     onclick: toggleAdvanced,
   }, draft.mode === 'advanced' ? '− 收起進階條件' : '＋ 進階條件'));
+  form.append(el('button', {
+    class: 'btn btn--primary search-form__submit', type: 'submit',
+    disabled: viewModel.searching,
+  }, viewModel.searching ? '尋星中…' : '開始尋星'));
   if (viewModel.searching) {
     form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select')
       .forEach((control) => { control.disabled = true; });

@@ -54,14 +54,11 @@ function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLE
       yearBoundary: state.settings.yearBoundary,
     }, temporalContext)
     : undefined;
-  const card = el('section', {
-    class: 'card', id: 'current-chart', role: 'tabpanel',
-    'aria-labelledby': `level-tab-${state.level}`, 'data-swipe-zone': 'chart',
+  const chartMode = state.selectionMode ? 'selection' : state.overlayMode ? 'overlay' : 'plain';
+  const modePanel = el('div', {
+    class: 'chart-mode-panel', id: 'chart-mode-panel', role: 'tabpanel',
+    'aria-labelledby': `chart-mode-${chartMode}`,
   },
-    ChartHeader(result, state.level, state, temporalContext),
-    state.selectionMode && directionEvaluations
-      ? SelectionPurposeControl(state)
-      : null,
     state.selectionMode && directionEvaluations
       ? NinePalaceSelectionGrid(chart, directionEvaluations, state)
       : state.overlayMode
@@ -72,6 +69,16 @@ function ChartCard(result: StarResult, state: AppState, chart: FullChart): HTMLE
     state.selectionMode && directionEvaluations
       ? DirectionRanking(directionEvaluations, state)
       : null,
+    state.selectionMode && directionEvaluations
+      ? SelectionPurposeControl(state)
+      : null,
+  );
+  const card = el('section', {
+    class: 'card', id: 'current-chart', role: 'tabpanel',
+    'aria-labelledby': `level-tab-${state.level}`, 'data-swipe-zone': 'chart',
+  },
+    ChartHeader(result, state.level, state, temporalContext),
+    modePanel,
   );
 
   let touchX = 0;

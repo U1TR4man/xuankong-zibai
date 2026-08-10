@@ -39,12 +39,12 @@ function primaryCondition(evaluation: DirectionEvaluation): string | undefined {
     const others = genericAnJian.killers.filter((killer) => killer !== 'an_jian');
     const label = genericAnJian.level === 'month'
       ? '大月建／月暗建' : `${LEVEL_SHORT_LABEL[genericAnJian.level]}九宮暗建`;
-    return `⚠ ${label}${others.length > 0
+    return `警示 · ${label}${others.length > 0
       ? `、${others.map((item) => KILLER_SHORT_LABEL[item]).join('、')}` : ''}`;
   }
   const killer = activeHits.find((hit) => hit.killers.length >= 2) ?? activeHits[0];
   if (killer) {
-    return `⚠ ${LEVEL_SHORT_LABEL[killer.level]}${starName(killer.star)}：${killer.killers
+    return `警示 · ${LEVEL_SHORT_LABEL[killer.level]}${starName(killer.star)}：${killer.killers
       .map((item) => KILLER_SHORT_LABEL[item]).join('、')}`;
   }
   const branchWarning = states.find((state) => (
@@ -52,10 +52,10 @@ function primaryCondition(evaluation: DirectionEvaluation): string | undefined {
     && (state.temporalState.liuJieTomb || state.temporalState.absolute)
   ));
   if (branchWarning) {
-    return `⚠ ${LEVEL_SHORT_LABEL[branchWarning.level]}${starName(branchWarning.star)}：${
+    return `警示 · ${LEVEL_SHORT_LABEL[branchWarning.level]}${starName(branchWarning.star)}：${
       branchWarning.temporalState.liuJieTomb ? '入墓' : '臨絕'}`;
   }
-  if (evaluation.temporalProfile.yellowBlackLayers.length >= 2) return '⚠ 二黑、五黃同到';
+  if (evaluation.temporalProfile.yellowBlackLayers.length >= 2) return '警示 · 二黑、五黃同到';
   return undefined;
 }
 
@@ -112,8 +112,8 @@ export function NinePalaceSelectionGrid(
     const shownHit = match ?? evaluation.topHit;
     const condition = match ? undefined : primaryCondition(evaluation);
     const summary = condition ?? (shownHit.rule.reviewStatus === 'pending'
-      ? `${shownHit.pair} 資料待校對`
-      : `${match ? '✓ ' : '✦ '}${shownHit.pair} ${shownHit.rule.title}`);
+      ? `參考 · ${shownHit.pair} 資料待校對`
+      : `參考 · ${shownHit.pair} ${shownHit.rule.title}`);
     const cell = el('button', {
       class: [
         'cell', 'selection-cell', selected ? 'is-selected' : '', match ? 'is-search-match' : '',
@@ -133,7 +133,8 @@ export function NinePalaceSelectionGrid(
         : evaluation.verdict === 'mixed' ? '吉凶並見'
           : evaluation.verdict === 'caution' ? '慎用' : '普通'),
     el('span', {
-      class: `selection-cell__top${condition ? ' selection-cell__condition' : ''}`,
+      class: `selection-cell__top ${condition
+        ? 'selection-cell__condition' : 'selection-cell__reference'}`,
       ...(condition ? {} : { 'data-pair': shownHit.pair }),
     }, summary),
     );

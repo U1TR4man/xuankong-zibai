@@ -14,8 +14,15 @@ export function SelectionPurposeControl(state: AppState): HTMLElement {
   select.addEventListener('change', () => {
     setSelectionPurpose(select.value as SelectionPurpose);
   });
-  return el('label', { class: 'selection-purpose' },
-    el('span', { class: 'selection-purpose__label' }, '雙星參考'),
-    select,
+  return el('section', {
+    class: 'selection-purpose-panel', 'aria-labelledby': 'selection-purpose-title',
+  },
+    el('label', { class: 'selection-purpose' },
+      el('span', { class: 'selection-purpose__label', id: 'selection-purpose-title' },
+        '雙星用途參考'),
+      select,
+    ),
+    el('p', { class: 'selection-purpose__helper' },
+      '僅篩選相關雙星斷語，不改變方向排序。'),
   );
 }

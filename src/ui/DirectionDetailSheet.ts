@@ -98,9 +98,9 @@ function temporalConditions(evaluation: DirectionEvaluation): HTMLElement {
 function arrivalLabel(state: TemporalStarAssessment, qualified: boolean): string {
   if (!state.isPurpleWhite) return '';
   if (!qualified) return '紫白另有警示';
-  if (state.arrivalRule.role === 'primary') return '✓ 主層紫白';
-  if (state.arrivalRule.role === 'tie_breaker') return '✓ 細選紫白';
-  return '✓ 背景紫白';
+  if (state.arrivalRule.role === 'primary') return '主層紫白';
+  if (state.arrivalRule.role === 'tie_breaker') return '細選紫白';
+  return '背景紫白';
 }
 
 function branchQiLabel(state: TemporalStarAssessment): string {
@@ -134,7 +134,7 @@ function killerConditions(evaluation: DirectionEvaluation): HTMLElement {
             el('strong', {}, `大月建／月暗建 · ${starName(centerStar)}入中`),
             el('span', {}, `本月${starName(centerStar)}入中，其後天本宮為${evaluation.snapshot.name}；兩個名稱同位，只計一次警示`),
             assessment.hasVariantReading
-              ? el('small', {}, '⚑ 五黃四隅另有傳本異法，預設不採') : null);
+              ? el('small', {}, '異文 · 五黃四隅另有傳本異法，預設不採') : null);
         }
         return el('li', {},
           el('strong', {}, `${LEVEL_LABEL[hit.level]}白 · ${starName(centerStar)}入中${
@@ -142,7 +142,7 @@ function killerConditions(evaluation: DirectionEvaluation): HTMLElement {
           el('span', {}, `${LEVEL_LABEL[hit.level]}白入中 → ${
             referenceOnly ? '白中殺類比：' : ''}${evaluation.snapshot.name}宮為一般九宮暗建方`),
           assessment.hasVariantReading
-            ? el('small', {}, '⚑ 此條有傳本異法') : null);
+            ? el('small', {}, '異文 · 此條有傳本異法') : null);
       }
       return el('li', {},
         el('strong', {}, `${LEVEL_LABEL[hit.level]} · ${starName(hit.star)}${

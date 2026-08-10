@@ -1,8 +1,12 @@
 import type { TemporalBranchContext } from '../selection/types';
+import type { Settings } from '../state/settings';
 import { el } from './dom';
 import { openTemporalGanzhiSheet } from './TemporalGanzhiSheet';
 
-export function TemporalGanzhiMeta(context: TemporalBranchContext): HTMLButtonElement {
+export function TemporalGanzhiMeta(
+  context: TemporalBranchContext,
+  settings: Pick<Settings, 'yearBoundary' | 'dayChangeMode'>,
+): HTMLButtonElement {
   const { pillars } = context;
   const fullLabel = `${pillars.year.text}年、${pillars.month.text}月、${pillars.day.text}日、${pillars.hour.text}時`;
   const trigger = el('button', {
@@ -16,6 +20,6 @@ export function TemporalGanzhiMeta(context: TemporalBranchContext): HTMLButtonEl
     `${pillars.year.text}年 · ${pillars.month.text}月 · ${pillars.day.text}日 · ${pillars.hour.text}時`),
   el('span', { class: 'temporal-ganzhi-meta__arrow', 'aria-hidden': 'true' }, '›'),
   );
-  trigger.addEventListener('click', () => openTemporalGanzhiSheet(trigger, pillars));
+  trigger.addEventListener('click', () => openTemporalGanzhiSheet(trigger, pillars, settings));
   return trigger;
 }

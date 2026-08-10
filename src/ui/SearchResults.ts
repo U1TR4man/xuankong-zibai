@@ -40,9 +40,6 @@ function ResultCard(match: SearchMatch): HTMLElement {
     },
     el('span', { class: 'search-result__layer-label' }, LEVEL_LABEL[level]),
     el('span', { class: 'search-result__layer-star' }, star ? starName(star) : '—'),
-    matchedLevels.has(level as SearchMatch['precision'])
-      ? el('span', { class: 'search-result__match', 'aria-label': '命中' }, '✓')
-      : null,
     ));
   }
 

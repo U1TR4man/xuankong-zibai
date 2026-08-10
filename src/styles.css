@@ -347,7 +347,6 @@ button, select, input { font: inherit; color: inherit; }
 .search-result__layer-label { font-size: 10px; color: var(--ink-secondary); }
 .search-result__layer-star { font-family: var(--font-display); font-size: 13px; white-space: nowrap; }
 .search-result__layer.is-match .search-result__layer-star { color: var(--cinnabar); }
-.search-result__match { position: absolute; top: 1px; right: 3px; color: var(--cinnabar); font-size: 10px; }
 .search-result__footer { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-height: 24px; }
 .search-result__combinations { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .search-result__combinations > span { font-size: 12px; color: var(--ink-secondary); }
@@ -566,6 +565,7 @@ button, select, input { font: inherit; color: inherit; }
 }
 /* ---------- 盤 ---------- */
 .card { display: flex; flex-direction: column; gap: var(--s3); }
+.chart-mode-panel { display: flex; flex-direction: column; gap: var(--s3); }
 .card__head { display: flex; flex-direction: column; gap: var(--s1); }
 .card__eyebrow {
   min-height: 21px;
@@ -705,9 +705,15 @@ button, select, input { font: inherit; color: inherit; }
 }
 .overlay-cell__layer.is-primary .overlay-cell__value { color: var(--cinnabar); }
 .overlay-cell__layer.is-search-match .overlay-cell__value { color: var(--cinnabar); }
-.overlay-cell__match { margin-left: 1px; color: var(--cinnabar); font-size: 9px; }
 
 /* ---------- 紫白擇吉八方 ---------- */
+.selection-purpose-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding-top: var(--s3);
+  border-top: 1px solid var(--line);
+}
 .selection-purpose {
   min-height: var(--tap);
   display: flex;
@@ -716,6 +722,12 @@ button, select, input { font: inherit; color: inherit; }
   gap: var(--s3);
 }
 .selection-purpose__label { font-size: 13px; color: var(--ink-secondary); }
+.selection-purpose__helper {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
 .selection-purpose__select {
   min-width: 144px;
   min-height: var(--tap);
@@ -792,8 +804,8 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
   line-height: 1.25;
   color: var(--ink-secondary);
 }
-.selection-cell.is-search-match .selection-cell__top { color: var(--cinnabar); }
 .selection-cell__condition { color: #8b5148; }
+.selection-cell__reference { color: var(--ink-secondary); }
 .selection-cell__excluded { font-size: 10px; color: var(--ink-muted); }
 .selection-ranking {
   display: flex;
@@ -1406,7 +1418,34 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
   font-size: 18px;
   font-weight: 500;
 }
-.temporal-pillars__note { margin: 0; color: var(--ink-muted); font-size: 12px; line-height: 1.7; }
+.temporal-boundaries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding-top: var(--s1);
+}
+.temporal-boundaries h3 {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 500;
+}
+.temporal-boundaries dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--s2) var(--s4);
+  margin: 0;
+  padding-top: var(--s2);
+  border-top: 1px solid var(--line);
+}
+.temporal-boundaries dt { color: var(--ink-muted); font-size: 13px; }
+.temporal-boundaries dd {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 13px;
+  text-align: right;
+}
 .sheet-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

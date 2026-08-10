@@ -5,6 +5,7 @@ import { fromUtc8, __setNowForTesting } from '../src/engine/time/utc8';
 
 const NOW = fromUtc8(2026, 8, 7, 11, 38);
 const LATER = fromUtc8(2026, 8, 7, 12, 5);
+const AFTER_SEARCH = fromUtc8(2026, 8, 7, 12, 36);
 const $ = <T extends Element = Element>(selector: string) => document.querySelector<T>(selector);
 
 function touch(target: Element, type: 'touchstart' | 'touchend', x: number, y: number): void {
@@ -108,8 +109,10 @@ describe('Phase 6 polish', () => {
     expect(getState().followNow).toBe(false);
   });
 
-  it('followNow 只更新正在跟隨現在的狀態', async () => {
-    const { getState, refreshFollowedNow, returnToNow } = await import('../src/state/appState');
+  it('followNow 在搜尋不重建表單，返回排盤才立即同步現在', async () => {
+    const {
+      getState, refreshFollowedNow, returnToNow, setView,
+    } = await import('../src/state/appState');
     const manuallySelected = getState().selectedDateTime.getTime();
     __setNowForTesting(LATER);
     refreshFollowedNow();
@@ -118,5 +121,20 @@ describe('Phase 6 polish', () => {
     returnToNow();
     expect(getState().followNow).toBe(true);
     expect(getState().selectedDateTime.getTime()).toBe(LATER.getTime());
+
+    setView('search');
+    const form = $<HTMLFormElement>('.search-form')!;
+    const startDate = $<HTMLInputElement>('input[name="startDate"]')!;
+    startDate.focus();
+    __setNowForTesting(AFTER_SEARCH);
+    refreshFollowedNow();
+
+    expect(getState().selectedDateTime.getTime()).toBe(LATER.getTime());
+    expect($('.search-form')).toBe(form);
+    expect(document.activeElement).toBe(startDate);
+
+    setView('chart');
+    expect(getState().followNow).toBe(true);
+    expect(getState().selectedDateTime.getTime()).toBe(AFTER_SEARCH.getTime());
   });
 });

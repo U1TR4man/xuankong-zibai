@@ -32,11 +32,47 @@ beforeAll(async () => {
 
 describe('紫白擇吉 Phase 2 主盤 UI', () => {
   it('原盤／疊盤／擇吉是互斥的三段模式控制', () => {
-    expect($('.chart-mode')?.getAttribute('role')).toBe('radiogroup');
+    expect($('.chart-mode')?.getAttribute('role')).toBe('tablist');
     expect(document.querySelectorAll('.chart-mode__item')).toHaveLength(3);
-    expect($('.plain-toggle')?.getAttribute('aria-checked')).toBe('true');
-    expect($('.overlay-toggle')?.getAttribute('aria-checked')).toBe('false');
-    expect($('.selection-toggle')?.getAttribute('aria-checked')).toBe('false');
+    expect(document.querySelectorAll('.chart-mode__item[role="tab"]')).toHaveLength(3);
+    expect($('.plain-toggle')?.getAttribute('aria-selected')).toBe('true');
+    expect($('.plain-toggle')?.getAttribute('tabindex')).toBe('0');
+    expect($('.overlay-toggle')?.getAttribute('aria-selected')).toBe('false');
+    expect($('.overlay-toggle')?.getAttribute('tabindex')).toBe('-1');
+    expect($('.selection-toggle')?.getAttribute('aria-selected')).toBe('false');
+    expect($('.selection-toggle')?.getAttribute('aria-controls')).toBe('chart-mode-panel');
+    expect($('#chart-mode-panel')?.getAttribute('role')).toBe('tabpanel');
+    expect($('#chart-mode-panel')?.getAttribute('aria-labelledby')).toBe('chart-mode-plain');
+  });
+
+  it('盤面模式 tabs 支援方向鍵、Home、End 與 roving tabindex', async () => {
+    const { getState } = await import('../src/state/appState');
+    const press = (mode: string, key: string) => {
+      $<HTMLButtonElement>(`#chart-mode-${mode}`)?.dispatchEvent(new KeyboardEvent('keydown', {
+        key, bubbles: true, cancelable: true,
+      }));
+    };
+
+    $<HTMLButtonElement>('#chart-mode-plain')?.focus();
+    press('plain', 'ArrowRight');
+    await Promise.resolve();
+    expect(getState().overlayMode).toBe(true);
+    expect(document.activeElement).toBe($('#chart-mode-overlay'));
+    expect($('#chart-mode-panel')?.getAttribute('aria-labelledby')).toBe('chart-mode-overlay');
+
+    press('overlay', 'End');
+    await Promise.resolve();
+    expect(getState().selectionMode).toBe(true);
+    expect(document.activeElement).toBe($('#chart-mode-selection'));
+
+    press('selection', 'ArrowLeft');
+    await Promise.resolve();
+    expect(getState().overlayMode).toBe(true);
+    press('overlay', 'Home');
+    await Promise.resolve();
+    expect(getState().overlayMode).toBe(false);
+    expect(getState().selectionMode).toBe(false);
+    expect(document.activeElement).toBe($('#chart-mode-plain'));
   });
 
   it('開啟擇吉後只排名八方，中宮保留但不成為方向按鈕', async () => {
@@ -52,6 +88,15 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect(document.querySelectorAll('.selection-cell__concentration')).toHaveLength(0);
     expect($('.selection-cell--center')?.textContent).toContain('不參與排序');
     expect(document.querySelectorAll('.selection-ranking__direction')).toHaveLength(8);
+    expect($('.selection-purpose__label')?.textContent).toBe('雙星用途參考');
+    expect($('.selection-purpose__helper')?.textContent)
+      .toBe('僅篩選相關雙星斷語，不改變方向排序。');
+    const gridBeforeRanking = $('.selection-grid')?.compareDocumentPosition($('.selection-ranking')!) ?? 0;
+    const rankingBeforePurpose = $('.selection-ranking')?.compareDocumentPosition(
+      $('.selection-purpose-panel')!,
+    ) ?? 0;
+    expect(gridBeforeRanking & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(rankingBeforePurpose & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('八方四星逐一等於同一 FullChart，沒有改寫原飛星', () => {
@@ -80,8 +125,8 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.selection-grid')?.textContent).not.toContain('刻');
   });
 
-  it('擇吉 ChartHeader 以輕量 metadata 顯示 canonical 干支，並可開完整四柱', () => {
-    const trigger = $<HTMLButtonElement>('.temporal-ganzhi-meta')!;
+  it('擇吉 ChartHeader 顯示 canonical 干支，Sheet 列出實際計算設定', async () => {
+    let trigger = $<HTMLButtonElement>('.temporal-ganzhi-meta')!;
     expect(trigger.textContent).toContain('癸丑日 · 戊午時');
     expect(trigger.getAttribute('aria-label')).toContain('丙午年、乙未月、癸丑日、戊午時');
     expect(trigger.getAttribute('aria-label')).toContain('查看完整四柱');
@@ -92,7 +137,20 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
       .toEqual(['年柱', '月柱', '日柱', '時柱']);
     expect(Array.from(document.querySelectorAll('.temporal-pillars dd')).map((node) => node.textContent))
       .toEqual(['丙午', '乙未', '癸丑', '戊午']);
+    expect(Array.from(document.querySelectorAll('.temporal-boundaries dt')).map((node) => node.textContent))
+      .toEqual(['年界', '月柱', '換日', '時辰']);
+    expect(Array.from(document.querySelectorAll('.temporal-boundaries dd')).map((node) => node.textContent))
+      .toEqual(['立春', '節氣月', '午夜 00:00', '中國時辰']);
     $<HTMLButtonElement>('dialog .sheet__close')!.click();
+
+    const { updateSettings } = await import('../src/state/appState');
+    updateSettings({ yearBoundary: 'gregorian', dayChangeMode: 'zishi2300' });
+    trigger = $<HTMLButtonElement>('.temporal-ganzhi-meta')!;
+    trigger.click();
+    expect(Array.from(document.querySelectorAll('.temporal-boundaries dd')).map((node) => node.textContent))
+      .toEqual(['公曆元旦', '節氣月', '子初 23:00', '中國時辰']);
+    $<HTMLButtonElement>('dialog .sheet__close')!.click();
+    updateSettings({ yearBoundary: 'lichun', dayChangeMode: 'midnight' });
   });
 
   it('方向詳情首屏只顯示結果，研究內容預設收起且仍可完整展開', async () => {
@@ -119,6 +177,10 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
       .toContain('鬥牛');
     expect($('[data-selection-palace="zhen"] .selection-cell__condition')?.textContent)
       .toContain('大月建／月暗建');
+    expect($('[data-selection-palace="zhen"] .selection-cell__condition')?.textContent)
+      .toContain('警示 ·');
+    expect($('.selection-cell__reference')?.textContent).toMatch(/^參考 · [1-9]{2} /u);
+    expect($('#app')?.textContent).not.toMatch(/[⚠✦✓⚑]/u);
     const disclosures = Array.from(document.querySelectorAll<HTMLDetailsElement>('.direction-disclosure'));
     expect(disclosures).toHaveLength(4);
     expect(disclosures.every((item) => !item.open)).toBe(true);
@@ -167,6 +229,7 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('rankingWeight');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('研究簡寫');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('二時紫白同加');
+    expect($('dialog.sheet-dialog--direction')?.textContent).not.toMatch(/[⚠✦✓⚑]/u);
     const pairButton = $<HTMLButtonElement>('.direction-pairs .direction-pair')!;
     expect(pairButton.tagName).toBe('BUTTON');
     pairButton.click();
