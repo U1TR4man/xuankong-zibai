@@ -5,7 +5,7 @@ import {
   MONTH_JIN_KUI_POLICY,
   type DirectionVirtueCode,
   type DirectionVirtueEvidence,
-  detectSanDeCongJu,
+  detectSanDeFang,
   getDirectionVirtues,
   getMonthJinKuiBranch,
   listMonthJinKuiByGroup,
@@ -217,7 +217,7 @@ describe('§3 三德叢聚', () => {
     const hits: string[] = [];
     for (const stem of STEMS) {
       for (const branch of BRANCHES) {
-        const result = detectSanDeCongJu(getDirectionVirtues(stem, branch));
+        const result = detectSanDeFang(getDirectionVirtues(stem, branch));
         if (result.active) hits.push(`${stem}${branch}${result.mountain}`);
       }
     }
@@ -233,7 +233,7 @@ describe('§3 三德叢聚', () => {
       ['丙', '辛', '戌', '丙'], ['丁', '壬', '辰', '壬'],
     ] as Array<[Stem, Stem, Branch, string]>) {
       for (const stem of [stemA, stemB]) {
-        expect(detectSanDeCongJu(getDirectionVirtues(stem, branch)), `${stem}${branch}`)
+        expect(detectSanDeFang(getDirectionVirtues(stem, branch)), `${stem}${branch}`)
           .toEqual({ active: true, mountain });
       }
     }
@@ -242,7 +242,7 @@ describe('§3 三德叢聚', () => {
   it('戊年、癸年在十二個月皆不成立（歲德為戊，無外方）', () => {
     for (const stem of ['戊', '癸'] as Stem[]) {
       for (const branch of BRANCHES) {
-        expect(detectSanDeCongJu(getDirectionVirtues(stem, branch)).active, `${stem}${branch}`).toBe(false);
+        expect(detectSanDeFang(getDirectionVirtues(stem, branch)).active, `${stem}${branch}`).toBe(false);
       }
     }
   });
@@ -250,7 +250,7 @@ describe('§3 三德叢聚', () => {
   it('三德不含合德：天德＝月德但歲德不同方時不成立', () => {
     // 辰未戌丑月天德＝月德，但歲德須同方才算三德叢聚
     expect(raw('甲', '辰', 'tian_de')).toBe(raw('甲', '辰', 'yue_de'));
-    expect(detectSanDeCongJu(getDirectionVirtues('甲', '辰')).active).toBe(false);
+    expect(detectSanDeFang(getDirectionVirtues('甲', '辰')).active).toBe(false);
   });
 
   it('天德＝月德的月份恰為辰未戌丑', () => {
@@ -282,7 +282,7 @@ describe('計算層不得內嵌 user-facing 中文（接手指南 §7）', () =>
   it('六德輸出、三德結果與月金匱 policy 全部無中文', () => {
     const payload = JSON.stringify({
       virtues: getDirectionVirtues('甲', '未', { tianDeHeCornerVariant: true }),
-      sanDe: detectSanDeCongJu(getDirectionVirtues('甲', '未')),
+      sanDe: detectSanDeFang(getDirectionVirtues('甲', '未')),
       policy: MONTH_JIN_KUI_POLICY,
     });
     // rawValue／mountain／stem 是干支與四維字，屬既有 UI 字元；

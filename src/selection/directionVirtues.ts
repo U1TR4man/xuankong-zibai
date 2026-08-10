@@ -1,5 +1,5 @@
 /**
- * Direction Positive Evidence V1 —— 六德與三德叢聚（positive channel）。
+ * Direction Positive Evidence V1 —— 六德與三德方（positive channel）。
  *
  * 契約見 `docs/direction-positive-v1-authoritative-rules.md`，特別是 §1、§2、§3、§7。
  *
@@ -7,7 +7,7 @@
  *
  * ```text
  * DIRECTION CONSTRAINTS   歲破、月破方、三煞      → directionGate.ts
- * DIRECTION POSITIVES     六德、三德叢聚          → 本檔
+ * DIRECTION POSITIVES     六德、三德方            → 本檔
  * ```
  *
  * V1 政策（§7.1）：
@@ -16,7 +16,7 @@
  * rankingUse: 'disabled'      // 正面 evidence 同樣不參與八方排序
  * ```
  *
- * **正面 evidence 不得翻轉 structural veto**（§6）：不得因六德或三德叢聚
+ * **正面 evidence 不得翻轉 structural veto**（§6）：不得因六德或三德方
  * 就解除歲破、三煞、大月建、破日或時破，不做數值化總分，不做正負抵消，
  * 也不得建立「命中 2 個吉神即優先」這類古法未明載的硬閾值。
  *
@@ -249,22 +249,22 @@ export function getDirectionVirtues(
 }
 
 /* ------------------------------------------------------------------ *
- * 三德叢聚
+ * 三德方
  * ------------------------------------------------------------------ */
 
 /** 三德＝歲德＋天德＋月德，**不含**三個合德。 */
 const SAN_DE_CODES: readonly DirectionVirtueCode[] = Object.freeze(['sui_de', 'tian_de', 'yue_de']);
 
-export interface SanDeCongJuResult {
+export interface SanDeFangResult {
   active: boolean;
   mountain?: Mountain24;
 }
 
 /**
- * 三德叢聚。
+ * 三德方。
  *
- * 「三德叢聚」是古籍既有名詞（《新刊類編陰陽選擇合併通書大全》卷十二〈三德格〉），
- * 不是現代自創 heuristic。識別碼採正名 `sanDeCongJu`；原研究稿的
+ * 「三德方」是古籍既有名詞（《新刊類編陰陽選擇合併通書大全》卷十二〈三德格〉），
+ * 不是現代自創 heuristic。識別碼採正名 `sanDeFang`；原研究稿的
  * `sanDeCongJi` 屬誤植。
  *
  * 條件：歲德、天德、月德三者**皆有 peripheral mountain 且完全相同**。
@@ -272,9 +272,9 @@ export interface SanDeCongJuResult {
  *
  * 戊、癸年恆為 false：其歲德為戊，無外方。
  */
-export function detectSanDeCongJu(
+export function detectSanDeFang(
   virtues: readonly DirectionVirtueEvidence[],
-): SanDeCongJuResult {
+): SanDeFangResult {
   const mountains = SAN_DE_CODES.map((code) => {
     const found = virtues.find((virtue) => virtue.code === code);
     return found?.position.kind === 'mountain' ? found.position.mountain : undefined;

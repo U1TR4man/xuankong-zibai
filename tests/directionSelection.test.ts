@@ -32,7 +32,7 @@ describe('V2 組裝：constraints 與 positives 分 channel', () => {
   it('context 只依年干與月支，八宮共用同一份', () => {
     const context = buildDirectionSelectionContext(CONFLICT);
     expect(context.virtues).toHaveLength(6);
-    expect(context.sanDeCongJu).toEqual({ active: true, mountain: '甲' });
+    expect(context.sanDeFang).toEqual({ active: true, mountain: '甲' });
     expect(context.monthJinKui).toEqual({ branch: '卯', rankingUse: 'disabled', mode: 'reference_only' });
   });
 
@@ -76,7 +76,7 @@ describe('V2 組裝：constraints 與 positives 分 channel', () => {
   it('三德叢聚只出現在該山所屬的宮', () => {
     const context = buildDirectionSelectionContext(CONFLICT);
     const withPattern = PALACES.filter(
-      (palace) => buildDirectionSelectionAssessment(context, palace).positives.patterns.sanDeCongJu,
+      (palace) => buildDirectionSelectionAssessment(context, palace).positives.patterns.sanDeFang,
     );
     expect(withPattern).toEqual([palaceOfMountain('甲')]);
     expect(withPattern).toEqual(['zhen']);
@@ -98,7 +98,7 @@ describe('§6 architecture invariant：正面不得翻轉 structural veto', () =
   const zhen = buildDirectionSelectionAssessment(context, 'zhen');
 
   it('同宮同時有三德叢聚與歲破，兩者都完整保留', () => {
-    expect(zhen.positives.patterns.sanDeCongJu).toEqual({ active: true, mountain: '甲' });
+    expect(zhen.positives.patterns.sanDeFang).toEqual({ active: true, mountain: '甲' });
     const rules = zhen.constraints.hits.map((hit) => hit.rule);
     expect(rules).toContain('sui_po');
     expect(rules).toContain('year_san_sha');
@@ -126,7 +126,7 @@ describe('§6 architecture invariant：正面不得翻轉 structural veto', () =
       'constraint_sui_po',
       'constraint_year_san_sha',
       'positive_virtue',
-      'positive_san_de_cong_ju',
+      'positive_san_de_fang',
       'reference_month_jin_kui',
     ]);
     // 正面條目沒有讓 constraint 條目消失
@@ -185,7 +185,7 @@ describe('regression：V2 組裝不得影響方向 verdict 與排序', () => {
     const chart = computeFullChart(AT);
     const serialized = JSON.stringify(evaluateDirections(chart));
     for (const token of [
-      'sanDeCongJu', 'monthJinKui', 'sui_de', 'tian_de', 'yue_de',
+      'sanDeFang', 'monthJinKui', 'sui_de', 'tian_de', 'yue_de',
       'positive_virtue', 'constraint_sui_po', 'outside_24_mountains',
     ]) {
       expect(serialized, token).not.toContain(token);

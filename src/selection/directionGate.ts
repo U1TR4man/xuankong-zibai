@@ -16,7 +16,7 @@
  * `verdictFor()` 與 `rankDirections()` **不得讀取本檔任何欄位**，
  * 由 `tests/directionGate.test.ts` 的 regression test 鎖定。
  *
- * 本檔是正面 evidence（六德、三德叢聚）的前置：兩者共用 24 山幾何，
+ * 本檔是正面 evidence（六德、三德方）的前置：兩者共用 24 山幾何，
  * 但必須分成 constraints 與 positives 兩個 channel，不得混為一鍋。
  *
  * 全部為純函式：不讀 DOM、localStorage 或 URL state，不修改 `src/engine/**`。

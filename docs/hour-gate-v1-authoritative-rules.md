@@ -323,7 +323,14 @@ assessHourStemSupport(dayStem: Stem, hourStem: Stem): HourStemSupport;
 卷七另給了五不遇的解除條件：「然尚須論其所臨之支是否與日干日支相生，如其相生則又不為五不遇也」——
 若把解除條件算進去，五不遇反而比時刑更容易被排除。
 
-**建議調為同級**，但這會改變 precedence 輸出，屬使用者決策。**本輪仍不改**。
+**2026-08-10 已依此修正**：`src/selection/hourGate.ts` 改為
+大凶 → `reject`；**次凶（時刑、五不遇）→ `caution`**；其餘凶 → `mixed`。
+
+日害維持 `mixed`：卷七雖與破、刑並列，但卷三十四〈用時法〉未列日害，
+兩卷都沒有給它明確等級，故不隨時刑一併提升。
+
+本文件 §4 的 severity 表（五不遇 C 層、時刑 D 層）**以本節為準**，該表為初版分層，
+所引「次凶，亦輕可」一句在兩卷均未見。
 詳見 `docs/primary-source-verification-2026-08.md` §6.1、§8.1。
 
 ### 不可封版（須先補證據或使用者決策）

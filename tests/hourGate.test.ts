@@ -84,11 +84,18 @@ describe('§7 precedence', () => {
     expect(result.status).toBe('caution');
   });
 
-  it('時刑或日害至少 mixed', () => {
+  it('時刑與五不遇同為次凶，皆對應 caution', () => {
     // 子刑卯，且子卯既不相沖也不相害，可單獨測時刑
     const punish = gate({ day: ganzhi('甲', '子'), hourBranch: '卯' });
-    expect(punish.conflicts).toMatchObject({ punishment: true, hourBreak: false, harm: false });
-    expect(punish.status).toBe('mixed');
+    expect(punish.conflicts).toMatchObject({ punishment: true, hourBreak: false, harm: false, fiveBuYu: false });
+    expect(punish.status).toBe('caution');
+    // 甲日午時為庚午，是甲的五不遇；兩者同級
+    const wuBuYu = gate({ day: ganzhi('甲', '寅'), hourBranch: '午' });
+    expect(wuBuYu.conflicts.fiveBuYu).toBe(true);
+    expect(wuBuYu.status).toBe('caution');
+  });
+
+  it('日害維持 mixed：兩卷都未給它明確等級，不隨時刑一併提升', () => {
     // 子未六害，且子未不相沖、不相刑
     const harm = gate({ day: ganzhi('甲', '子'), hourBranch: '未' });
     expect(harm.conflicts).toMatchObject({ harm: true, hourBreak: false, punishment: false });
@@ -147,7 +154,7 @@ describe('§3.1 正負關係必須可同時存在', () => {
     expect(result.conflicts.punishment).toBe(true);
     expect(result.reasons).toContain('support_liu_he');
     expect(result.reasons).toContain('conflict_punishment');
-    expect(result.status).toBe('mixed');
+    expect(result.status).toBe('caution');
   });
 
   it('自刑支日時相同時同時是時建與時刑', () => {
@@ -156,7 +163,7 @@ describe('§3.1 正負關係必須可同時存在', () => {
       const result = gate({ day: ganzhi(stem, branch), hourBranch: branch });
       expect(result.support.build, branch).toBe(true);
       expect(result.conflicts.punishment, branch).toBe(true);
-      expect(result.status, branch).toBe('mixed');
+      expect(result.status, branch).toBe('caution');
     }
   });
 

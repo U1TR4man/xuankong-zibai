@@ -5,7 +5,7 @@
  *
  * ```text
  * DIRECTION CONSTRAINTS   歲破、月破方、三煞      → directionGate.ts
- * DIRECTION POSITIVES     六德、三德叢聚          → directionVirtues.ts
+ * DIRECTION POSITIVES     六德、三德方            → directionVirtues.ts
  *          ↓
  * DIRECTION SELECTION V2  本檔：並列保存，不做綜合判定
  * ```
@@ -15,7 +15,7 @@
  *
  * ```ts
  * // 明確禁止，本檔不存在這種寫法
- * if (sanDeCongJu) { suiPo = false; sanSha = false; }
+ * if (sanDeFang) { suiPo = false; sanSha = false; }
  * ```
  *
  * 也不做數值化總分、不做正負抵消、不建立「命中 N 個吉神即優先」的硬閾值。
@@ -34,8 +34,8 @@ import {
 import {
   type DirectionVirtueEvidence,
   type DirectionVirtueOptions,
-  type SanDeCongJuResult,
-  detectSanDeCongJu,
+  type SanDeFangResult,
+  detectSanDeFang,
   getDirectionVirtues,
   getMonthJinKuiBranch,
 } from './directionVirtues';
@@ -66,7 +66,7 @@ export type DirectionAssessmentReason =
   | 'constraint_month_san_sha'
   | 'constraint_day_san_sha'
   | 'positive_virtue'
-  | 'positive_san_de_cong_ju'
+  | 'positive_san_de_fang'
   | 'reference_month_jin_kui';
 
 const CONSTRAINT_REASON: Readonly<Record<string, DirectionAssessmentReason>> = Object.freeze({
@@ -78,13 +78,13 @@ const CONSTRAINT_REASON: Readonly<Record<string, DirectionAssessmentReason>> = O
 });
 
 /**
- * 全盤層 context：六德、三德叢聚與月金匱都只依年干與月支，
+ * 全盤層 context：六德、三德方與月金匱都只依年干與月支，
  * 與宮位無關，因此算一次即可，不必在八個宮重複計算。
  */
 export interface DirectionSelectionContext {
   /** 六項全部，含 `outside_24_mountains` 與 `none`，供全盤層說明使用。 */
   virtues: readonly DirectionVirtueEvidence[];
-  sanDeCongJu: SanDeCongJuResult;
+  sanDeFang: SanDeFangResult;
   monthJinKui: { branch: Branch; rankingUse: 'disabled'; mode: 'reference_only' };
   sha: DirectionShaSource;
 }
@@ -100,7 +100,7 @@ export function buildDirectionSelectionContext(
   const virtues = getDirectionVirtues(source.yearStem, source.monthBranch, options);
   return {
     virtues,
-    sanDeCongJu: detectSanDeCongJu(virtues),
+    sanDeFang: detectSanDeFang(virtues),
     monthJinKui: {
       branch: getMonthJinKuiBranch(source.monthBranch),
       rankingUse: 'disabled',
@@ -121,8 +121,8 @@ export interface DirectionPositives {
   matched: readonly Mountain24[];
   coverage: PositiveHitCoverage;
   patterns: {
-    /** 只在三德叢聚山落在本宮時出現。 */
-    sanDeCongJu?: { active: true; mountain: Mountain24 };
+    /** 只在三德方山落在本宮時出現。 */
+    sanDeFang?: { active: true; mountain: Mountain24 };
   };
   references: {
     /** 只在月金匱支落在本宮時出現；恆不參與排序。 */
@@ -156,7 +156,7 @@ function positiveCoverage(matchedCount: number): PositiveHitCoverage {
  * 組裝單一宮的 V2 結果。
  *
  * constraints 與 positives 各自獨立計算後並列保存：
- * 同一宮可同時有受煞山與得吉山（例如震宮的卯犯歲破、甲得三德叢聚），
+ * 同一宮可同時有受煞山與得吉山（例如震宮的卯犯歲破、甲得三德方），
  * **兩者都必須保留**，不得因任一方而移除或弱化另一方。
  */
 export function buildDirectionSelectionAssessment(
@@ -174,9 +174,9 @@ export function buildDirectionSelectionAssessment(
   const { matched } = getMountainHitsForPalace(palace, virtueMountains);
 
   const patterns: DirectionPositives['patterns'] = {};
-  const { sanDeCongJu } = context;
-  if (sanDeCongJu.active && sanDeCongJu.mountain && palaceOfMountain(sanDeCongJu.mountain) === palace) {
-    patterns.sanDeCongJu = { active: true, mountain: sanDeCongJu.mountain };
+  const { sanDeFang } = context;
+  if (sanDeFang.active && sanDeFang.mountain && palaceOfMountain(sanDeFang.mountain) === palace) {
+    patterns.sanDeFang = { active: true, mountain: sanDeFang.mountain };
   }
 
   const references: DirectionPositives['references'] = {};
@@ -190,7 +190,7 @@ export function buildDirectionSelectionAssessment(
     if (reason && !reasons.includes(reason)) reasons.push(reason);
   }
   if (virtuesHere.length > 0) reasons.push('positive_virtue');
-  if (patterns.sanDeCongJu) reasons.push('positive_san_de_cong_ju');
+  if (patterns.sanDeFang) reasons.push('positive_san_de_fang');
   if (references.monthJinKui) reasons.push('reference_month_jin_kui');
 
   return {

@@ -146,12 +146,26 @@ function clashSeverity(active: boolean, mode: SelectionMode): ClashSeverity {
  * ```text
  * 1. hourBreak                                  → reject
  * 2. construction && (clashMonth || clashYear)  → reject
- * 3. fiveBuYu                                   → caution
- * 4. punishment || harm                         → 至少 mixed
+ * 3. fiveBuYu || punishment                     → caution
+ * 4. harm || clashing                           → 至少 mixed
  * 5. pass + 任一正面支持                        → preferred
  * ```
  *
  * **positive support 不得把 reject 翻回 pass。**
+ *
+ * ### 2026-08-10 修正：時刑與五不遇同級
+ *
+ * 初版依研究稿把五不遇列 C 層、時刑列 D 層，因此五不遇（caution）重於時刑（mixed）。
+ * 補讀固定版本原文後，**兩卷都不支持這個高下**：
+ *
+ * - 《協紀》四庫本卷三十四〈用時法〉：「時破**大凶**……時刑**次凶**……五不遇時**次凶**」
+ * - 同書卷七〈八錄〉：「建合則吉，而**破刑害則凶**也」——破、刑、害並列，不分高下
+ *
+ * 規則文件 §4 為時刑所引的「次凶，亦輕可」一句，在兩卷均未見。
+ *
+ * 因此改為：大凶 → `reject`；**次凶（時刑、五不遇）→ `caution`**；其餘凶 → `mixed`。
+ * 日害維持 `mixed`：卷七雖與破、刑並列，但卷三十四〈用時法〉未列日害，
+ * 兩卷都沒有給它明確等級，故不隨時刑一併提升。
  *
  * ### 實作補洞：daily 模式的時沖月令／歲君
  *
@@ -172,8 +186,9 @@ function resolveStatus(
   if (conflicts.hourBreak) return 'reject';
   const clashing = conflicts.clashMonth.active || conflicts.clashYear.active;
   if (mode === 'construction' && clashing) return 'reject';
-  if (conflicts.fiveBuYu) return 'caution';
-  if (conflicts.punishment || conflicts.harm || clashing) return 'mixed';
+  // 次凶：時刑與五不遇同級（見上方 2026-08-10 修正）
+  if (conflicts.fiveBuYu || conflicts.punishment) return 'caution';
+  if (conflicts.harm || clashing) return 'mixed';
   const hasSupport = support.build
     || support.liuHe
     || support.sanHe

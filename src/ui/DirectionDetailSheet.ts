@@ -78,7 +78,7 @@ const REASON_LABEL: Record<DirectionAssessmentReason, string> = {
   constraint_sui_po: '歲破', constraint_month_break: '月破方',
   constraint_year_san_sha: '年三煞', constraint_month_san_sha: '月三煞',
   constraint_day_san_sha: '日三煞',
-  positive_virtue: '得德', positive_san_de_cong_ju: '三德方',
+  positive_virtue: '得德', positive_san_de_fang: '三德方',
   reference_month_jin_kui: '月金匱',
 };
 
@@ -300,7 +300,7 @@ function virtueSection(
 ): HTMLElement {
   const here = assessment.positives.virtues;
   const elsewhere = allVirtues.filter((virtue) => !here.includes(virtue));
-  const pattern = assessment.positives.patterns.sanDeCongJu;
+  const pattern = assessment.positives.patterns.sanDeFang;
   return el('section', { class: 'direction-section direction-virtue' },
     el('h3', {}, '六德'),
     here.length === 0
