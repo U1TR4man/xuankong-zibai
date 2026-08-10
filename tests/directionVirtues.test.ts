@@ -194,14 +194,21 @@ describe('§1 層級與證據等級', () => {
     });
   });
 
-  it('只有已核對四庫本卷三者 primarySourceVerified 為 true', () => {
+  it('六張表全部已核到固定版本原文，primarySourceVerified 皆為 true', () => {
+    // 歲德／歲德合：協紀四庫本卷十四年表一（甲子至癸酉恰涵蓋十天干）
+    // 天德／天德合／月德／月德合：星厯考原四庫本卷三，協紀卷二十至三十一月表佐證
     const verified = Object.fromEntries(
       getDirectionVirtues('甲', '未').map((v) => [v.code, v.primarySourceVerified]),
     );
     expect(verified).toEqual({
-      sui_de: false, sui_de_he: false,
+      sui_de: true, sui_de_he: true,
       tian_de: true, tian_de_he: true, yue_de: true, yue_de_he: true,
     });
+    for (const virtue of getDirectionVirtues('甲', '未')) {
+      expect(virtue.evidenceLevel, virtue.code).toBe('A');
+      // 證據升級不等於強度升級
+      expect(virtue.rankingUse, virtue.code).toBe('disabled');
+    }
   });
 });
 

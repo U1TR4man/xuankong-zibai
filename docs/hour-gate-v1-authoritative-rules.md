@@ -265,6 +265,11 @@ assessHourStemSupport(dayStem: Stem, hourStem: Stem): HourStemSupport;
 
 ## 10. 證據狀態
 
+> **2026-08-10 證據升級**：本文件多數條目已核到固定版本原文（《欽定協紀辨方書》四庫本、《御定星厯考原》四庫本），
+> 逐條核對結果與仍未核到的項目見 `docs/primary-source-verification-2026-08.md`。
+> **規則與 severity 一律未變**，升級的只是證據等級。
+
+
 `primarySourceVerified = false`（全部條目）。
 
 引用具**卷次級**定位，強於第十輪 Direction Gate：
@@ -292,6 +297,27 @@ assessHourStemSupport(dayStem: Stem, hourStem: Stem): HourStemSupport;
 - [x] 祿時不凌駕時破／五不遇
 - [x] 旬空／截路空亡只作 activity-specific
 - [x] 時白排在 Hour Gate 之後
+
+### 4.3 待決：時刑與五不遇在原文中同為「次凶」（2026-08-10 登記）
+
+《協紀》四庫本卷三十四〈用時法〉的分級是：
+
+```text
+時破    大凶
+時刑    次凶
+五不遇  次凶
+```
+
+但 §4 的 severity 表把五不遇列 **C 層 strong caution**、時刑列 **D 層 minor**，
+`src/selection/hourGate.ts` 的 precedence 因此讓五不遇（`caution`）重於時刑（`mixed`）。
+
+**原文並列為次凶，沒有把五不遇排在時刑之上。**
+
+兩者仍有不對稱之處：五不遇另引三元歌「五不遇兮損光明……切忌之」語氣較重，
+但緊接著又說「用五不遇者亦少」並舉楊筠松實際犯之仍用的例。
+
+**本輪不改 precedence**，登記為待決。要調整須使用者決定，並宜先補《協紀》卷七
+〈五不遇時〉等條目再判。詳見 `docs/primary-source-verification-2026-08.md` §8.1。
 
 ### 不可封版（須先補證據或使用者決策）
 

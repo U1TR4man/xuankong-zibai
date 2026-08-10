@@ -177,12 +177,19 @@ interface VirtueDefinition {
  * 層級（§1）：天德／月德 primary、兩合德 combined；**歲德與歲德合同為 primary**
  * （《協紀》「並屬上吉」），不得把歲德合降一級。
  *
- * `primarySourceVerified`（§9）：只有《御定星厯考原》四庫本卷三已逐字核對者為 true。
- * 歲德與歲德合目前只有篇名與線上連結，未親自讀取原文，維持 false。
+ * `primarySourceVerified`（§9）：六張表**全部**已核到固定版本原文，
+ * 見 `docs/primary-source-verification-2026-08.md`：
+ * - 歲德、歲德合：《欽定協紀辨方書》四庫本卷十四〈年表一〉甲子至癸酉，恰涵蓋十天干。
+ * - 天德、天德合、月德、月德合：《御定星厯考原》四庫本卷三，
+ *   另有《協紀》卷二十至三十一〈月表〉逐月佐證。
+ *
+ * 注意 `role` 的證據狀態與表不同：〈月吉神總論〉明言天德月德「大吉」、
+ * 兩合德「次吉」，但**沒有**給歲德、歲德合任何等級。歲家同為 `primary_virtue`
+ * 目前只是「未被列為次吉」的消極推論，「並屬上吉」一句尚未核到原文。
  */
 const VIRTUE_DEFINITIONS: Readonly<Record<DirectionVirtueCode, VirtueDefinition>> = Object.freeze({
-  sui_de: { role: 'primary_virtue', evidenceLevel: 'B', primarySourceVerified: false },
-  sui_de_he: { role: 'primary_virtue', evidenceLevel: 'B', primarySourceVerified: false },
+  sui_de: { role: 'primary_virtue', evidenceLevel: 'A', primarySourceVerified: true },
+  sui_de_he: { role: 'primary_virtue', evidenceLevel: 'A', primarySourceVerified: true },
   tian_de: { role: 'primary_virtue', evidenceLevel: 'A', primarySourceVerified: true },
   tian_de_he: { role: 'combined_virtue', evidenceLevel: 'A', primarySourceVerified: true },
   yue_de: { role: 'primary_virtue', evidenceLevel: 'A', primarySourceVerified: true },

@@ -99,3 +99,9 @@ interface DayGate {
 - [《造命宗鏡集》卷六數位本](https://www.shidianguji.com/zh/book/NA06432/chapter/1l0fx8tfgjc3v)：直接支持用日旺相、用時扶日、弱日可由時扶，以及沖破優先；本專案尚未保存固定版本原頁，因此 `primarySourceVerified` 仍標 `false`。
 
 上述規則級對讀已可重跑；但《造命宗鏡集》的固定版本、頁碼與原頁影像尚未收入 repo，不能把 `primarySourceVerified` 寫成 `true`。
+
+## 證據升級補記
+
+> **2026-08-10 證據升級**：本文件多數條目已核到固定版本原文（《欽定協紀辨方書》四庫本、《御定星厯考原》四庫本），
+> 逐條核對結果與仍未核到的項目見 `docs/primary-source-verification-2026-08.md`。
+> **規則與 severity 一律未變**，升級的只是證據等級。

@@ -46,7 +46,9 @@ describe('Direction Gate 組裝', () => {
     for (const hit of assessment.hits) {
       expect(hit.rankingUse).toBe('disabled');
       expect(hit.gateUse).toBe('reference_only');
-      expect(hit.evidenceLevel).toBe('C');
+      // 2026-08-10：已核到協紀四庫本卷十四年表原文，證據等級由 C 升為 A；
+      // 但強度不變，rankingUse 仍為 disabled。
+      expect(hit.evidenceLevel).toBe('A');
     }
   });
 

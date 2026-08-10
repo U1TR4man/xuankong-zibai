@@ -104,13 +104,21 @@ export interface DirectionShaSource {
 }
 
 /**
- * 五條規則的證據等級一律 `'C'`。
+ * 五條規則的證據等級為 `'A'`（2026-08-10 升級）。
  *
- * 第十輪研究稿只給篇名，未給卷次、頁碼、版本或原頁影像
- * （見 `docs/direction-gate-v1-authoritative-rules.md` §9），
- * 是三輪 Gate 研究中最弱者。**不得因為算法 deterministic 就調高。**
+ * 初版為 `'C'`：第十輪研究稿只給篇名，是三輪 Gate 研究中最弱者。
+ * 本輪已核到固定版本原文，見 `docs/primary-source-verification-2026-08.md` §5：
+ * 《欽定協紀辨方書》四庫本卷十四〈年表一〉逐年列出歲破與三煞，
+ * 十組全數與 `getSuiPoMountain()`／`getSanShaMountains()` 相符；
+ * 月破方另見卷二十至三十一〈月表〉逐月「月建在寅、月破在申」等。
+ *
+ * 三煞在年表中以〈巳午未〉這樣的**三個地支**列出而非「南方」整宮，
+ * 佐證了 partial hit 模型。
+ *
+ * **升級的只是證據等級，不是強度**：`rankingUse` 仍為 `'disabled'`、
+ * `gateUse` 仍為 `'reference_only'`。強度調整屬 §10 stop condition。
  */
-const DIRECTION_SHA_EVIDENCE: TemporalEvidenceLevel = 'C';
+const DIRECTION_SHA_EVIDENCE: TemporalEvidenceLevel = 'A';
 
 const V1_NOTE: DirectionGateNote = 'v1_reference_only_not_evaluated';
 
