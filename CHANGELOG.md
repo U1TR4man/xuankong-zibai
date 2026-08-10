@@ -29,7 +29,7 @@
 - 新增紫白擇吉方向 V1 的 Phase 1 純資料／判讀層：81 個有序雙星規則、八方年月日時快照、每方六組 pair、用途 tag 與無分數的可解釋 heuristic；未校對研究摘要維持 neutral／needs-review／rankingWeight 0。
 - 盤頭加入輕量「疊盤」switch；疊盤主星直接跟隨既有年／月／日／時／刻層級列。
 - 尋星改為漸進式進階條件：預設只顯示簡易搜尋，按「＋ 進階條件」才展開多層／多星設定；收起再展開仍保留設定。
-- Search → Chart 會把既有命中層帶到命中宮的五層註記，以朱砂＋✓ 輕量標示；切換時間、導覽層級或宮位後即清除過期標示。
+- Search → Chart 會把既有命中層帶到命中宮的五層註記，以朱砂色與底線輕量標示；切換時間、導覽層級或宮位後即清除過期標示。
 - 簡易尋星條件可由 `from/to/searchPalace/precision/star` URL 還原，支援 refresh、bookmark 與分享；進階條件暫不序列化。
 - 新增疊盤純資料模型，直接組裝現有 `computeFullChart()` 的年月日時刻結果，並鎖定宮位、飛星值與上層顯示規則。
 - 新增可開關的九宮疊盤、主顯示層同步、選宮高亮與宮位詳情 Bottom Sheet；詳情只列 deterministic 組合，不判吉凶。
@@ -40,6 +40,10 @@
 
 ### Changed
 
+- Search 停留時不再被 `followNow` 的 30 秒 timer 重建；保留 follow 狀態，返回排盤時立即同步 `nowUtc8()`。
+- 「雙星用途參考」移到擇吉九宮與方向排序之後，明示只篩選斷語、不改 ranking；宮格以「參考 · …」及「警示 · …」區分參考 pair 與正式判定條件。
+- 尋星的進階條件控制移到 primary CTA 前；原盤／疊盤／擇吉改為完整 keyboard tabs，加入左右鍵、Home／End、roving tabindex 與 tabpanel 關聯。
+- 「時間干支」Sheet 新增實際年界、節氣月、午夜／子初換日及中國時辰設定，主畫面與四柱計算不變。
 - 一般九宮本位、受剋古表、對宮公式與鬥牛條件由分散常數改為共用第七輪矩陣；暗建讀入中星、四種宮位殺讀到方星、六捷讀時間地支，年月 active／日時 reference-only 邊界不變。
 - 大月建改由正式月紫白入中星的後天本宮直接推得；與月暗建同位時合流為一條「大月建／月暗建」警示，只計一次，五黃預設回中宮。
 - 日白到方不再被「當日地支未列直接有氣」整層取消；日支直接有氣改作次級加強。時白不單獨提升 verdict，只在同級方向間作 tie-breaker。
@@ -58,6 +62,7 @@
 
 ### Fixed
 
+- 移除 user-facing UI 的 `⚠`、`✦`、`✓`、`⚑` 平台字形；警示、參考、命中與異文改由正常中文及既有 design tokens 表達。
 - 重建 `Zibai Serif` 離線字體子集至 917 個 UI 字元／918 glyphs；第七輪研究說明新增中文已進 preload、PWA precache 與單檔 data URI。
 - 移除大月建「獨立月干支飛宮尚待核對」的過期 user-facing 說法；主盤與詳情不再將大月建、月暗建重複顯示或重複計入警示。
 - 重建 `Zibai Serif` 離線字體子集至 912 個 UI 字元／913 glyphs；第六輪新增文字已進 preload、PWA precache 與單檔 data URI。
@@ -88,14 +93,15 @@
 - 修正盤頭精修時的一個多餘 CSS 結尾括號；production／PWA build 再次通過。
 - 搜尋 UI 回歸測試改為等待搜尋狀態真正結束，不再以固定 10ms 猜測完成時間，避免完整套件並行時誤判。
 - 壓縮日期／時間、節氣、層級列與盤頭的垂直距離；盤名與時段改為同列，並讓疊盤在選宮後只有命中宮維持強焦點。
-- 疊盤九宮五層資料維持單列、標籤與非當前數值使用墨灰；目前層級小值使用朱紅，Search 真正命中層仍以朱砂＋✓ 表示。
-- 搜尋結果改為整列可點的精簡列表，移除大型「查看此盤」按鈕；保留時段、宮位、各層、命中勾號、組合摘要及方向箭頭。
+- 疊盤九宮五層資料維持單列、標籤與非當前數值使用墨灰；目前層級小值使用朱紅，Search 真正命中層仍以朱砂色表示。
+- 搜尋結果改為整列可點的精簡列表，移除大型「查看此盤」按鈕；保留時段、宮位、各層、命中層色彩、組合摘要及方向箭頭。
 - 補齊層級 tabs 的 roving `tabindex`、方向鍵、Home／End、automatic activation 與 `tabpanel` 關聯，改善外接鍵盤及輔助科技操作。
 - 將「返回時盤」的左箭頭移到文案前方，讓視覺順序、閱讀順序與返回方向一致。
 - iPhone 實機使用回報原生日期／時間 picker、field border／focus 與版面皆無問題；P0 acceptance 通過。
 
 ### Documentation
 
+- 收錄 V2 Final UI/UX refinement 的原始規格 checksum、P0／P1 implementation record、195 tests、PWA／單檔 build、字體 coverage、30 秒 follow-now 與四種 iPhone 寬度 Browser 驗收；兩項 P2 明確暫緩。
 - 收錄紫白擇吉第七輪實作紀錄、原始研究 checksum、9×6 矩陣、三種輸入契約、194 tests、PWA／單檔 build、離線字體與四種手機寬度 Browser 驗收；原典影像未入專案故仍保留 `primarySourceVerified=false`。
 - 收錄紫白擇吉第六輪實作紀錄、原始研究 checksum、大月建 36 月合流、日白／時白層級、194 tests、PWA／單檔 build、離線字體與四種手機寬度 Browser 驗收。
 - 收錄紫白擇吉第五輪實作紀錄、原始研究 checksum、暗建傳本分層、年月／日時證據政策、大月建／日主 Gate／月納音暫緩邊界、191 tests、PWA／單檔 build 與四種手機寬度驗收。

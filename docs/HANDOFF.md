@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／搜尋 implementation **Phase 0–6**、盤面／搜尋／URL cleanup、疊盤配色補丁、紫白擇吉方向 V1 **Phase 1–4**，以及干支加入與 UI/UX refinement V2 的 **P0／P1** 均已完成。雙星 81 組已與方向 ranking 解耦；第六輪已確認大月建等於月入中星本宮、與月暗建合流，並將日白升為正式主層、時白定為同級細選；第七輪已將六捷墓、九宮暗建、受剋、穿心、交劍與鬥牛整合為唯一 9 星×6 殺矩陣。現行 Direction status 繼續使用 source-aware V6 政策。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／搜尋 implementation **Phase 0–6**、盤面／搜尋／URL cleanup、疊盤配色補丁、紫白擇吉方向 V1 **Phase 1–4**、干支加入與 UI/UX refinement V2 的 **P0／P1**，以及 V2 Final UI/UX refinement 的 **P0／P1** 均已完成。雙星 81 組已與方向 ranking 解耦；第六輪已確認大月建等於月入中星本宮、與月暗建合流，並將日白升為正式主層、時白定為同級細選；第七輪已將六捷墓、九宮暗建、受剋、穿心、交劍與鬥牛整合為唯一 9 星×6 殺矩陣。現行 Direction status 繼續使用 source-aware V6 政策。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -33,6 +33,7 @@
 - 紫白擇吉第五輪暗建／白中殺／有氣分層 code checkpoint：`b8980ae`
 - 紫白擇吉第六輪大月建合流／日白升級 code checkpoint：`9674f28`
 - 紫白擇吉第七輪白中殺 9×6 矩陣 code checkpoint：`175ee81`
+- V2 Final UI/UX refinement code checkpoint：`2c4228e`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -50,8 +51,9 @@
 - 紫白擇吉第六輪考源紀錄：`docs/purple-white-sixth-round-dayuejian-daywhite.md`
 - 紫白擇吉第七輪考源紀錄：`docs/purple-white-seventh-round-white-killer-matrix.md`
 - 干支加入與 UI/UX refinement V2 紀錄：`docs/ganzhi-uiux-refinement-v2.md`
+- V2 Final UI/UX refinement 紀錄：`docs/v2-final-uiux-refinement.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣及 canonical 年月日時干支均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。下一步是收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式或 P2 最佳時窗。
+P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣、canonical 年月日時干支及 V2 Final P0／P1 均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。V2 UI/UX 進入 freeze；下一步是收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式、九宮式 Search selector、九宮 keyboard cleanup 或 P2 最佳時窗。
 
 ---
 
@@ -110,7 +112,7 @@ tests/fixtures/chart-snapshot.json
 ### Phase 6 — Polish
 
 - swipe 只綁 `[data-swipe-zone="chart"]`，並排除 interactive elements
-- `followNow` 每 30 秒刷新；手動選時即停止，按「回到今」恢復
+- `followNow` 每 30 秒只在 Chart 刷新；Search 不 emit／重建，返回 Chart 時若仍跟隨現在會立即同步；手動選時即停止，按「回到今」恢復
 - Chart Header hierarchy、兩欄 Prev／Next、functional motion
 - focus、44px touch target、safe area、PWA light theme、no-JS 文案
 - Dark Mode 沒有開 scope，留待 V3
@@ -151,6 +153,16 @@ tests/fixtures/chart-snapshot.json
 - Search result 加干支、九宮式選宮與最佳時窗仍屬 P2；天干不參與 verdict／ranking，亦未加入藏干、十神、納音、旬空或二十四山。
 - 可攜式紀錄、原始規格 checksum、boundary tests、font 及 Browser QA 見 `docs/ganzhi-uiux-refinement-v2.md`。
 
+### V2 Final UI/UX refinement — P0／P1
+
+- Search 保留 `followNow` 狀態，但 30 秒 timer 只在 Chart 更新；Search 的 input focus、native date picker、內容與 scroll 不再因 timer 重建。返回 Chart 時若仍 follow，立即同步 `nowUtc8()`。
+- 擇吉的「雙星用途參考」移到九宮與方向排序後，helper 明示只篩選斷語、不改 ranking；宮格的 pair 改為次級墨色「參考 · …」，正式條件改為 caution 色「警示 · …」。
+- 尋星進階控制移到 CTA 前，收合不清除設定；原盤／疊盤／擇吉已改為完整 `tablist/tab/tabpanel`，支援左右鍵、Home／End、roving tabindex 及 automatic activation。
+- user-facing UI 已移除四種 platform glyph；Search 命中使用既有色彩／底線，異文使用自然中文。
+- 「時間干支」Sheet 顯示 current 年界、節氣月、午夜／子初換日及中國時辰；四柱 truth source 與主畫面 hierarchy 未改。
+- code checkpoint：`2c4228e`；完整規格 checksum、195 tests、字體及 Browser 證據見 `docs/v2-final-uiux-refinement.md`。
+- 原規格 P2 的 Search 九宮式選宮與九宮方向鍵 semantic cleanup 仍暫緩，不得順手擴做。
+
 ### `fdee2e7` read-only review 收尾
 
 - P0：0 個 code bug；使用者完成 iPhone 實機使用並回報無問題，日期／時間 code 不再調整
@@ -179,8 +191,8 @@ tests/fixtures/chart-snapshot.json
 - 盤名與時段同列；疊盤改為盤頭右側 switch，不再有獨立大型控制區
 - `overlayPrimaryLevel` 底層欄位保留，但目前跟隨 `level`；主畫面永遠只有一套層級列
 - 疊盤未選宮時中心只作淡焦點；選宮後只有命中宮使用強朱砂框
-- 普通盤與疊盤中央大星均使用墨色，五層小值只有目前層級使用朱紅；Search 真正命中層仍使用朱砂＋✓
-- Search → Chart 會暫存 `searchMatchedLevels`，只在 selected palace 的命中層顯示朱砂＋✓；改時間、導覽層級或宮位會清除，避免留下過期命中
+- 普通盤與疊盤中央大星均使用墨色，五層小值只有目前層級使用朱紅；Search 真正命中層使用朱砂色及底線
+- Search → Chart 會暫存 `searchMatchedLevels`，只在 selected palace 的命中層使用朱砂色；改時間、導覽層級或宮位會清除，避免留下過期命中
 - 尋星取消等權重的簡易／進階 tabs，改由「＋ 進階條件」漸進展開，收合不丟條件
 - 結果改為精簡整列可點，移除大型「查看此盤」按鈕；每批顯示 50 筆
 
@@ -287,11 +299,11 @@ tests/fixtures/chart-snapshot.json
 
 ```text
 test files  25 passed
-tests       194 passed
+tests       195 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（457.64 KiB）success
-single file 玄空紫白.html（541,632 bytes；font data URI）success
+PWA precache 11 entries（459.20 KiB）success
+single file 玄空紫白.html（543,221 bytes；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -310,7 +322,7 @@ single file 玄空紫白.html（541,632 bytes；font data URI）success
 - 日期 Sheet apply、Esc、focus return
 - 320 / 375 / 390 / 430 native date/time shell 無 clipping；兩個 input 都維持 `appearance:auto`
 - date/time focus：shell 1px border + 2px outline；input 0 border + no outline
-- 品牌字體 `document.fonts.check()` 命中；917 個 UI 字元／918 glyphs／244,620 bytes，production font 與 public font SHA-256 均為 `5db7f01b9af6f76e2c25aeb7fe3225b4cc1d09d4042030ed4b35e14f8b42acfc`
+- 品牌字體 `document.fonts.check()` 命中；915 個目前必要 UI 字元均已覆蓋，WOFF2 cmap 917／918 glyphs／244,620 bytes，production font 與 public font SHA-256 均為 `5db7f01b9af6f76e2c25aeb7fe3225b4cc1d09d4042030ed4b35e14f8b42acfc`
 - 日期時間列在 320／375／390／430px 均無 overflow；右側「今／回到今」維持 64px 並以 baseline 對齊，左側日期位置不因文案長度跳動
 - TopBar 兩個 SVG 均為 1.5px stroke
 - 主頁一個「今」、無常駐 UTC+8；TimePicker／Settings 仍顯示 UTC+8
@@ -326,7 +338,7 @@ single file 玄空紫白.html（541,632 bytes；font data URI）success
 - production 320／390px 疊盤及尋星無 horizontal overflow；主要 touch target ≥ 44px
 - production 320／375／390／430px 的排盤、疊盤、簡易搜尋均無 horizontal overflow
 - 320px 疊盤 9 宮 × 5 層維持單列；主顯示跟隨唯一層級列，選宮後只有一個強焦點
-- 320px 進階條件可展開／收合並保留設定；結果整列可點，命中層以朱砂＋✓ 表示
+- 320px 進階條件可展開／收合並保留設定；結果整列可點，命中層以朱砂色表示
 - 320px 洛書單選／三組進階多選皆為 44px touch target；四種手機寬度均無 overflow
 - 簡易 Search URL 與 Chart deep-link 均實測 reload 後完整還原；Search URL 無 Chart-only params
 - production 320／375／390／430px：疊盤大星為墨色、目前層小值為朱紅、其他層小值為墨灰，排盤與尋星均無 horizontal overflow
@@ -356,6 +368,10 @@ single file 玄空紫白.html（541,632 bytes；font data URI）success
 - production 320px Direction Detail client／scroll width 均為 318px；九星×六殺研究說明完整，`document.fonts.check()` 為 true，console 為 0 warning／0 error
 - 本機 Browser 320／375／390／430／560px：擇吉干支 metadata、九宮及 Direction Sheet 均無 horizontal overflow；320–430px 顯示日時，560px 顯示完整四柱，44px touch target 保持不變
 - 本機 Browser 五種寬度：Direction Detail 年月日時四欄均顯示 canonical 干支且無重疊；「時間干支」Sheet focus return 正常；搜尋 tabs 的完整鍵盤測試通過，Browser 另實測 ArrowRight／Home、focus 與 tabpanel 同步
+- V2 Final production Browser 320／375／390／430px：原盤、疊盤、擇吉、簡易／進階 Search 與時間干支 Sheet 均無 horizontal overflow；九宮高度沒有因 refinement 額外增加
+- Search 日期欄在完整 31.2 秒 follow-now timer 週期後仍保留焦點、值及展開狀態；返回 Chart 立即由 `10:40` 同步到 `10:42`
+- 擇吉 production DOM 順序為九宮 → 方向排序 → 雙星用途參考；pair 與 warning 分別使用 secondary ink／caution 色，四種 platform glyph 均未出現
+- 原盤九星大字全為墨色；疊盤大星為墨色、目前層小值為朱紅、其他層為墨灰；`document.fonts.check()` 命中新增字串，console 0 warning／0 error
 
 ---
 

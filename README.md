@@ -8,7 +8,7 @@
 ```
 npm install
 npm run dev       # 開發
-npm test          # 179 個測試（含 1200 點 engine snapshot）
+npm test          # 195 個測試（含 1200 點 engine snapshot）
 npm run build     # 產生 dist/（含 service worker、manifest）
 npm run preview
 ```
@@ -43,7 +43,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 ### V2.1 視覺精修與 iOS 日期時間修正
 
 - 日期／時間仍使用原生 `<input type="date">`、`<input type="time">`；外層 shell 統一繪製 border 與 focus，避免 iOS WebKit 原生控件內外框尺寸不同步。
-- 自帶約 230 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、892 個 UI 字元子集，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
+- 自帶約 239 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、917 個 cmap 字元／918 glyphs，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
 - 頂欄 info／settings 改為同一套 1.5px inline SVG，不再依賴平台 emoji。
 - 層級列改為無外框 tab + 朱砂短底線；主畫面只保留一個「今」，UTC+8 說明留在選時與設定 Sheet。
 - 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
@@ -57,6 +57,14 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 - Bottom Sheet 初始焦點改到 sheet surface，關閉按鈕統一為 1.5px inline SVG 並保留 keyboard focus。
 - Workspace、時間軸及盤面模式以 sans／serif、字重及不同底線尺寸拉開三層 hierarchy；routing／state 不變。
 - 詳見 [專業 UI/UX refinement 紀錄](docs/professional-uiux-refinement.md)。
+
+### V2 Final UI/UX refinement
+
+- Search 不再被 follow-now timer 週期性重建；若仍跟隨現在，返回排盤時立即同步。
+- 擇吉九宮以「參考 · …／警示 · …」分清 pair 與正式條件；雙星用途控制移到方向排序後，明示不改 ranking。
+- 尋星先完成進階條件再按 CTA；原盤／疊盤／擇吉使用完整 keyboard tabs。
+- UI 不再依賴警告、星號、勾號或旗幟等平台字形；時間干支 Sheet 可直接核查年界、節氣月、換日與時辰設定。
+- 詳見 [V2 Final UI/UX refinement 紀錄](docs/v2-final-uiux-refinement.md)。
 
 ## 疊盤與尋星
 
@@ -173,7 +181,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 194 個測試，涵蓋算法、1,200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1 UI／資產／鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第六輪大月建合流／日白升級、第七輪 9×6 白中殺矩陣、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
+- `npm test` — 195 個測試，涵蓋算法、1,200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1／Final UI、資產與鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第六輪大月建合流／日白升級、第七輪 9×6 白中殺矩陣、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
