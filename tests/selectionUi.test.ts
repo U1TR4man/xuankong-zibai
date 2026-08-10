@@ -165,6 +165,17 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect(Array.from(document.querySelectorAll('.direction-detail__ganzhi'))
       .map((node) => node.textContent)).toEqual(['丙午', '乙未', '癸丑', '戊午']);
     expect($('.direction-detail__verdict')?.textContent).toBe('慎用');
+    expect($('.direction-day-gate h3')?.textContent).toBe('日課');
+    expect($('.direction-day-gate')?.textContent).toContain('日主癸水');
+    expect($('.direction-day-gate')?.textContent).toContain('月令未土');
+    expect($('.direction-day-gate')?.textContent).toContain('狀態死慎看');
+    expect($('.direction-day-gate')?.textContent).toContain('月令剋日主，日主受制');
+    expect($('.direction-day-gate')?.textContent).toContain('四立前十八日土旺');
+    expect($('.direction-detail__section-label')?.textContent).toBe('方向');
+    const dayGateOrder = $('.direction-day-gate')?.compareDocumentPosition(
+      $('.direction-detail__section-label')!,
+    ) ?? 0;
+    expect(dayGateOrder & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect($('.direction-primary-conditions')).toBeNull();
     expect($('.direction-primary-signal')?.textContent).toContain('紫白主幹');
     expect($('.direction-primary-signal')?.textContent).toContain('3/4');
@@ -223,7 +234,7 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     expect($('.direction-research')?.textContent)
       .toContain('日支為次級有效條件，時支仍只作類推參考');
     expect($('.direction-research')?.textContent)
-      .toContain('日主與時課 Gate 尚未建立完整日課規則');
+      .toContain('Day Gate V1 已按日干與月令顯示旺相休囚死');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('TOOL_HEURISTIC');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('unknown');
     expect($('dialog.sheet-dialog--direction')?.textContent).not.toContain('rankingWeight');

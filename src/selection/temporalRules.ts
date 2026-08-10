@@ -1,19 +1,33 @@
 import type { PalaceKey } from '../engine/flyingStar/types';
 import type { YearBoundary } from '../engine/flyingStar/yearStar';
-import type { Branch, Ganzhi } from '../engine/time/ganzhi';
+import type { Branch, Ganzhi, Stem } from '../engine/time/ganzhi';
 import type { DayChangeMode } from '../engine/time/ganzhiDay';
+import { nextTermOf } from '../engine/time/solarTerms';
 import type { StarNumber } from '../overlay/types';
 import { PURPLE_WHITE_STARS, STAR_QI_REFERENCE } from './researchEvidence';
 import { buildTemporalPillars } from './temporalPillars';
 import { WHITE_KILLER_MATRIX, type WhiteKillerMatrixRow } from './whiteKillerMatrix';
 import type {
   AnJianVariantId, DaYueJianAssessment, DirectionLevel, DirectionPalaceKey, Element,
-  GenericWhiteKillerAnJianAssessment, LayerRole, MonthlyCenterStarState,
+  DayGate, DayMasterSeasonState, GenericWhiteKillerAnJianAssessment, LayerRole, MonthlyCenterStarState,
   PalaceElementRelation, PalaceKiller, RuleEvidence, SeasonalState, TemporalBranchContext,
   TemporalStarAssessment, TimeGateAssessment, PurpleWhiteArrivalRule,
 } from './types';
 
 type MonthSeason = TemporalBranchContext['monthSeason'];
+
+const STEM_ELEMENT: Readonly<Record<Stem, Element>> = {
+  甲: '木', 乙: '木', 丙: '火', 丁: '火', 戊: '土',
+  己: '土', 庚: '金', 辛: '金', 壬: '水', 癸: '水',
+};
+
+/** 四季主氣；辰未戌丑進入四立前十八日後，Day Gate 另改取土司令。 */
+const SEASON_MAIN_ELEMENT_BY_BRANCH: Readonly<Record<Branch, Element>> = {
+  子: '水', 丑: '水', 寅: '木', 卯: '木', 辰: '木', 巳: '火',
+  午: '火', 未: '火', 申: '金', 酉: '金', 戌: '金', 亥: '水',
+};
+const FOUR_SEASON_STARTS = ['立春', '立夏', '立秋', '立冬'] as const;
+const EARTH_COMMAND_MS = 18 * 24 * 60 * 60 * 1000;
 
 export const NATIVE_PALACE: Readonly<Record<StarNumber, PalaceKey>> = {
   1: WHITE_KILLER_MATRIX[1].anJian[0], 2: WHITE_KILLER_MATRIX[2].anJian[0],
@@ -152,10 +166,15 @@ export function buildTemporalBranchContext(
   options: TemporalContextOptions = {},
 ): TemporalBranchContext {
   const pillars = buildTemporalPillars(date, options);
+  const nextSeasonStart = nextTermOf(date, FOUR_SEASON_STARTS);
+  const isEarthCommand = nextSeasonStart.date.getTime() - date.getTime() <= EARTH_COMMAND_MS;
   return {
     pillars,
     evidence: { year: 'A', month: 'A', day: 'B', hour: 'C' },
     monthSeason: MONTH_SEASON_BY_BRANCH[pillars.month.branch],
+    monthCommand: isEarthCommand
+      ? { element: '土', rule: 'earth_last_18_days' }
+      : { element: SEASON_MAIN_ELEMENT_BY_BRANCH[pillars.month.branch], rule: 'season_main' },
   };
 }
 
@@ -242,12 +261,60 @@ export function computeDaYueJian(
   };
 }
 
-export function buildTimeGateAssessment(): TimeGateAssessment {
+export function dayElementFor(stem: Stem): Element {
+  return STEM_ELEMENT[stem];
+}
+
+export function dayMasterSeasonStateFor(
+  dayElement: Element,
+  monthElement: Element,
+): DayMasterSeasonState {
+  if (dayElement === monthElement) return 'wang';
+  if (GENERATES[monthElement] === dayElement) return 'xiang';
+  if (GENERATES[dayElement] === monthElement) return 'xiu';
+  if (CONTROLS[dayElement] === monthElement) return 'qiu';
+  return 'si';
+}
+
+function buildDayGate(context: TemporalBranchContext): DayGate {
+  const dayStem = context.pillars.day.stem;
+  const dayElement = dayElementFor(dayStem);
+  const monthElement = context.monthCommand.element;
+  const seasonalState = dayMasterSeasonStateFor(dayElement, monthElement);
+  const reasons: Record<DayMasterSeasonState, string> = {
+    wang: '日主與月令同氣，日主得令。',
+    xiang: '月令生扶日主，日主得生。',
+    xiu: '日主生月令，氣勢休退。',
+    qiu: '日主剋月令，失時受囚。',
+    si: '月令剋日主，日主受制。',
+  };
+  const status = seasonalState === 'wang' || seasonalState === 'xiang'
+    ? 'pass' : seasonalState === 'xiu' ? 'mixed' : 'caution';
   return {
-    dayStatus: 'not_evaluated',
+    dayStem,
+    dayElement,
+    monthBranch: context.pillars.month.branch,
+    monthElement,
+    monthCommandRule: context.monthCommand.rule,
+    seasonalState,
+    status,
+    reasons: [
+      reasons[seasonalState],
+      context.monthCommand.rule === 'earth_last_18_days'
+        ? '月令司氣採四立前十八日土旺。'
+        : '月令司氣採節氣月的四季主氣。',
+    ],
+  };
+}
+
+export function buildTimeGateAssessment(context: TemporalBranchContext): TimeGateAssessment {
+  const dayGate = buildDayGate(context);
+  return {
+    dayStatus: dayGate.status,
     hourStatus: 'not_evaluated',
     rankingUse: 'disabled',
-    note: '日主與時課 Gate 尚未建立完整通書日課規則，不參與方向判定。',
+    dayGate,
+    note: 'Day Gate V1 只判日干與月令，不換算分數；時課尚未評估，兩者均不改方向排序。',
   };
 }
 

@@ -1,5 +1,5 @@
 import type { PalaceKey } from '../engine/flyingStar/types';
-import type { Branch, Ganzhi } from '../engine/time/ganzhi';
+import type { Branch, Ganzhi, Stem } from '../engine/time/ganzhi';
 import type { StarNumber } from '../overlay/types';
 import type { TemporalPillars } from './temporalPillars';
 
@@ -87,6 +87,9 @@ export interface PurpleWhiteArrivalRule {
   role: PurpleWhiteArrivalRole;
 }
 export type Element = '木' | '火' | '土' | '金' | '水';
+export type DayMasterSeasonState = 'wang' | 'xiang' | 'xiu' | 'qiu' | 'si';
+export type DayGateStatus = 'pass' | 'mixed' | 'caution';
+export type MonthCommandRule = 'season_main' | 'earth_last_18_days';
 export type PalaceElementRelation =
   | 'same' | 'palace_generates_star' | 'star_generates_palace'
   | 'palace_controls_star' | 'star_controls_palace';
@@ -150,6 +153,11 @@ export interface TemporalBranchContext {
   pillars: TemporalPillars;
   evidence: Record<DirectionLevel, TemporalEvidenceLevel>;
   monthSeason: 'spring' | 'summer' | 'autumn' | 'winter' | 'earth_transition';
+  /** Day Gate 專用司令五行；不改寫既有九星月令矩陣。 */
+  monthCommand: {
+    element: Element;
+    rule: MonthCommandRule;
+  };
 }
 
 export type AnJianVariantId = 'generic_jiugong' | 'san_yuan_bao_hai' | 'jiyao_native_and_center';
@@ -194,10 +202,22 @@ export interface AnJianAssessment {
   daYueJian: DaYueJianAssessment;
 }
 
+export interface DayGate {
+  dayStem: Stem;
+  dayElement: Element;
+  monthBranch: Branch;
+  monthElement: Element;
+  monthCommandRule: MonthCommandRule;
+  seasonalState: DayMasterSeasonState;
+  status: DayGateStatus;
+  reasons: string[];
+}
+
 export interface TimeGateAssessment {
-  dayStatus: 'pass' | 'mixed' | 'reject' | 'not_evaluated';
+  dayStatus: DayGateStatus;
   hourStatus: 'pass' | 'mixed' | 'not_evaluated';
   rankingUse: 'disabled';
+  dayGate: DayGate;
   note: string;
 }
 

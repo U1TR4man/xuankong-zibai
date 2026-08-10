@@ -69,5 +69,6 @@ describe('擇吉 canonical 年月日時干支', () => {
       expect(assessment.periodBranch).toBe(context.pillars[level].branch);
     }
     expect(context.monthSeason).toBe('earth_transition');
+    expect(context.monthCommand).toEqual({ element: '土', rule: 'earth_last_18_days' });
   });
 });

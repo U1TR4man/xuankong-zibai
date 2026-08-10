@@ -102,7 +102,7 @@ export function buildDirectionTemporalProfile(
     qualifiedPurpleWhiteHits,
     qualifiedPurpleWhiteCount,
     starStates,
-    timeGate: buildTimeGateAssessment(),
+    timeGate: buildTimeGateAssessment(context),
     anJian: {
       genericWhiteKiller,
       daYueJian: computeDaYueJian(
@@ -221,8 +221,8 @@ export function evaluateDirection(
     absoluteCount > 0 ? `臨絕：${absoluteCount} 層` : '',
     profile.yellowBlackLayers.length >= 2
       ? `二黑、五黃同到${profile.yellowBlackThriving ? '且月令值旺' : ''}` : '',
-    '月、日白是方向主層；日主 Gate 尚未評估，年作長期背景，時白只作同級細選',
-    '月令旺相休囚只作條件顯示，不換算固定分數',
+    '日課 Gate 已顯示但不改方向排序；月、日白是方向主層，年作長期背景，時白只作同級細選',
+    '日課旺相休囚死與九星月令狀態均不換算固定分數',
     '雙星 81 組只供參考，不參與方向排序',
   ].filter(Boolean);
 

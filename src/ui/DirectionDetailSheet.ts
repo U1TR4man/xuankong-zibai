@@ -3,7 +3,7 @@ import { purposeLabel } from '../selection/purpose';
 import { PURPLE_WHITE_SIGNAL_LABEL, WHITE_KILLER_LABEL } from '../selection/researchEvidence';
 import {
   VERDICT_LABEL, type BranchQiState, type DirectionEvaluation, type DirectionLevel,
-  type LayerRole, type PairHit, type PalaceElementRelation, type SeasonalState,
+  type DayGateStatus, type DayMasterSeasonState, type LayerRole, type PairHit, type PalaceElementRelation, type SeasonalState,
   type SourceGrade, type TemporalStarAssessment,
 } from '../selection/types';
 import { openBottomSheet } from './BottomSheet';
@@ -28,6 +28,12 @@ const ROLE_LABEL: Record<LayerRole, string> = {
   seasonal_command: '月令核心',
   day_gate: '日主 Gate',
   fine_tuning: '細選／扶日',
+};
+const DAY_STATE_LABEL: Record<DayMasterSeasonState, string> = {
+  wang: '旺', xiang: '相', xiu: '休', qiu: '囚', si: '死',
+};
+const DAY_STATUS_LABEL: Record<DayGateStatus, string> = {
+  pass: '通過', mixed: '偏弱', caution: '慎看',
 };
 const ELEMENT_RELATION_LABEL: Record<PalaceElementRelation, (
   palace: string, star: string,
@@ -152,6 +158,26 @@ function killerConditions(evaluation: DirectionEvaluation): HTMLElement {
     })));
 }
 
+function dayGateSection(evaluation: DirectionEvaluation): HTMLElement {
+  const gate = evaluation.temporalProfile.timeGate.dayGate;
+  return el('section', {
+    class: `direction-section direction-day-gate day-gate--${gate.status}`,
+    'aria-labelledby': 'direction-day-gate-title',
+  },
+  el('h3', { id: 'direction-day-gate-title' }, '日課'),
+  el('div', { class: 'direction-day-gate__facts' },
+    el('p', {}, el('small', {}, '日主'), el('strong', {}, `${gate.dayStem}${gate.dayElement}`)),
+    el('p', {}, el('small', {}, '月令'), el('strong', {}, `${gate.monthBranch}${gate.monthElement}`)),
+    el('p', { class: 'direction-day-gate__state' },
+      el('small', {}, '狀態'),
+      el('strong', {}, DAY_STATE_LABEL[gate.seasonalState]),
+      el('span', {}, DAY_STATUS_LABEL[gate.status]))),
+  el('ul', { class: 'direction-day-gate__reasons' },
+    ...gate.reasons.map((reason) => el('li', {}, reason))),
+  el('small', { class: 'direction-day-gate__boundary' },
+    'V1 只判日干與月令；四柱沖合、時辰扶日尚未納入。'));
+}
+
 export function openDirectionDetailSheet(
   trigger: HTMLElement,
   evaluation: DirectionEvaluation,
@@ -197,6 +223,8 @@ export function openDirectionDetailSheet(
         ...evaluation.temporalProfile.starStates.map((state) => (
           starItem(LEVEL_LABEL[state.level], state.ganzhi.text, state.star)
         ))),
+      dayGateSection(evaluation),
+      el('h2', { class: 'direction-detail__section-label' }, '方向'),
       el('p', { class: `direction-detail__verdict verdict--${evaluation.verdict}` },
         VERDICT_LABEL[evaluation.verdict]),
       evaluation.purpose !== 'general'
@@ -243,7 +271,7 @@ export function openDirectionDetailSheet(
             el('p', {}, '「紫白一時加／二時加」存在異文，不作至少兩層才成立的門檻；單一合格紫白亦可成為正面訊號。'),
             el('p', {}, '月白與日白是方向主層；時白正式有效但只作同級細選，不能單靠時白翻轉年月日較差的方向。'),
             el('p', {}, '支序有氣對年、月正式運用；日支為次級有效條件，時支仍只作類推參考。五行生扶型有氣未封版，不參與排序。'),
-            el('p', {}, '月令是核心；日主與時課 Gate 尚未建立完整日課規則，目前不宣稱日期本身已通過古法篩選。'),
+            el('p', {}, 'Day Gate V1 已按日干與月令顯示旺相休囚死，但不換算分數、不改方向排序；四柱沖合與時辰扶日仍待下一階段。'),
             el('p', {}, '月建納音的作用範圍、刑宮、害宮、四空亡及二十四山尚未納入判定。'),
             el('p', {}, '目前判定名稱屬工具分級，不是古籍原有等級。'))),
       ),

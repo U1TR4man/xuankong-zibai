@@ -130,13 +130,14 @@ export const SELECTION_METHOD_EVIDENCE: readonly SelectionMethodEvidence[] = [
   },
   {
     id: 'time_gate_boundary',
-    summary: '日主為擇吉 Gate，時課用來扶日與細選；完整通書日課未建立前，狀態明示為尚未評估。',
+    summary: 'Day Gate V1 依節氣月司令判日干旺相休囚死，只作 pass／mixed／caution；時課用來扶日與細選，四柱沖合未完成前不 hard reject。',
     useContexts: ['selection_coarrival'],
-    verificationStatus: 'awaiting_scan',
+    verificationStatus: 'verified',
     primarySourceVerified: false,
     witnesses: [
-      { source: '《儒門崇理折衷堪輿完孝錄》卷六〈九宮紫白〉', note: '記「大抵至重者，日主也」與月令提綱。' },
-      { source: '《造命宗鏡集》', note: '用日宜擇旺相，用時宜扶日主、幫四柱。' },
+      { source: '《多能鄙事》卷六〈旺相休囚死例〉', note: '保存春夏秋冬四季的五行旺相休囚死定表。' },
+      { source: '《御定星曆考原》卷一', note: '記四立前各十八日土旺，合為七十二日。' },
+      { source: '《造命宗鏡集》卷六', note: '記用日宜旺相、用時扶日；小修可用時扶日使日不休囚，故 V1 弱日只警示。' },
     ],
   },
   {

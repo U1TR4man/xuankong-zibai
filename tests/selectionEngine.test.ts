@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeFullChart } from '../src/engine/flyingStar';
+import { getSolarTerms } from '../src/engine/time/solarTerms';
 import { fromUtc8 } from '../src/engine/time/utc8';
 import { ganzhiFromIndex60 } from '../src/engine/time/ganzhi';
 import { buildDirectionSnapshots } from '../src/selection/buildDirectionSnapshots';
@@ -14,7 +15,8 @@ import {
   PURPLE_WHITE_ARRIVAL_POLICY, WHITE_KILLER_LAYER_POLICY,
   assessAnJian, assessArrivalWhiteKillers, assessGenericWhiteKillerAnJian, assessLiuJie,
   assessTemporalStar, buildMonthlyCenterStarState, buildTemporalBranchContext,
-  buildTimeGateAssessment, computeDaYueJian, palaceElementRelationFor, seasonalStateFor,
+  buildTimeGateAssessment, computeDaYueJian, dayElementFor, dayMasterSeasonStateFor,
+  palaceElementRelationFor, seasonalStateFor,
 } from '../src/selection/temporalRules';
 import { WHITE_KILLER_MATRIX, WHITE_KILLER_MATRIX_AUDIT } from '../src/selection/whiteKillerMatrix';
 import type { StarNumber } from '../src/overlay/types';
@@ -35,6 +37,7 @@ const CONTEXT: TemporalBranchContext = {
   },
   evidence: { year: 'A', month: 'A', day: 'B', hour: 'C' },
   monthSeason: 'autumn',
+  monthCommand: { element: '金', rule: 'season_main' },
 };
 
 describe('紫白擇吉 Phase 1 資料與判讀層', () => {
@@ -156,9 +159,13 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     )))).toEqual(expected);
   });
 
-  it('日主 Gate 與月納音繼續保留未評估介面', () => {
-    expect(buildTimeGateAssessment()).toMatchObject({
-      dayStatus: 'not_evaluated', hourStatus: 'not_evaluated', rankingUse: 'disabled',
+  it('Day Gate V1 已評估日干月令，Hour Gate 與月納音維持未評估', () => {
+    expect(buildTimeGateAssessment(CONTEXT)).toMatchObject({
+      dayStatus: 'pass', hourStatus: 'not_evaluated', rankingUse: 'disabled',
+      dayGate: {
+        dayStem: '庚', dayElement: '金', monthBranch: '酉', monthElement: '金',
+        seasonalState: 'wang', status: 'pass',
+      },
     });
     expect(buildMonthlyCenterStarState(4, CONTEXT.pillars.month)).toMatchObject({
       centerStar: 4, monthNayin: null, transformedElement: null,
@@ -258,6 +265,40 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(seasonalStateFor(9, 'winter')).toBe('controlled');
   });
 
+  it('十干五行與日主旺相休囚死採五行生剋的 deterministic 關係', () => {
+    expect('甲乙丙丁戊己庚辛壬癸'.split('').map((stem) => dayElementFor(
+      stem as Parameters<typeof dayElementFor>[0],
+    ))).toEqual(['木', '木', '火', '火', '土', '土', '金', '金', '水', '水']);
+    expect([
+      dayMasterSeasonStateFor('木', '木'),
+      dayMasterSeasonStateFor('火', '木'),
+      dayMasterSeasonStateFor('水', '木'),
+      dayMasterSeasonStateFor('土', '木'),
+      dayMasterSeasonStateFor('金', '木'),
+    ]).toEqual(['wang', 'xiang', 'xiu', 'si', 'qiu']);
+  });
+
+  it('Day Gate 月令採節氣月，並只在四立前十八日切換土司令', () => {
+    const liqiu = getSolarTerms(2026).find((term) => term.name === '立秋')!.date;
+    const transition = new Date(liqiu.getTime() - 18 * 24 * 60 * 60 * 1000);
+    const before = buildTemporalBranchContext(new Date(transition.getTime() - 1_000));
+    const atTransition = buildTemporalBranchContext(transition);
+    const atLiqiu = buildTemporalBranchContext(liqiu);
+
+    expect(before).toMatchObject({
+      pillars: { month: { branch: '未' } },
+      monthCommand: { element: '火', rule: 'season_main' },
+    });
+    expect(atTransition).toMatchObject({
+      pillars: { month: { branch: '未' } },
+      monthCommand: { element: '土', rule: 'earth_last_18_days' },
+    });
+    expect(atLiqiu).toMatchObject({
+      pillars: { month: { branch: '申' } },
+      monthCommand: { element: '金', rule: 'season_main' },
+    });
+  });
+
   it('四層地支沿用正式年界、節氣月、換日與時辰 API', () => {
     const context = buildTemporalBranchContext(AT);
     expect(Object.fromEntries(Object.entries(context.pillars).map(([level, pillar]) => (
@@ -266,7 +307,19 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
     expect(context).toMatchObject({
       evidence: { year: 'A', month: 'A', day: 'B', hour: 'C' },
       monthSeason: 'earth_transition',
+      monthCommand: { element: '土', rule: 'earth_last_18_days' },
     });
+  });
+
+  it('Day Gate 狀態不會改寫同一方向的 verdict 或排序', () => {
+    const passContext = { ...CONTEXT, monthCommand: { element: '金', rule: 'season_main' } } as const;
+    const cautionContext = { ...CONTEXT, monthCommand: { element: '火', rule: 'season_main' } } as const;
+    const pass = evaluateDirection(EXAMPLE, passContext);
+    const caution = evaluateDirection(EXAMPLE, cautionContext);
+
+    expect(pass.temporalProfile.timeGate.dayStatus).toBe('pass');
+    expect(caution.temporalProfile.timeGate.dayStatus).toBe('caution');
+    expect(caution.verdict).toBe(pass.verdict);
   });
 
   it('白中殺與支序有氣依來源強度分層，五行生扶不參與排序', () => {
