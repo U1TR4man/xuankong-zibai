@@ -186,7 +186,7 @@ describe('§1 層級與證據等級', () => {
     );
     expect(roles).toEqual({
       sui_de: 'primary_virtue',
-      sui_de_he: 'primary_virtue', // 《協紀》「並屬上吉」，不得降級
+      sui_de_he: 'primary_virtue', // 原文未給歲家等級，同級屬消極推論（見考源記錄 §1.1）
       tian_de: 'primary_virtue',
       tian_de_he: 'combined_virtue',
       yue_de: 'primary_virtue',
