@@ -78,7 +78,7 @@ const REASON_LABEL: Record<DirectionAssessmentReason, string> = {
   constraint_sui_po: '歲破', constraint_month_break: '月破方',
   constraint_year_san_sha: '年三煞', constraint_month_san_sha: '月三煞',
   constraint_day_san_sha: '日三煞',
-  positive_virtue: '得德', positive_san_de_cong_ju: '三德叢聚',
+  positive_virtue: '得德', positive_san_de_cong_ju: '三德方',
   reference_month_jin_kui: '月金匱',
 };
 
@@ -309,7 +309,7 @@ function virtueSection(
         ...here.map((virtue) => el('li', {},
           el('strong', {}, `${(virtue.position.kind === 'mountain' ? virtue.position.mountain : '')}山`),
           el('span', {}, `${VIRTUE_LABEL[virtue.code]}${virtue.role === 'combined_virtue' ? '（次吉）' : ''}`)))),
-    pattern ? el('p', { class: 'direction-virtue__pattern' }, `三德叢聚於${pattern.mountain}山。`) : null,
+    pattern ? el('p', { class: 'direction-virtue__pattern' }, `三德方：${pattern.mountain}山。`) : null,
     elsewhere.length > 0
       ? el('details', { class: 'direction-virtue__others' },
         el('summary', {}, '本盤其餘六德'),
