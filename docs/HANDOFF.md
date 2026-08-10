@@ -35,7 +35,8 @@
 - 紫白擇吉第七輪白中殺 9×6 矩陣 code checkpoint：`175ee81`
 - V2 Final UI/UX refinement code checkpoint：`2c4228e`
 - Day Gate V1 code checkpoint：`8ce7010`
-- 三 Gate 共用地支關係 primitive checkpoint：見本輪 commit（`src/selection/branchRelations.ts`）
+- 三 Gate 共用地支關係 primitive checkpoint：`b1c7d71`（`src/selection/branchRelations.ts`）
+- 24 山幾何 checkpoint：見本輪 commit（`src/selection/mountains24.ts`）
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -329,6 +330,18 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### 24 山幾何 `mountains24.ts`（已實作）
+
+- `src/selection/mountains24.ts` 是方位神煞層的唯一空間真相源，對應 `docs/direction-gate-v1-authoritative-rules.md` §11 的第 1、2 步。紫白飛星到方繼續用八宮 45°，方位神煞用 24 山 15°，兩套解析度並存。
+- 匯出：`Mountain24`、`MOUNTAINS_24`、`MOUNTAIN_ARC_DEGREES`、`isMountain24`、`mountainBearing`、`palaceOfMountain`、`mountainsOfPalace`、`getSuiPoMountain`、`getMonthBreakMountain`、`getSanShaMountains`、`listSanShaByGroup`、`DirectionHitCoverage`、`MountainHitResult`、`getMountainHitsForPalace`。全部純函式，不讀 DOM／localStorage／URL state。
+- 24 山以**單一有序表**保存（起於壬，順時針）；方位角與八宮歸屬皆由索引導出，不另建第二張映射表。子 0°、卯 90°、午 180°、酉 270°，壬跨 0° 邊界為 345°。角度僅供未來 compass 使用，V1 不做羅盤、不分磁北／真北。
+- 歲破山與月破方共用 `branchRelations.ts` 的 `oppositeBranch()`；三煞完全由 `SAN_HE_GROUPS` 經 `opposingTrineBranches()` 導出，**沒有第二張三煞表**。年、月、日三煞共用同一函式，未建立時三煞。
+- `isMountain24()` 已備，供下一輪六德判斷戊、己是否有外方使用；24 山不含戊己，測試已鎖定。
+- partial hit 是必要概念：`getMountainHitsForPalace()` 回傳 `matched` 與 `none / partial / full`。測試鎖定十二支的三煞在任一八宮皆不產生 `full`，且 `matched` 依羅盤次序回傳、重複輸入不重複計算。同一山可同時被歲破、月破方、三煞命中，三條 hit 並列保存、不做數值相抵。
+- **術語校正（資料未改）**：規則文件 §4 稱三煞為「三個連續 15° 山」。實際上三煞三支在**十二地支環**上相鄰，但在 **24 山環**上相隔 30°，中間夾天干山——例如三煞亥子丑之間夾壬、癸，而壬、癸並不命中。原文措辭應理解為四正「一帶三山」的傳統說法。程式註解與測試已明確鎖定此行為；依「不自行修文」原則，`docs/direction-gate-v1-authoritative-rules.md` 原句未改，是否補註由使用者決定。
+- 本輪**只有**幾何 primitive 與測試：沒有組裝 `DirectionGateAssessment`、沒有改 `src/selection/types.ts`（`DirectionHitCoverage` 暫定義於本檔）、沒有 UI 變更。`mountains24.ts` 目前無任何 import 端，production bundle 仍為 `index-ByhQ1c1Q.js` 164.33 kB、single file 545,356 bytes，與上一輪 byte 相同，可證明零 runtime 影響。
+- 下一步：`DirectionGateAssessment` 組裝（`status` 恆 `'not_evaluated'`，須附 regression test 證明 `verdictFor()`／`rankDirections()` 輸出不變），之後才是六德正面 evidence。
+
 ### Direction Positive Evidence V1 規則封版（第十一至十三輪，尚未實作）
 
 - 產出 `docs/direction-positive-v1-authoritative-rules.md`；本輪為接手指南 §5 Phase N0 的 read-only 考源封版，**沒有任何 production code 變更**，`src/` 零 diff。
@@ -357,8 +370,8 @@ tests/fixtures/chart-snapshot.json
 ## 驗證結果
 
 ```text
-test files  26 passed
-tests       226 passed（198 基線 + 28 個 branchRelations primitive 測試）
+test files  27 passed
+tests       247 passed（198 基線 + 28 branchRelations + 21 mountains24 primitive 測試）
 build       production success
 PWA font    preload + precache（單一 entry）success
 PWA precache 11 entries（461.53 KiB）success
@@ -466,6 +479,6 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - Search result 干支與最佳時窗仍為 P2；不得讓天干、旬空、納音或其他新條件在沒有獨立研究與規格前進入 verdict／ranking。
 - 雙星 81 組第二輪 source audit 及第三至七輪時間／白中殺規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
 - 第三輪「飛星回本宮＝暗建」、第四輪「暗建只套月層／五黃四隅是唯一答案」與 generic 宮剋星＝受剋殺均已廢止；不可從歷史文件回復。
-- 六德、三德聚方、月金匱已封版但未實作，且依賴尚未實作的 24 山幾何；不得跳過第十輪負面規則直接做正面 evidence。六德 severity 全部 `reference_only`，不得因為表可 deterministic 計算就升為 active。
+- 六德、三德聚方、月金匱已封版但未實作；24 山幾何已於本輪備妥（含 `isMountain24()` 供戊己判斷），但 `DirectionGateAssessment` 組裝仍未做，不得跳過它直接做正面 evidence。六德 severity 全部 `reference_only`，不得因為表可 deterministic 計算就升為 active。
 - 地支關係 primitive 已實作，但尚無任何消費者；六沖／六合／六害／三合／刑目前不影響 verdict、ranking 或 UI，`hourStatus` 仍為 `not_evaluated`。加入消費者時必須沿用 `docs/gates-v1-integration.md` §1 的六個具名欄位（`dayMonthBreak`／`hourBreak`／`clashMonth`／`clashYear`／`suiPoMountain`／`monthBreakMountain`），禁用 `yuePo`，且同一 clash fact 只登記一次。
 - 大月建公式已由第六輪封版，白中殺 9×6 程式矩陣已由第七輪封版，日干×月令 Day Gate V1 亦已封版，地支關係 primitive 已於本輪落地；仍暫緩的是四柱沖、月破、日時沖、時扶日、日干祿時、五黃傳本 selector、日／時白中殺 active 化與直接實例、時支有氣直接表、第七輪各書固定版本原頁證據包、月納音作用範圍、periodElement、修造／日常獨立模式與固定百分比。
