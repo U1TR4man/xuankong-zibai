@@ -6,6 +6,14 @@
 
 ### Added
 
+- 新增 `src/selection/directionVirtues.ts`：Direction Positive Evidence V1 的六德六張表、三德叢聚與月金匱參考值。與 `directionGate.ts` 分成 constraints／positives 兩個 channel，不混為一鍋；全部 `rankingUse: 'disabled'`，不參與八方排序，亦無使用者可見行為變更。
+- 六德恆回傳六項而不預先過濾，讓呼叫端能區分「落在某山」「值為戊己故無外方」「本月官方曆例無合」三種情況。`resolveVirtueSpatialPosition()` 明確禁止把戊、己強轉為山。
+- 層級依考源覆核設定：天德／月德為 `primary_virtue`、天德合／月德合為 `combined_virtue`，但**歲德與歲德合同為 `primary_virtue`**（《協紀》「並屬上吉」），不得把歲德合降一級。
+- 新增 `primarySourceVerified` 欄位並分層：天德、天德合、月德、月德合已逐字核對《御定星厯考原》四庫本卷三，設為 `true`；歲德、歲德合目前只有篇名與線上連結，維持 `false`。這是本專案首批達到固定版本原文標準的規則。
+- 天德合四維互合列為 default 關閉的異文（`tian_de_he_corner_directional_variant`），啟用後標記 `sourceMode: 'variant'` 且仍不參與排序；非四仲月不受影響。四仲月 default 維持官方曆例的「無合」。
+- 三德叢聚由三張表計算而不寫死四組；`detectSanDeCongJu()` 正名採「叢聚」，原研究稿的 `sanDeCongJi` 屬誤植。月金匱複用既有 `SAN_HE_GROUPS[].center`，policy 記為 `evidenceStatus: 'source_tension'`，不得寫成「《協紀》認為金匱無用」。
+- 新增 23 個測試：八組推導不變式（測試自備五合表，不從 production 匯入以免循環論證）、9 個無外方例全枚舉、四仲無合、120 組年干×月支枚舉恰 8 組三德叢聚且與古籍〈三德格〉四組一致、戊癸年恆不成立，以及計算層輸出不得內嵌中文句子。
+
 - 新增 `src/selection/directionGate.ts`：Direction Gate V1 組裝層，把歲破、月破方與年／月／日三煞五條方位神煞收斂成單一 `DirectionGateAssessment`。`status` 恆為 `not_evaluated`、`rankingUse` 為 `disabled`、`gateUse` 為 `reference_only`，只標示受影響的山，不判定方位吉凶、不參與八方排序，亦無使用者可見行為變更。
 - `hits` 只保留實際命中本宮的規則；整體 `coverage` 取命中山的**聯集**，因此同一山被多條規則命中不會重複計入，但五條 hit 仍各自登記、並列保存，不合併也不相抵。年支與月支相同時歲破與月破方必然同山，測試已鎖定兩者仍分別登記。
 - 五條規則的 `evidenceLevel` 一律為 `C`：第十輪研究稿只給篇名，是三輪 Gate 研究中最弱者，不得因算法 deterministic 就調高。未建立時三煞，測試已鎖定。

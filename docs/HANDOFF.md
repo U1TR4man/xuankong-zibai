@@ -37,7 +37,8 @@
 - Day Gate V1 code checkpoint：`8ce7010`
 - 三 Gate 共用地支關係 primitive checkpoint：`b1c7d71`（`src/selection/branchRelations.ts`）
 - 24 山幾何 checkpoint：`493ac1c`（`src/selection/mountains24.ts`）
-- Direction Gate V1 組裝 checkpoint：見本輪 commit（`src/selection/directionGate.ts`）
+- Direction Gate V1 組裝 checkpoint：`ffcadac`（`src/selection/directionGate.ts`）
+- 六德／三德叢聚 checkpoint：見本輪 commit（`src/selection/directionVirtues.ts`）
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -331,6 +332,20 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### Direction Positive Evidence `directionVirtues.ts`（已實作）
+
+- `src/selection/directionVirtues.ts` 完成 `docs/direction-positive-v1-authoritative-rules.md` §11 第 4–6 步。與 `directionGate.ts` 是**分離的兩個 channel**：constraints（歲破／月破方／三煞）與 positives（六德／三德叢聚），不得混為一鍋。
+- 匯出：`DirectionVirtueCode`、`CentralStem`、`VirtueRawValue`、`VirtueSpatialPosition`、`DirectionVirtueEvidence`、`DirectionVirtueOptions`、`resolveVirtueSpatialPosition`、`getDirectionVirtues`、`SanDeCongJuResult`、`detectSanDeCongJu`、`getMonthJinKuiBranch`、`MONTH_JIN_KUI_POLICY`、`listMonthJinKuiByGroup`、`TIAN_DE_HE_CORNER_VARIANT_ID`。全部純函式。
+- `getDirectionVirtues()` 恆回傳六項、不預先過濾，讓呼叫端能區分三種情況：落在某山、值為戊己故無外方、本月官方曆例無合。`resolveVirtueSpatialPosition()` 明確不做 `as Mountain24`。
+- 空間狀態命名為 `outside_24_mountains` 而非 `central_stem`：可確認的只有「二十四山無戊己」，「因而屬中宮、因而無方」是應用推論。行為不變，但不冒充古法定例。全枚舉 9 例由測試鎖定。
+- **層級**：天德／月德 `primary_virtue`、天德合／月德合 `combined_virtue`；**歲德與歲德合同為 `primary_virtue`**（《協紀》「並屬上吉」）。不得對三家統一二分。
+- **`primarySourceVerified` 分層**：天德、天德合、月德、月德合為 `true`（已逐字核對《御定星厯考原》四庫本卷三）；歲德、歲德合為 `false`（只有篇名與連結，未親自讀取）。這是本專案首批達到固定版本原文標準的規則，其餘全部規則仍為 `false`。
+- 天德合四維互合異文 `defaultEnabled: false`，啟用後標 `sourceMode: 'variant'` 且仍不參排序；非四仲月不受影響。四仲月 default 維持官方「無合」，不自動補。
+- 三德叢聚由三張表計算而非寫死四組；120 組全枚舉恰 8 組、對應甲庚丙壬四山，與古籍〈三德格〉一致，戊癸年恆 false。識別碼正名 `detectSanDeCongJu`。月金匱複用 `SAN_HE_GROUPS[].center`，`evidenceStatus: 'source_tension'`。
+- 測試自備天干五合表驗證推導不變式，**不從 production 匯入**，避免循環論證。另有一條測試鎖定計算層輸出不得內嵌中文句子（延續上一輪 `note` 被字體測試擋下的教訓）。
+- 本輪**沒有** UI，`directionVirtues.ts` 仍無 import 端；production bundle 仍為 `index-ByhQ1c1Q.js` 164.33 kB、single file 545,356 bytes，與前三輪 byte 相同。`rankingUse` 全部 `disabled`，severity 依使用者決定維持 `reference_only`。
+- 下一步：`DirectionSelectionAssessmentV2` 組裝（§11 第 7 步），把 constraints 與 positives 併成單一結果並附 regression test；UI 屬第 8 步且需重建字體 subset，應獨立成輪。
+
 ### Direction Gate V1 組裝 `directionGate.ts`（已實作）
 
 - `src/selection/directionGate.ts` 完成 `docs/direction-gate-v1-authoritative-rules.md` §11 第 3 步。第十輪的負面 constraints 至此可運作，但**不產生吉凶**。
@@ -399,8 +414,8 @@ tests/fixtures/chart-snapshot.json
 ## 驗證結果
 
 ```text
-test files  28 passed
-tests       262 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate）
+test files  29 passed
+tests       285 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate + 23 directionVirtues）
 build       production success
 PWA font    preload + precache（單一 entry）success
 PWA precache 11 entries（461.53 KiB）success
