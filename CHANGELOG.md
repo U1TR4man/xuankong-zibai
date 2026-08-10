@@ -6,6 +6,12 @@
 
 ### Added
 
+- 新增 `src/selection/hourGateTables.ts`：Hour Gate V1 的五不遇十組定局表、十干日祿時表與時干扶日五行關係。純表與純函式，不做 precedence 組裝、不改 `TimeGateAssessment.hourStatus`（仍為 `not_evaluated`）、不參與排序，亦無使用者可見行為變更。
+- 五不遇採**十組定局表**而非「時干剋日干且同陰陽」的 generic 推導，避免傳本干支配時差異造成 false positive；並明確不把「時支剋日支」混入。表與五鼠遁的一致性由測試驗證，但一致性只是驗證手段，不是取值來源。
+- `temporalRules.ts` 新增 `elementRelationBetween()`，複用既有 `GENERATES`／`CONTROLS`；時干扶日由此導出，不另建第二套五行表。`HourStemSupport` 的 `neutral` 經 100 組全枚舉確認 V1 永不回傳。
+- **新發現**：全枚舉後確認日祿時與五不遇時**恰有一組重疊**——辛日酉時為丁酉，既是辛的祿時也是辛的五不遇。規則文件 §3.2「祿時＋五不遇不得直接升為 preferred」因此不是抽象防呆而有唯一具體案例；已補記為 §3.2.1，組裝層 precedence 測試必須以此為 fixture，不可假設兩者互斥。
+- 新增 16 個測試：十組定局逐項、每個日干恰一個五不遇時與一個祿時、十組時干確實剋日干且同陰陽、100 組扶日關係全枚舉、關係有向不可對調，以及五不遇時干對日干恆為 `controls_day`。
+
 - 新增 `src/selection/directionSelection.ts`：`DirectionSelectionAssessmentV2` 組裝，把方位 constraints（歲破／月破方／三煞）與 positives（六德／三德叢聚）並列保存為單一結果。`status` 恆為 `not_evaluated`、`rankingUse` 為 `disabled`，V1 不產生 priority／usable／mixed／caution／avoid，亦無使用者可見行為變更。
 - 六德、三德叢聚與月金匱只依年干與月支，抽為全盤層 `DirectionSelectionContext` 計算一次，八宮共用，不重複計算。
 - **本檔刻意沒有任何抵銷路徑**：正面 evidence 不得翻轉 structural veto，不做數值化總分，不做正負抵消，不建立「命中 N 個吉神即優先」的硬閾值。以己酉年未月震宮為關鍵案例——甲山得三德叢聚、卯山同時犯歲破與年三煞——測試鎖定兩者完整並存、`reasons` 正負並列且 constraints 在前，並掃描輸出不得出現 `cancel`／`suppress`／`resolved`／`score`／`total` 等欄位。

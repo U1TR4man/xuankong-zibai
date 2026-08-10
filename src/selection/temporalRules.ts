@@ -265,6 +265,22 @@ export function dayElementFor(stem: Stem): Element {
   return STEM_ELEMENT[stem];
 }
 
+/** 兩個五行之間的關係，以 `from` 為主體。 */
+export type ElementRelation =
+  | 'same' | 'generates' | 'generated_by' | 'controls' | 'controlled_by';
+
+/**
+ * 五行關係的唯一實作，複用本檔既有的 `GENERATES`／`CONTROLS`。
+ * Hour Gate 的時干扶日由此導出，**不得另建第二套五行表**。
+ */
+export function elementRelationBetween(from: Element, to: Element): ElementRelation {
+  if (from === to) return 'same';
+  if (GENERATES[from] === to) return 'generates';
+  if (GENERATES[to] === from) return 'generated_by';
+  if (CONTROLS[from] === to) return 'controls';
+  return 'controlled_by';
+}
+
 export function dayMasterSeasonStateFor(
   dayElement: Element,
   monthElement: Element,

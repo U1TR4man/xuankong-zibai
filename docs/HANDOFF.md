@@ -39,7 +39,8 @@
 - 24 山幾何 checkpoint：`493ac1c`（`src/selection/mountains24.ts`）
 - Direction Gate V1 組裝 checkpoint：`ffcadac`（`src/selection/directionGate.ts`）
 - 六德／三德叢聚 checkpoint：`e68ff09`（`src/selection/directionVirtues.ts`）
-- Direction Selection V2 組裝 checkpoint：見本輪 commit（`src/selection/directionSelection.ts`）
+- Direction Selection V2 組裝 checkpoint：`3c9e9df`（`src/selection/directionSelection.ts`）
+- Hour Gate 三張表 checkpoint：見本輪 commit（`src/selection/hourGateTables.ts`）
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -333,6 +334,18 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### Hour Gate 三張表 `hourGateTables.ts`（已實作）
+
+- `src/selection/hourGateTables.ts` 完成 `docs/hour-gate-v1-authoritative-rules.md` §12 第 2 步：五不遇十組定局表、十干日祿時表、時干扶日五行關係。
+- 匯出：`isFiveBuYu`、`fiveBuYuGanzhiFor`、`isDayLuHour`、`dayLuBranchFor`、`HourStemSupport`、`assessHourStemSupport`、`isSupportiveHourStem`。全部純函式。
+- 五不遇採**十組定局表**，不用「時干剋日干且同陰陽」的 generic 推導（§1.3），且**不把時支剋日支混入**——《協紀》卷七專門校正過此點。表與五鼠遁的一致性由測試驗證，但一致性是驗證手段、不是取值來源。
+- 日祿時：甲寅、乙卯、丙巳、丁午、戊巳、己午、庚申、辛酉、壬亥、癸子。戊祿在巳、己祿在午與丙丁同位，是定局不是筆誤，測試明文鎖定。
+- `temporalRules.ts` 新增 `elementRelationBetween()`（複用既有 `GENERATES`／`CONTROLS`），時干扶日由此導出，**不另建第二套五行表**。`HourStemSupport` 的 `neutral` 經 100 組全枚舉確認 V1 永不回傳，型別保留只為對齊規則文件 §8。
+- **本輪新發現，下一輪必用**：日祿時與五不遇時**恰有一組重疊**——`辛日酉時 = 丁酉`，既是辛祿也是辛的五不遇；其餘九干各自落在不同時辰。規則文件 §3.2 因此有唯一具體案例，已補記為 §3.2.1。**組裝層 precedence 測試必須以辛日酉時為 fixture，不可假設祿時與五不遇互斥。**
+- V1 只把 `same_element` 與 `generates_day` 當正面訊號；洩、耗、剋在 V1 不作負面扣分，因研究稿未給強度且 Gate 不做數值抵消。
+- 本輪仍無 UI import 端；`elementRelationBetween()` 未被 UI 消費故被 tree-shake，production bundle 仍為 `index-ByhQ1c1Q.js` 164.33 kB、single file 545,356 bytes（僅 sourcemap 因原始檔變長而由 492.46 kB 增為 493.00 kB）。
+- 下一步：`HourGate` 組裝與 precedence（§12 第 3 步），`rankingUse` 維持 `disabled`，須附 regression test。
+
 ### Direction Selection V2 組裝 `directionSelection.ts`（已實作）
 
 - `src/selection/directionSelection.ts` 完成 `docs/direction-positive-v1-authoritative-rules.md` §11 第 7 步。Direction 層的 constraints 與 positives 至此併成單一結果，但**不產生綜合判定**。
@@ -344,6 +357,29 @@ tests/fixtures/chart-snapshot.json
 - regression 已附：計算 V2 前後八方 verdict 與排序完全相同；`DirectionEvaluation` 序列化後不含任何 V2 token；十天干×十二月支枚舉下 `status` 恆為 `not_evaluated`、`rankingUse` 恆為 `disabled`。
 - 本輪仍無 UI import 端，production bundle 仍為 `index-ByhQ1c1Q.js` 164.33 kB、single file 545,356 bytes，與前四輪 byte 相同。
 - **下一步是 UI（§11 第 8 步），必須獨立成輪**：會新增「歲德：戊，此值不在二十四山」「本月官方曆例無合」這類中文，依接手指南 §9 須重建自帶字體 subset 並記錄字元數、glyph 數、bytes 與 WOFF2／source SHA-256，另須驗 PWA precache、single-file data URI 與 320／375／390／430px 無 overflow。主九宮只能顯示「本宮含受影響／得吉山」，不得 overclaim 為「南方大凶」。
+
+#### UI 輪目前被來源字型卡住（2026-08-10）
+
+實測 Direction 層 UI 所需新增字元，僅 5 個不在現有 subset：
+
+```text
+匱 叢 德 歲 響
+```
+
+但 `德`、`歲` 是六德的核心詞彙，無法迴避；而 `scripts/build-font-subset.py` 要求
+`NotoSerifCJKtc-Medium.otf`，SHA-256 `da0a79ee44322329dd9ff87d2cc878dc897c5180195e3f9b6cd4c8569781e887`
+（以 `--source` 參數或 `ZIBAI_FONT_SOURCE` 提供）。
+
+現況：repo 內只有 OFL、glyph inventory 與產物 WOFF2，沒有來源 OTF；執行環境亦只有
+Noto Serif CJK **Regular／Bold 的 .ttc**，沒有 Medium `.otf`。
+
+**不得用 Regular 或 Bold 頂替**：那會靜默更換品牌字體並使已記錄的 source checksum 失效，
+違反接手指南 §9「取得相同官方 Noto Serif CJK TC Medium source 後，先核對 source checksum，
+再重建 subset」。
+
+因此 UI 輪需使用者先提供該 OTF，才能開始。取得後的步驟：核對 source checksum → 重建 subset →
+記錄新的字元數／glyph 數／bytes／WOFF2 SHA-256 → 驗 preload、PWA precache 與 single-file data URI
+→ 四寬度 overflow 實測。
 
 ### Direction Positive Evidence `directionVirtues.ts`（已實作）
 
@@ -427,8 +463,9 @@ tests/fixtures/chart-snapshot.json
 ## 驗證結果
 
 ```text
-test files  30 passed
-tests       300 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate + 23 directionVirtues + 15 directionSelection）
+test files  31 passed
+tests       316 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate
+            + 23 directionVirtues + 15 directionSelection + 16 hourGateTables）
 build       production success
 PWA font    preload + precache（單一 entry）success
 PWA precache 11 entries（461.53 KiB）success
