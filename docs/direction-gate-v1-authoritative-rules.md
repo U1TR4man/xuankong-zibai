@@ -165,7 +165,7 @@ export interface DirectionGateAssessment {
   hits: MountainHit[];
   coverage: DirectionHitCoverage;
   status: 'not_evaluated';       // V1 不產生 pass/mixed/caution/avoid
-  note: string;
+  note: string;                  // 實作收窄為穩定代碼，見下方
 }
 ```
 
@@ -178,6 +178,15 @@ getMountainHitsForPalace(palace, affected): { matched, coverage };
 ```
 
 `status` 在證據補齊前恆為 `'not_evaluated'`，與 `TimeGateAssessment.hourStatus` 現行慣例一致。
+
+### 8.1 實作偏離：`note` 為穩定代碼（2026-08-10 補記）
+
+`src/selection/directionGate.ts` 把 `note` 收窄為 `DirectionGateNote = 'v1_reference_only_not_evaluated'`，不是中文句子。理由：
+
+1. 接手指南 §7：「計算層回傳穩定、可測試的結構資料；UI 才翻譯成自然中文。」
+2. 在 `src/**` 的字串常量新增中文會擴大自帶字體 subset，由 `tests/v21Assets.test.ts` 鎖定；本輪非 UI scope，不應觸發字體重建。
+
+UI 層負責把此代碼翻成自然中文。
 
 ## 9. 證據狀態
 

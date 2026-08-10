@@ -6,6 +6,12 @@
 
 ### Added
 
+- 新增 `src/selection/directionGate.ts`：Direction Gate V1 組裝層，把歲破、月破方與年／月／日三煞五條方位神煞收斂成單一 `DirectionGateAssessment`。`status` 恆為 `not_evaluated`、`rankingUse` 為 `disabled`、`gateUse` 為 `reference_only`，只標示受影響的山，不判定方位吉凶、不參與八方排序，亦無使用者可見行為變更。
+- `hits` 只保留實際命中本宮的規則；整體 `coverage` 取命中山的**聯集**，因此同一山被多條規則命中不會重複計入，但五條 hit 仍各自登記、並列保存，不合併也不相抵。年支與月支相同時歲破與月破方必然同山，測試已鎖定兩者仍分別登記。
+- 五條規則的 `evidenceLevel` 一律為 `C`：第十輪研究稿只給篇名，是三輪 Gate 研究中最弱者，不得因算法 deterministic 就調高。未建立時三煞，測試已鎖定。
+- 新增 15 個測試，含 regression：以 144 組年月支全枚舉確認任一宮 coverage 皆不為 `full`，並證明計算 Direction Gate 前後八方 verdict 與排序完全相同、`DirectionEvaluation` 序列化後不含任何 Gate 專屬欄位、被歲破或三煞命中的方向不因此被推到排序末端。
+- `DirectionGateAssessment.note` 收窄為穩定代碼而非中文句子（規則文件 §8 原作 `note: string`）：接手指南 §7 要求計算層回傳結構資料、由 UI 翻譯中文，且在 `src/**` 字串常量新增中文會擴大自帶字體 subset。此偏離已記入規則文件。
+
 - Direction Positive Evidence V1 規則經**獨立考源覆核**後修訂：以不含本專案結論的中性提問清單交由另一模型獨立查證，六德六張表 80 格、9 個中宮干例、8 組三德聚方**全部零差異**，屬獨立路徑交叉確認；六張表的值不因覆核改動。
 - 天德、天德合、月德、月德合四張表已核對到固定版本原文（《御定星厯考原》四庫全書本卷三，維基文庫公有領域全文），含「四仲之月天德居四維故無合也」原句，此四項升為 `primarySourceVerified = true`；其餘條目升級為「篇名／卷次＋可核對連結」但未親自讀取，維持 `false`。
 - 保存《御定星厯考原》卷三月德合條「二六十月在巳」的形近訛異文：同條按語作「各以月德所合之干為之」，甲之五合為己，故表值取己，但異文照錄不修文。

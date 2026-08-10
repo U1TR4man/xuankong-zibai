@@ -36,7 +36,8 @@
 - V2 Final UI/UX refinement code checkpoint：`2c4228e`
 - Day Gate V1 code checkpoint：`8ce7010`
 - 三 Gate 共用地支關係 primitive checkpoint：`b1c7d71`（`src/selection/branchRelations.ts`）
-- 24 山幾何 checkpoint：見本輪 commit（`src/selection/mountains24.ts`）
+- 24 山幾何 checkpoint：`493ac1c`（`src/selection/mountains24.ts`）
+- Direction Gate V1 組裝 checkpoint：見本輪 commit（`src/selection/directionGate.ts`）
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -330,6 +331,18 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### Direction Gate V1 組裝 `directionGate.ts`（已實作）
+
+- `src/selection/directionGate.ts` 完成 `docs/direction-gate-v1-authoritative-rules.md` §11 第 3 步。第十輪的負面 constraints 至此可運作，但**不產生吉凶**。
+- 匯出：`DirectionShaRule`、`SpatialResolution`、`SpatialTarget`、`MountainHit`、`DirectionGateNote`、`DirectionGateAssessment`、`DirectionShaSource`、`DirectionShaAffected`、`getDirectionShaAffected`、`buildDirectionGateAssessment`、`buildDirectionGateAssessments`。全部純函式，只消費 `mountains24.ts` 與 `branchRelations.ts`。
+- V1 政策欄位固定：`status: 'not_evaluated'`、`precision: 'palace8'`、每個 hit 的 `rankingUse: 'disabled'`／`gateUse: 'reference_only'`／`evidenceLevel: 'C'`。第十輪只有篇名級引用，是三輪 Gate 中最弱，**不得因算法 deterministic 就調高強度**。
+- 五條規則：`sui_po`、`month_break`、`year_san_sha`、`month_san_sha`、`day_san_sha`。**未建立 `hour_san_sha`**（核心文本作「年月日之凶神」），測試鎖定。`sui_po`／`month_break` 是方位層對沖山，與 Time Gate 的 `dayMonthBreak`（破日）語義不同，不得共用欄位；`yuePo` 仍為禁用名。
+- `hits` 只保留實際命中本宮者，未命中的規則不入列；整體 `coverage` 取命中山的**聯集**，同一山被多條規則命中不重複計入。但五條 hit 各自登記、並列保存：年支＝月支時歲破與月破方必然同山，測試鎖定兩者仍分別出現，不合併、不相抵。
+- **偏離規則文件一處**：§8 寫 `note: string`，實作收窄為 `DirectionGateNote = 'v1_reference_only_not_evaluated'`。理由是接手指南 §7「計算層回傳穩定、可測試的結構資料；UI 才翻譯成自然中文」，且在 `src/**` 字串常量新增中文會擴大自帶字體 subset（由 `tests/v21Assets.test.ts` 鎖定）。初版曾誤放中文句子，被字體測試擋下後改正。UI 層負責翻譯此代碼。
+- **regression 已附**（規則文件 §6、整合契約 §6 要求）：計算 Direction Gate 前後八方 verdict 與排序完全相同；`DirectionEvaluation` 序列化後不含任何 Gate 專屬 token；被歲破或三煞命中的方向不因此被推到排序末端；四個不同時間點的 Gate 命中宮數確實變動，證明不變性不是因為 Gate 恆空。注意 `not_evaluated` **不可**用作洩漏判準——既有 `TimeGateAssessment.hourStatus` 本來就是這個值。
+- `directionGate.ts` 目前仍無 UI import 端，production bundle 仍為 `index-ByhQ1c1Q.js` 164.33 kB、single file 545,356 bytes，與前兩輪 byte 相同。
+- 下一步：六德正面 evidence（`getDirectionVirtues()`／`detectSanDeCongJu()`），與本層分成 constraints／positives 兩個 channel，見 `docs/direction-positive-v1-authoritative-rules.md` §11 第 4–6 步。
+
 ### Direction Positive Evidence V1 獨立考源覆核（文件修訂，無程式變更）
 
 - 以**不含本專案任何結論、表值或推導**的中性提問清單，交由另一模型獨立查證後逐項對比。覆核稿 `紫白擇吉_六德三德月金匱_獨立考源覆核.md`，SHA-256 `f65311d3e46298c9de775e45b3fa470e4bd759560f7f626779a5d0249367aeac`，依使用者決定只記 checksum，原檔不收進 repo。
@@ -386,8 +399,8 @@ tests/fixtures/chart-snapshot.json
 ## 驗證結果
 
 ```text
-test files  27 passed
-tests       247 passed（198 基線 + 28 branchRelations + 21 mountains24 primitive 測試）
+test files  28 passed
+tests       262 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate）
 build       production success
 PWA font    preload + precache（單一 entry）success
 PWA precache 11 entries（461.53 KiB）success
