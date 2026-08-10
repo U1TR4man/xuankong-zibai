@@ -38,7 +38,8 @@
 - 三 Gate 共用地支關係 primitive checkpoint：`b1c7d71`（`src/selection/branchRelations.ts`）
 - 24 山幾何 checkpoint：`493ac1c`（`src/selection/mountains24.ts`）
 - Direction Gate V1 組裝 checkpoint：`ffcadac`（`src/selection/directionGate.ts`）
-- 六德／三德叢聚 checkpoint：見本輪 commit（`src/selection/directionVirtues.ts`）
+- 六德／三德叢聚 checkpoint：`e68ff09`（`src/selection/directionVirtues.ts`）
+- Direction Selection V2 組裝 checkpoint：見本輪 commit（`src/selection/directionSelection.ts`）
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -332,6 +333,18 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### Direction Selection V2 組裝 `directionSelection.ts`（已實作）
+
+- `src/selection/directionSelection.ts` 完成 `docs/direction-positive-v1-authoritative-rules.md` §11 第 7 步。Direction 層的 constraints 與 positives 至此併成單一結果，但**不產生綜合判定**。
+- 匯出：`PositiveHitCoverage`、`DirectionAssessmentReason`、`DirectionSelectionContext`、`DirectionSelectionSource`、`DirectionPositives`、`DirectionSelectionAssessmentV2`、`buildDirectionSelectionContext`、`buildDirectionSelectionAssessment`、`buildDirectionSelectionAssessments`。全部純函式。
+- 六德、三德叢聚、月金匱只依年干與月支，抽為全盤層 `DirectionSelectionContext` 算一次，八宮共用；宮位相關的只有「該山是否落在本宮」。
+- **architecture invariant 已落實且測試鎖定**：本檔沒有任何抵銷路徑。關鍵案例為己酉年未月震宮——甲山得三德叢聚（己年歲德甲、未月天德甲、未月月德甲），卯山同時犯歲破與年三煞——測試確認兩者完整並存、各自 `matched` 正確、`reasons` 為 `[constraint_sui_po, constraint_year_san_sha, positive_virtue, positive_san_de_cong_ju, reference_month_jin_kui]`，並掃描序列化輸出不得出現 `cancel`／`suppress`／`resolved`／`score`／`total`。
+- `reasons` 收窄為穩定代碼 union（規則文件 §7 原作 `reasons: string[]`），理由同 `DirectionGateNote`：接手指南 §7 要求計算層回傳結構資料、UI 才翻譯中文。`PositiveHitCoverage` 與 negative 的 `DirectionHitCoverage` 刻意分開命名，避免把「本宮受煞幾山」與「本宮得吉幾山」誤用成同一欄位。
+- `positives.virtues` 只含落在本宮者；六項全貌（含 `outside_24_mountains` 與 `none`）留在 context，因為那是全盤層資訊，不屬於任何一宮。
+- regression 已附：計算 V2 前後八方 verdict 與排序完全相同；`DirectionEvaluation` 序列化後不含任何 V2 token；十天干×十二月支枚舉下 `status` 恆為 `not_evaluated`、`rankingUse` 恆為 `disabled`。
+- 本輪仍無 UI import 端，production bundle 仍為 `index-ByhQ1c1Q.js` 164.33 kB、single file 545,356 bytes，與前四輪 byte 相同。
+- **下一步是 UI（§11 第 8 步），必須獨立成輪**：會新增「歲德：戊，此值不在二十四山」「本月官方曆例無合」這類中文，依接手指南 §9 須重建自帶字體 subset 並記錄字元數、glyph 數、bytes 與 WOFF2／source SHA-256，另須驗 PWA precache、single-file data URI 與 320／375／390／430px 無 overflow。主九宮只能顯示「本宮含受影響／得吉山」，不得 overclaim 為「南方大凶」。
+
 ### Direction Positive Evidence `directionVirtues.ts`（已實作）
 
 - `src/selection/directionVirtues.ts` 完成 `docs/direction-positive-v1-authoritative-rules.md` §11 第 4–6 步。與 `directionGate.ts` 是**分離的兩個 channel**：constraints（歲破／月破方／三煞）與 positives（六德／三德叢聚），不得混為一鍋。
@@ -414,8 +427,8 @@ tests/fixtures/chart-snapshot.json
 ## 驗證結果
 
 ```text
-test files  29 passed
-tests       285 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate + 23 directionVirtues）
+test files  30 passed
+tests       300 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate + 23 directionVirtues + 15 directionSelection）
 build       production success
 PWA font    preload + precache（單一 entry）success
 PWA precache 11 entries（461.53 KiB）success

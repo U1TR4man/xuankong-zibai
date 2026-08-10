@@ -6,6 +6,12 @@
 
 ### Added
 
+- 新增 `src/selection/directionSelection.ts`：`DirectionSelectionAssessmentV2` 組裝，把方位 constraints（歲破／月破方／三煞）與 positives（六德／三德叢聚）並列保存為單一結果。`status` 恆為 `not_evaluated`、`rankingUse` 為 `disabled`，V1 不產生 priority／usable／mixed／caution／avoid，亦無使用者可見行為變更。
+- 六德、三德叢聚與月金匱只依年干與月支，抽為全盤層 `DirectionSelectionContext` 計算一次，八宮共用，不重複計算。
+- **本檔刻意沒有任何抵銷路徑**：正面 evidence 不得翻轉 structural veto，不做數值化總分，不做正負抵消，不建立「命中 N 個吉神即優先」的硬閾值。以己酉年未月震宮為關鍵案例——甲山得三德叢聚、卯山同時犯歲破與年三煞——測試鎖定兩者完整並存、`reasons` 正負並列且 constraints 在前，並掃描輸出不得出現 `cancel`／`suppress`／`resolved`／`score`／`total` 等欄位。
+- `reasons` 收窄為穩定代碼 union（規則文件 §7 原作 `string[]`），理由同前一輪的 `DirectionGateNote`：計算層回傳結構資料、由 UI 翻譯中文。`PositiveHitCoverage` 與 negative 的 `DirectionHitCoverage` 分開命名，避免把「本宮受煞幾山」與「本宮得吉幾山」誤用成同一欄位。
+- 新增 15 個測試，含 regression：計算 V2 前後八方 verdict 與排序完全相同、`DirectionEvaluation` 序列化後不含任何 V2 欄位，以及十天干×十二月支枚舉下 `status` 恆為 `not_evaluated`。
+
 - 新增 `src/selection/directionVirtues.ts`：Direction Positive Evidence V1 的六德六張表、三德叢聚與月金匱參考值。與 `directionGate.ts` 分成 constraints／positives 兩個 channel，不混為一鍋；全部 `rankingUse: 'disabled'`，不參與八方排序，亦無使用者可見行為變更。
 - 六德恆回傳六項而不預先過濾，讓呼叫端能區分「落在某山」「值為戊己故無外方」「本月官方曆例無合」三種情況。`resolveVirtueSpatialPosition()` 明確禁止把戊、己強轉為山。
 - 層級依考源覆核設定：天德／月德為 `primary_virtue`、天德合／月德合為 `combined_virtue`，但**歲德與歲德合同為 `primary_virtue`**（《協紀》「並屬上吉」），不得把歲德合降一級。
