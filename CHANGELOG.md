@@ -6,6 +6,9 @@
 
 ### Added
 
+- 新增 Day Gate V1 權威規則紀錄：逐項定案旺相休囚死算法、節氣月、四立前十八日土旺、弱日 veto 邊界、時辰生扶與四柱沖合優先順序；原始規劃 SHA-256 一併保存。
+- 新增日干五行、月令司令五行、旺相休囚死與 `pass / mixed / caution` 評估；只顯示時間 Gate，不換算分數、不 hard reject、不改八方 verdict／ranking。
+- 擇吉方向詳情新增「日課」區塊，依序顯示日主、月令、狀態與自然中文理由，並明示四柱沖合、時辰扶日尚未納入。
 - 新增第七輪白中殺 9 星×6 殺單一真相表：六捷墓、九宮暗建、受剋、穿心、交劍、鬥牛全部逐星鎖定，並保存還原欄序、規則級信心與原典未核 metadata。
 - 新增暗建、到方四殺與六捷墓的獨立 API 及完整矩陣測試；鎖定同層多殺、五黃中宮預設、九紫戌墓及一白艮宮不誤報受剋殺。
 - 新增第六輪四層到方政策：月／日為正式主層、年為背景、時白為同級細選；日支有氣升為 B+ 次級有效，日時白中殺仍只作參考。
@@ -62,6 +65,7 @@
 
 ### Fixed
 
+- 重建 `Zibai Serif` 離線字體子集至 914 個 UI 字元／915 glyphs；Day Gate 新增中文字已進 preload、PWA precache 與單檔 data URI。
 - 移除 user-facing UI 的 `⚠`、`✦`、`✓`、`⚑` 平台字形；警示、參考、命中與異文改由正常中文及既有 design tokens 表達。
 - 重建 `Zibai Serif` 離線字體子集至 917 個 UI 字元／918 glyphs；第七輪研究說明新增中文已進 preload、PWA precache 與單檔 data URI。
 - 移除大月建「獨立月干支飛宮尚待核對」的過期 user-facing 說法；主盤與詳情不再將大月建、月暗建重複顯示或重複計入警示。
@@ -101,6 +105,7 @@
 
 ### Documentation
 
+- 收錄 Day Gate V1 implementation record、code checkpoint `8ce7010`、198 tests、PWA／單檔 build、字體 coverage 及 320／375／390／430px Browser 驗收；四柱沖合與 Hour Gate 明確留待下一階段。
 - 收錄 V2 Final UI/UX refinement 的原始規格 checksum、P0／P1 implementation record、195 tests、PWA／單檔 build、字體 coverage、30 秒 follow-now 與四種 iPhone 寬度 Browser 驗收；兩項 P2 明確暫緩。
 - 收錄紫白擇吉第七輪實作紀錄、原始研究 checksum、9×6 矩陣、三種輸入契約、194 tests、PWA／單檔 build、離線字體與四種手機寬度 Browser 驗收；原典影像未入專案故仍保留 `primarySourceVerified=false`。
 - 收錄紫白擇吉第六輪實作紀錄、原始研究 checksum、大月建 36 月合流、日白／時白層級、194 tests、PWA／單檔 build、離線字體與四種手機寬度 Browser 驗收。

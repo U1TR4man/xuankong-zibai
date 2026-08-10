@@ -2,7 +2,7 @@
 
 ## 目前狀態
 
-`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／搜尋 implementation **Phase 0–6**、盤面／搜尋／URL cleanup、疊盤配色補丁、紫白擇吉方向 V1 **Phase 1–4**、干支加入與 UI/UX refinement V2 的 **P0／P1**，以及 V2 Final UI/UX refinement 的 **P0／P1** 均已完成。雙星 81 組已與方向 ranking 解耦；第六輪已確認大月建等於月入中星本宮、與月暗建合流，並將日白升為正式主層、時白定為同級細選；第七輪已將六捷墓、九宮暗建、受剋、穿心、交劍與鬥牛整合為唯一 9 星×6 殺矩陣。現行 Direction status 繼續使用 source-aware V6 政策。
+`docs/uiux-redesign-v2.md` 的 **Phase 0–6**、V2.1 視覺精修 **Phase A–D**、professional UI/UX refinement **Phase A–D**、疊盤／搜尋 implementation **Phase 0–6**、盤面／搜尋／URL cleanup、疊盤配色補丁、紫白擇吉方向 V1 **Phase 1–4**、干支加入與 UI/UX refinement V2 的 **P0／P1**、V2 Final UI/UX refinement 的 **P0／P1**，以及 **Day Gate V1** 均已完成。雙星 81 組已與方向 ranking 解耦；第六輪已確認大月建等於月入中星本宮、與月暗建合流，並將日白升為正式主層、時白定為同級細選；第七輪已將六捷墓、九宮暗建、受剋、穿心、交劍與鬥牛整合為唯一 9 星×6 殺矩陣。現行 Direction status 繼續使用 source-aware V6 政策，Day Gate V1 只顯示時間狀態，不改八方 verdict／ranking。
 
 - 專案：`U1TR4man/xuankong-zibai`
 - branch：`main`
@@ -34,6 +34,7 @@
 - 紫白擇吉第六輪大月建合流／日白升級 code checkpoint：`9674f28`
 - 紫白擇吉第七輪白中殺 9×6 矩陣 code checkpoint：`175ee81`
 - V2 Final UI/UX refinement code checkpoint：`2c4228e`
+- Day Gate V1 code checkpoint：`8ce7010`
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -52,8 +53,9 @@
 - 紫白擇吉第七輪考源紀錄：`docs/purple-white-seventh-round-white-killer-matrix.md`
 - 干支加入與 UI/UX refinement V2 紀錄：`docs/ganzhi-uiux-refinement-v2.md`
 - V2 Final UI/UX refinement 紀錄：`docs/v2-final-uiux-refinement.md`
+- Day Gate V1 權威規則：`docs/day-gate-v1-authoritative-rules.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣、canonical 年月日時干支及 V2 Final P0／P1 均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。V2 UI/UX 進入 freeze；下一步是收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式、九宮式 Search selector、九宮 keyboard cleanup 或 P2 最佳時窗。
+P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣、canonical 年月日時干支、V2 Final P0／P1 及 Day Gate V1 均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。V2 UI/UX 進入 freeze；Day Gate 下一步是四柱沖、月破、日時沖、時扶日與日干祿時。另需收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式、九宮式 Search selector、九宮 keyboard cleanup 或 P2 最佳時窗。
 
 ---
 
@@ -254,7 +256,7 @@ tests/fixtures/chart-snapshot.json
 - 白中殺：年 A active、月 A active、日 B reference only、時 B reference only。主盤只消費年月 `activeHits`；日時在詳情顯示「白中殺類比：研究參考」。
 - 支序有氣：年 A active、月 A active、日 B warning only、時 C reference only。五行生扶型有氣獨立保存且 `disabled`。
 - layer role 為年作長期背景、月為 `seasonal_command`、日為 `day_gate`、時為細選／扶日；不建立百分比權重。
-- 日主／時課 Gate 與月納音轉化介面已建立，但目前明示 `not_evaluated` / `research` / `disabled`，不假裝日課已完成。
+- 本段記錄當時狀態；日主 Gate 的 `not_evaluated` 已由 Day Gate V1 取代。時課仍為 `not_evaluated`，月納音仍為 `research`／`disabled`。
 - status V5 只讓年、月白中殺與 active／warning temporal state 影響 verdict；日、時白中殺類比不直接降級。`ordinary` 繼續是無正面訊號且無警示的中性 fallback。
 - 詳細 source map、測試、字體與 Browser 證據見 `docs/purple-white-fifth-round-layered-anjian-qi.md`。
 
@@ -267,7 +269,7 @@ tests/fixtures/chart-snapshot.json
 - 支序有氣為年 A active、月 A active、日 B+ active-secondary、時 C reference-only；日支直接有氣可在無警示時將主層由可用細分為優先，時支只作同級細選參考。
 - 白中殺維持年／月 active、日／時 reference-only；日、時 killer 不因本輪升級而變成 veto。
 - 大月建單一 warning 不直落慎用；與二黑／五黃、其他年月 active killer 或非參考層墓絕疊加才升 caution。二黑五黃多層 safeguard 保留。
-- 日主／時課 Gate 與月納音仍為 `not_evaluated`／`disabled`；V6 status 是工具分級，不冒充完整通書日課。
+- 本段記錄當時狀態；日主 Gate 已由 Day Gate V1 評估，時課與月納音仍為 `not_evaluated`／`disabled`；V6 direction status 仍是工具分級。
 - 詳細 source map、測試、字體與 Browser 證據見 `docs/purple-white-sixth-round-dayuejian-daywhite.md`。
 
 ### 紫白擇吉第七輪白中殺 9×6 矩陣封版
@@ -280,6 +282,14 @@ tests/fixtures/chart-snapshot.json
 - 年月白中殺 active、日時 reference-only、日白主層、時白 tie-breaker 全部繼承第六輪；第七輪不改 status 權重、不依殺數線性加減。
 - 第七輪「封版」只是程式規則級；原典固定版本、頁碼、完整逐字引文與原頁影像尚未入專案，`primarySourceVerified=false` 不得擅改。
 - 詳細 source map、完整矩陣、測試、字體與 Browser 證據見 `docs/purple-white-seventh-round-white-killer-matrix.md`。
+
+### Day Gate V1
+
+- `src/selection/temporalRules.ts` 以十干固定五行及月令司氣判定日主旺、相、休、囚、死；旺相為 `pass`、休為 `mixed`、囚死為 `caution`。
+- 月柱繼續取正式節氣月；Day Gate 另存司令五行。四立前十八個整日取土旺，其餘取春木、夏火、秋金、冬水；不改既有九星月令矩陣。
+- `TimeGateAssessment.dayStatus` 已正式評估；`hourStatus` 仍為 `not_evaluated`。`rankingUse` 維持 `disabled`，表示 V1 顯示時間 Gate，但方向 `verdictFor()`／`rankDirections()` 不讀取它。
+- Direction Detail 的年月日時四星下方先顯示「日課」，再顯示方向 verdict；UI 明示四柱沖合、時辰扶日尚未納入。
+- 考源定案、原始規劃 checksum、六個研究問題及來源狀態見 `docs/day-gate-v1-authoritative-rules.md`。固定版本《造命宗鏡集》原頁尚未入 repo，`primarySourceVerified` 維持 `false`。
 
 #### Reserved future capability — 最佳時窗
 
@@ -299,11 +309,11 @@ tests/fixtures/chart-snapshot.json
 
 ```text
 test files  25 passed
-tests       195 passed
+tests       198 passed
 build       production success
 PWA font    preload + precache（單一 entry）success
-PWA precache 11 entries（459.20 KiB）success
-single file 玄空紫白.html（543,221 bytes；font data URI）success
+PWA precache 11 entries（461.53 KiB）success
+single file 玄空紫白.html（545,356 bytes；font data URI）success
 ```
 
 真實 production 瀏覽器已驗證：
@@ -322,7 +332,7 @@ single file 玄空紫白.html（543,221 bytes；font data URI）success
 - 日期 Sheet apply、Esc、focus return
 - 320 / 375 / 390 / 430 native date/time shell 無 clipping；兩個 input 都維持 `appearance:auto`
 - date/time focus：shell 1px border + 2px outline；input 0 border + no outline
-- 品牌字體 `document.fonts.check()` 命中；915 個目前必要 UI 字元均已覆蓋，WOFF2 cmap 917／918 glyphs／244,620 bytes，production font 與 public font SHA-256 均為 `5db7f01b9af6f76e2c25aeb7fe3225b4cc1d09d4042030ed4b35e14f8b42acfc`
+- 品牌字體 `document.fonts.check()` 命中；914 個目前必要 UI 字元均已覆蓋，WOFF2 cmap 914／915 glyphs／243,864 bytes，production font 與 public font SHA-256 均為 `961d5494cfda720af1965b478ac10cb6d066fb87003953aed50669650a37b790`
 - 日期時間列在 320／375／390／430px 均無 overflow；右側「今／回到今」維持 64px 並以 baseline 對齊，左側日期位置不因文案長度跳動
 - TopBar 兩個 SVG 均為 1.5px stroke
 - 主頁一個「今」、無常駐 UTC+8；TimePicker／Settings 仍顯示 UTC+8
@@ -372,6 +382,7 @@ single file 玄空紫白.html（543,221 bytes；font data URI）success
 - Search 日期欄在完整 31.2 秒 follow-now timer 週期後仍保留焦點、值及展開狀態；返回 Chart 立即由 `10:40` 同步到 `10:42`
 - 擇吉 production DOM 順序為九宮 → 方向排序 → 雙星用途參考；pair 與 warning 分別使用 secondary ink／caution 色，四種 platform glyph 均未出現
 - 原盤九星大字全為墨色；疊盤大星為墨色、目前層小值為朱紅、其他層為墨灰；`document.fonts.check()` 命中新增字串，console 0 warning／0 error
+- Day Gate production 320／375／390／430px：頁面、Direction Sheet 與日課三欄的 client／scroll width 全部相等；320px Sheet 為 318px，順序為「日課 → 方向」，顯示癸水／未土／死・慎看，字體命中且 console 0 warning／0 error
 
 ---
 
@@ -406,4 +417,4 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - Search result 干支與最佳時窗仍為 P2；不得讓天干、旬空、納音或其他新條件在沒有獨立研究與規格前進入 verdict／ranking。
 - 雙星 81 組第二輪 source audit 及第三至七輪時間／白中殺規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
 - 第三輪「飛星回本宮＝暗建」、第四輪「暗建只套月層／五黃四隅是唯一答案」與 generic 宮剋星＝受剋殺均已廢止；不可從歷史文件回復。
-- 大月建公式已由第六輪封版，白中殺 9×6 程式矩陣已由第七輪封版；仍暫緩的是五黃傳本 selector、日／時白中殺 active 化與直接實例、時支有氣直接表、第七輪各書固定版本原頁證據包、月納音作用範圍、periodElement、完整日主／時課 Gate、修造／日常獨立模式與固定百分比。
+- 大月建公式已由第六輪封版，白中殺 9×6 程式矩陣已由第七輪封版，日干×月令 Day Gate V1 亦已封版；仍暫緩的是四柱沖、月破、日時沖、時扶日、日干祿時、五黃傳本 selector、日／時白中殺 active 化與直接實例、時支有氣直接表、第七輪各書固定版本原頁證據包、月納音作用範圍、periodElement、修造／日常獨立模式與固定百分比。

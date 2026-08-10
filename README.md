@@ -8,7 +8,7 @@
 ```
 npm install
 npm run dev       # 開發
-npm test          # 195 個測試（含 1200 點 engine snapshot）
+npm test          # 198 個測試（含 1200 點 engine snapshot）
 npm run build     # 產生 dist/（含 service worker、manifest）
 npm run preview
 ```
@@ -43,7 +43,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 ### V2.1 視覺精修與 iOS 日期時間修正
 
 - 日期／時間仍使用原生 `<input type="date">`、`<input type="time">`；外層 shell 統一繪製 border 與 focus，避免 iOS WebKit 原生控件內外框尺寸不同步。
-- 自帶約 239 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、917 個 cmap 字元／918 glyphs，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
+- 自帶約 238 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、914 個 cmap 字元／915 glyphs，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
 - 頂欄 info／settings 改為同一套 1.5px inline SVG，不再依賴平台 emoji。
 - 層級列改為無外框 tab + 朱砂短底線；主畫面只保留一個「今」，UTC+8 說明留在選時與設定 Sheet。
 - 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
@@ -101,7 +101,9 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 
 這 81 組全部是「雙星參考」：`needs-review`、`verified=false`、`rankingWeight=0`。研究版沒有附古籍版本頁碼與逐字引文，工具不會把摘要假裝成原文，也不會讓 pair 斷語或用途 tags 直接改變八方排序。
 
-第二輪考源加入 `sourceAudit`，分開記錄證據形式、原始使用情境、次序可信度、宮位／方位條件、異文與原頁核對狀態。第三輪建立墓絕、1／6／8／9 支序有氣及月令狀態；第四輪修正 co-arrival 與 classical 受剋表；第五輪再將一般九宮暗建、白中殺層級及支序有氣分開；第六輪確認大月建等於月入中星本宮，並把日白升為正式主層、時白定為同級細選；第七輪再將六捷墓、九宮暗建、受剋、穿心、交劍與鬥牛整合為唯一 9 星×6 殺矩陣，並分開入中星、到方星與時間地支三種輸入。現行年、月白中殺正式參與方向判定，日、時仍只作類比參考。月暗建與大月建合流顯示且只計一次，五黃預設為中宮；四隅版本只作異文。日主 Gate 與月納音在公式未封版前不參與 ranking。詳見 [第二輪](docs/purple-white-second-round-source-audit.md)、[第三輪](docs/purple-white-third-round-temporal-rules.md)、[第四輪](docs/purple-white-fourth-round-coarrival-anjian.md)、[第五輪](docs/purple-white-fifth-round-layered-anjian-qi.md)、[第六輪](docs/purple-white-sixth-round-dayuejian-daywhite.md) 及 [第七輪考源紀錄](docs/purple-white-seventh-round-white-killer-matrix.md)。
+第二輪考源加入 `sourceAudit`，分開記錄證據形式、原始使用情境、次序可信度、宮位／方位條件、異文與原頁核對狀態。第三輪建立墓絕、1／6／8／9 支序有氣及月令狀態；第四輪修正 co-arrival 與 classical 受剋表；第五輪再將一般九宮暗建、白中殺層級及支序有氣分開；第六輪確認大月建等於月入中星本宮，並把日白升為正式主層、時白定為同級細選；第七輪再將六捷墓、九宮暗建、受剋、穿心、交劍與鬥牛整合為唯一 9 星×6 殺矩陣，並分開入中星、到方星與時間地支三種輸入。現行年、月白中殺正式參與方向判定，日、時仍只作類比參考。月暗建與大月建合流顯示且只計一次，五黃預設為中宮；四隅版本只作異文。
+
+Day Gate V1 已加入日干五行、節氣月司令、四立前十八日土旺、旺相休囚死、`pass / mixed / caution` 與自然中文理由；方向詳情先顯示「日課」，再顯示方向結果。V1 只作時間 Gate 提示，不換算固定分數、不 hard reject，也不改八方 verdict／ranking；四柱沖合、月破、日時沖、時扶日與日干祿時仍待下一階段。詳見 [Day Gate V1 authoritative rules](docs/day-gate-v1-authoritative-rules.md)，並參考 [第二輪](docs/purple-white-second-round-source-audit.md)、[第三輪](docs/purple-white-third-round-temporal-rules.md)、[第四輪](docs/purple-white-fourth-round-coarrival-anjian.md)、[第五輪](docs/purple-white-fifth-round-layered-anjian-qi.md)、[第六輪](docs/purple-white-sixth-round-dayuejian-daywhite.md) 及 [第七輪考源紀錄](docs/purple-white-seventh-round-white-killer-matrix.md)。月納音仍未封版，不參與 ranking。
 
 ## 架構
 
@@ -152,6 +154,7 @@ src/
 | **流日** | 三元日紫白六段。冬至→雨水 甲子一白順、雨水→穀雨 甲子七赤順、穀雨→夏至 甲子四綠順、夏至→處暑 甲子九紫逆、處暑→霜降 甲子三碧逆、霜降→冬至 甲子六白逆。 |
 | **流時** | 陰陽遁 × 日支三分。陽遁（冬至→夏至）孟七赤／仲一白／季四綠，子時起順推；陰遁（夏至→冬至）孟三碧／仲九紫／季六白，子時起逆推。 |
 | **流刻** | ⚠️ **無統一古法**。目前僅實作「八刻十五分鐘制」：一時辰 120 分鐘均分八刻，第一刻承接流時入中星，之後沿流時方向逐刻推一星。UI 一律標示算法名稱與免責說明。 |
+| **Day Gate V1** | 日干五行 × 節氣月司令；四立前十八日改取土旺。旺／相＝pass、休＝mixed、囚／死＝caution；不 hard reject，不改方向排序。 |
 
 九宮飛行順序（唯一定義於 `flyNineStars.ts`）：中 → 乾 → 兌 → 艮 → 離 → 坎 → 坤 → 震 → 巽。
 
@@ -181,7 +184,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 195 個測試，涵蓋算法、1,200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1／Final UI、資產與鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第六輪大月建合流／日白升級、第七輪 9×6 白中殺矩陣、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
+- `npm test` — 198 個測試，涵蓋算法、1,200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1／Final UI、資產與鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第六輪大月建合流／日白升級、第七輪 9×6 白中殺矩陣、Day Gate V1、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
 - `tools/verify-solarterms.py` — 節氣表對 寿星天文历 的全表比對。
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
@@ -190,6 +193,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 ## 尚未做的事
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
+- 四柱沖合、月破、日時沖、時扶日與日干祿時仍是 Day／Hour Gate 的下一階段；目前 Day Gate V1 只顯示日干月令狀態，不否決時段。
 - 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前方向 status 即使已加入第六輪分層條件，仍只是工具分級。
 - 雙星古訣及第三至七輪時間／白中殺規則仍需以可追溯版本、頁碼／章節與原頁影像逐條校對；第七輪「封版」只指程式規則級，未核對條目必須繼續保持 `needs-review`、`verified=false`、`primarySourceVerified=false`、`rankingWeight=0`。
 - 進階搜尋條件尚未序列化到 URL，也未加入 recent search；簡易搜尋已支援 URL restore，切回尋星仍會保留本次頁面生命週期內的上一輪結果。
