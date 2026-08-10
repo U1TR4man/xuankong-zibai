@@ -969,6 +969,7 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
 }
 .direction-sha__hits span,
 .direction-virtue__hits span { color: var(--ink-secondary); }
+.direction-gate__empty,
 .direction-sha__clear,
 .direction-virtue__pattern,
 .direction-virtue__reference {

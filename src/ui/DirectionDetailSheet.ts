@@ -275,7 +275,7 @@ function shaSection(assessment: DirectionSelectionAssessmentV2): HTMLElement {
     el('p', { class: 'direction-sha__mountains' },
       el('small', {}, '本宮三山'), el('span', {}, constraints.mountains.join(' '))),
     byMountain.size === 0
-      ? el('p', {}, '本宮三山未受方位神煞影響。')
+      ? el('p', { class: 'direction-gate__empty' }, '本宮三山未受方位神煞影響。')
       : el('ul', { class: 'direction-sha__hits' },
         ...[...byMountain].map(([mountain, rules]) => el('li', {},
           el('strong', {}, `${mountain}山`), el('span', {}, rules.join('、'))))),
@@ -304,7 +304,7 @@ function virtueSection(
   return el('section', { class: 'direction-section direction-virtue' },
     el('h3', {}, '六德'),
     here.length === 0
-      ? el('p', {}, '本宮三山未得六德。')
+      ? el('p', { class: 'direction-gate__empty' }, '本宮三山未得六德。')
       : el('ul', { class: 'direction-virtue__hits' },
         ...here.map((virtue) => el('li', {},
           el('strong', {}, `${(virtue.position.kind === 'mountain' ? virtue.position.mountain : '')}山`),
