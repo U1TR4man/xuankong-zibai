@@ -6,6 +6,7 @@
 
 ### Added
 
+- 新增 Direction Gate V1 權威規則紀錄：封版歲破、月破方、年月日三煞的 24 山 truth table 與 partial hit 模型，明確分離「破日」與「月破方」，並把所有 severity 保留為 reference_only；原始研究 SHA-256、檔名與內容不符及缺頁碼證據狀態一併保存。本輪不含程式實作。
 - 新增 Day Gate V1 權威規則紀錄：逐項定案旺相休囚死算法、節氣月、四立前十八日土旺、弱日 veto 邊界、時辰生扶與四柱沖合優先順序；原始規劃 SHA-256 一併保存。
 - 新增日干五行、月令司令五行、旺相休囚死與 `pass / mixed / caution` 評估；只顯示時間 Gate，不換算分數、不 hard reject、不改八方 verdict／ranking。
 - 擇吉方向詳情新增「日課」區塊，依序顯示日主、月令、狀態與自然中文理由，並明示四柱沖合、時辰扶日尚未納入。

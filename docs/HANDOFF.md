@@ -305,6 +305,17 @@ tests/fixtures/chart-snapshot.json
 
 ---
 
+### Direction Gate V1 規則封版（尚未實作）
+
+- 產出 `docs/direction-gate-v1-authoritative-rules.md`；本輪為接手指南 §5 Phase N0 的 read-only 考源封版，**沒有任何 production code 變更**
+- 原始研究 `紫白擇吉_DayHourDirection_Gates_V1_Claude實作整合稿.md`，SHA-256 `181f2cef0d88a55d555836b8efa2f8b2d7a4d0faa7d4eee5a8b503c6a72975ac`；檔名寫三個 Gate，實際只有第十輪 Direction Gate，與 `紫白擇吉_第十輪考源_DirectionGate_歲破月破三煞.md` byte 相同
+- 接手指南 §1 所引 `紫白擇吉_下一階段研究規劃_DayGate優先.md`（`e45f1402…`）已不存在；`~/Downloads` 全樹 958 個 md／txt 無任何檔案命中該 checksum。Day Gate V1 已依該檔封版實作，本輪不回溯
+- 可封版：歲破＝太歲支對沖山、月破＝節氣月建對沖山、三煞四組公式（年月日共用同表）、24 山 mapping 與角度、三煞為三個連續 15° 山跨三個八宮、partial hit／coverage 模型、overlap 並列不做數值相抵、不自造時三煞、太歲方不等於凶方
+- 型別分離已定案：Time Gate 的「破日」用 `dayMonthBreak`（月支沖日支），Direction Gate 的「月破方」用 `monthBreakMountain`（月支對沖山），兩者都不得叫 `yuePo`，且不可重複扣分
+- **所有 severity 一律保留 `reference_only`／`rankingUse: 'disabled'`**：研究稿引《協紀辨方書》〈選擇要論〉〈三煞伏兵大禍〉、《造命宗鏡集》、《選擇紀要》、《通書》，但未給卷次、頁碼、版本或原頁影像，因此 `primarySourceVerified` 全部維持 `false`；依指南 §12，未補證據前不得把歲破設成 hard veto
+- 架構決策：紫白飛星用八宮 45°、方位神煞用 24 山 15°，兩套 spatial resolution 共存；八方 UI 只能顯示「本宮含受影響山」，不得把整宮等同犯煞
+- `src/` 目前完全沒有六沖、24 山或三煞程式碼，Direction Gate 為全新實作；下一輪順序見規則文件 §11
+
 ## 驗證結果
 
 ```text
