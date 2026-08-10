@@ -35,6 +35,7 @@
 - 紫白擇吉第七輪白中殺 9×6 矩陣 code checkpoint：`175ee81`
 - V2 Final UI/UX refinement code checkpoint：`2c4228e`
 - Day Gate V1 code checkpoint：`8ce7010`
+- 三 Gate 共用地支關係 primitive checkpoint：見本輪 commit（`src/selection/branchRelations.ts`）
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -327,11 +328,22 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### 地支關係 primitive `branchRelations.ts`（已實作）
+
+- `src/selection/branchRelations.ts` 是全專案六沖、六合、六害、三合、刑的**唯一**實作；`docs/gates-v1-integration.md` §1／§8 的契約至此落地。三個 Gate 之後只能消費本檔，不得另建第二套地支關係表。
+- 匯出：`isClash`、`oppositeBranch`、`isSixHarmony`／`sixHarmonyBranch`、`isSixHarm`／`sixHarmBranch`、`isSameSanHeGroup`／`getSanHeGroup`／`SAN_HE_GROUPS`／`opposingTrineBranches`、`isPunishment`／`isSelfPunishment`。全部純函式，不讀 DOM／localStorage／URL state，只 import `src/engine/time/ganzhi` 的 `BRANCHES`／`Branch` 型別。
+- 六沖以原典 truth table 明列，不靠隱式索引運算；測試以全部 144 組地支組合鎖定 `isClash(a, b) === (oppositeBranch(a) === b)`，並另鎖 `oppositeBranch` 等同「相隔六位」且為對合。
+- 三合為單一資料源，每組另存仲支 `center`。Direction Gate 的三煞由 `opposingTrineBranches()` 導出「對面三支」（申子辰→巳午未、寅午戌→亥子丑、亥卯未→申酉戌、巳酉丑→寅卯辰），測試鎖定三支恆連續、中心為仲支對沖支、與本局三支不重疊，並涵蓋寅午戌跨 0° 邊界。24 山映射與 coverage 仍屬 Direction Gate 範圍，本檔不做。
+- 刑是**有向**關係，參數次序固定為 `(dayBranch, hourBranch)`：申日寅時為刑、巳日寅時不是。測試涵蓋寅→巳→申→寅與丑→戌→未→丑兩個單向循環的正反例、子卯雙向、辰午酉亥自刑，並證明整體並非對稱關係，避免退化成「同組即成立」。
+- 正負關係可並存已由測試鎖定：巳日申時同時是六合與刑；自刑支日時相同時同時成立時建與時刑。primitive 不做任何抵消或評分。
+- 本輪**只有** primitive 與測試：沒有組裝 `HourGate`／`DirectionGate`，沒有改 `src/selection/types.ts`，沒有動 `TimeGateAssessment.hourStatus`，沒有 UI 變更。`branchRelations.ts` 目前無任何 import 端，production bundle 與 single-file 產物 byte 數皆與上一輪相同，可證明零 runtime 影響。
+- 下一步依 `docs/hour-gate-v1-authoritative-rules.md` §12：五不遇十組定局表、日祿十干表、時干扶日五行關係與測試。
+
 ## 驗證結果
 
 ```text
-test files  25 passed
-tests       198 passed
+test files  26 passed
+tests       226 passed（198 基線 + 28 個 branchRelations primitive 測試）
 build       production success
 PWA font    preload + precache（單一 entry）success
 PWA precache 11 entries（461.53 KiB）success
@@ -439,4 +451,5 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - Search result 干支與最佳時窗仍為 P2；不得讓天干、旬空、納音或其他新條件在沒有獨立研究與規格前進入 verdict／ranking。
 - 雙星 81 組第二輪 source audit 及第三至七輪時間／白中殺規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
 - 第三輪「飛星回本宮＝暗建」、第四輪「暗建只套月層／五黃四隅是唯一答案」與 generic 宮剋星＝受剋殺均已廢止；不可從歷史文件回復。
-- 大月建公式已由第六輪封版，白中殺 9×6 程式矩陣已由第七輪封版，日干×月令 Day Gate V1 亦已封版；仍暫緩的是四柱沖、月破、日時沖、時扶日、日干祿時、五黃傳本 selector、日／時白中殺 active 化與直接實例、時支有氣直接表、第七輪各書固定版本原頁證據包、月納音作用範圍、periodElement、修造／日常獨立模式與固定百分比。
+- 地支關係 primitive 已實作，但尚無任何消費者；六沖／六合／六害／三合／刑目前不影響 verdict、ranking 或 UI，`hourStatus` 仍為 `not_evaluated`。加入消費者時必須沿用 `docs/gates-v1-integration.md` §1 的六個具名欄位（`dayMonthBreak`／`hourBreak`／`clashMonth`／`clashYear`／`suiPoMountain`／`monthBreakMountain`），禁用 `yuePo`，且同一 clash fact 只登記一次。
+- 大月建公式已由第六輪封版，白中殺 9×6 程式矩陣已由第七輪封版，日干×月令 Day Gate V1 亦已封版，地支關係 primitive 已於本輪落地；仍暫緩的是四柱沖、月破、日時沖、時扶日、日干祿時、五黃傳本 selector、日／時白中殺 active 化與直接實例、時支有氣直接表、第七輪各書固定版本原頁證據包、月納音作用範圍、periodElement、修造／日常獨立模式與固定百分比。
