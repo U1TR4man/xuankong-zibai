@@ -360,11 +360,35 @@ WOFF2 SHA   298a8d3460e1992d739ad7b18fc680b95309e73348687921315cfefc41cc099b
 - **連續七輪以來 production bundle 首次改變**：`index-dJJc6V2G.js` 176.69 kB（原 164.33），precache 11 entries／479.50 KiB（原 461.53），single file 565,340 bytes（原 545,356）。先前不變是因 Gate 模組無 UI 消費端被 tree-shake。
 - 來源 OTF 目錄 `10_NotoSerifCJKtc/` 已加入 `.gitignore`，不進 repo。
 
+#### 使用者實測回饋與修正（2026-08-10）
+
+使用者以單檔版實測後回報：版面／border 無問題，但字體看起來不對。
+
+診斷結果：**字體管線沒有壞**。把單檔的 CSS 實際求值後確認 `@font-face` 為
+`src:url(data:font/woff2;base64,…) format("woff2")`，括號平衡、無殘留檔案路徑、
+解碼後正好 248,584 bytes。原始碼中看到的 `url('+"data:` 只是 JS 字串拼接的來源形式，不是缺陷。
+
+真正原因是**本輪新增的三個區塊完全沒有 CSS**：
+
+- 標籤 `<small>` 與值之間沒有間距，出現「本宮三山辰 巽 巳」「巳山月三煞」這種黏在一起的字串；
+- 山名與干支沒有套 `var(--font-display)`，掉回 UI 無襯線體，與日課區的襯線干支不一致——這就是使用者看到的「字體問題」。
+
+已補齊 `.direction-hour-gate*`、`.direction-sha*`、`.direction-virtue*`、`.direction-gate-boundary` 的樣式。
+
+另在 `tools/make-single-file.mjs` 加了 build 期斷言：內嵌字體解碼後 byte 數必須等於來源 WOFF2。
+字體截斷不會報錯、只會靜默退回系統字體，這種缺陷應該在 build 就擋下而不是靠肉眼。
+
+**驗證單檔字體是否真的生效的方法**（不要只看原始碼裡有沒有 data URI）：
+以 node 取出注入 `<style>` 的那段 `textContent` 運算式並求值，再檢查 `@font-face` 的 `src`、
+括號平衡與 base64 解碼長度。
+
 #### 尚未完成：四寬度 Browser QA
 
 接手指南 §10 要求 UI 有變時實測 320／375／390／430px 無 horizontal overflow、console 0 error、keyboard 與 dialog 行為。
 
-**本輪未能完成**：Chrome 擴充功能未開啟「允許存取檔案網址」，無法以 `file://` 開啟 `玄空紫白.html`，沙箱亦無法對使用者瀏覽器提供 localhost。
+**本輪未能完成**：需在 `chrome://extensions` 為 Claude 擴充功能開啟「允許存取檔案網址」，
+才能以 `file://` 開啟 `玄空紫白.html`；沙箱無法對使用者瀏覽器提供 localhost。
+開啟該權限後即可由工具端自動完成四寬度量測。
 
 需要人工補做，步驟：
 

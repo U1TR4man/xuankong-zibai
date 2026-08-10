@@ -21,6 +21,15 @@ const js = readFileSync(join(dir, jsFile), 'utf8')
   .replaceAll(viteFontExpression, JSON.stringify(fontUrl))
   .replaceAll('./fonts/zibai-serif-medium.woff2', fontUrl)
   .replaceAll('/fonts/zibai-serif-medium.woff2', fontUrl);
+// 內嵌字體必須與來源 WOFF2 完全等長；截斷或編碼錯誤會讓 @font-face 靜默失效，
+// 而畫面只會退回系統字體，不會報錯，因此在 build 期就擋下來。
+const embedded = js.match(/data:font\/woff2;base64,([A-Za-z0-9+/=]+)/);
+if (!embedded || Buffer.from(embedded[1], 'base64').length !== font.length) {
+  throw new Error(
+    `內嵌字體長度不符：來源 ${font.length} bytes，內嵌 ${
+      embedded ? Buffer.from(embedded[1], 'base64').length : 0} bytes`,
+  );
+}
 if (js.includes('fonts/zibai-serif-medium.woff2') || !js.includes('data:font/woff2;base64,')) {
   throw new Error('品牌字體未成功內嵌，單檔版將無法離線顯示宋體');
 }
