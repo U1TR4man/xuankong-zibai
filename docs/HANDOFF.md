@@ -40,7 +40,8 @@
 - Direction Gate V1 組裝 checkpoint：`ffcadac`（`src/selection/directionGate.ts`）
 - 六德／三德叢聚 checkpoint：`e68ff09`（`src/selection/directionVirtues.ts`）
 - Direction Selection V2 組裝 checkpoint：`3c9e9df`（`src/selection/directionSelection.ts`）
-- Hour Gate 三張表 checkpoint：見本輪 commit（`src/selection/hourGateTables.ts`）
+- Hour Gate 三張表 checkpoint：`eb0cc59`（`src/selection/hourGateTables.ts`）
+- Hour Gate 組裝 checkpoint：見本輪 commit（`src/selection/hourGate.ts`）
 - V2 規格真相來源：`docs/uiux-redesign-v2.md`
 - V2.1 規格：`docs/v2.1-visual-refinement-ios-datetime.md`
 - `fdee2e7` review 原文：`docs/reviews/fdee2e7-readonly-review.md`
@@ -334,6 +335,20 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### Hour Gate V1 組裝 `hourGate.ts`（已實作）
+
+- `src/selection/hourGate.ts` 完成 `docs/hour-gate-v1-authoritative-rules.md` §12 第 3 步。四柱一律取 canonical `TemporalPillars`，不另建第二套四柱。
+- 匯出：`HourGateStatus`、`SelectionMode`、`ClashSeverity`、`HourGateReason`、`HourGateConflicts`、`HourGateSupport`、`HourGate`、`HourGateOptions`、`buildHourGate`。全部純函式。
+- **`TimeGateAssessment.hourStatus` 仍為 `not_evaluated`**，本檔不寫回。依 §11 stop condition 2，改為正式狀態需使用者明確批准；regression test 已鎖定。
+- precedence 依 §7：時破 → reject；construction 且沖月令／歲君 → reject；五不遇 → caution；時刑或日害 → 至少 mixed；無衝突且有支持 → preferred；否則 pass。**positive support 不得把 reject 翻回 pass**。
+- **實作補洞（已補記為規則文件 §7.1）**：§7 未規定 daily 模式的沖月令／歲君落哪一級，照字面實作會讓「daily ＋ 沖月令 ＋ 日祿」得到 `preferred`，與 §4 列為 `warning` 矛盾。實作取**下限**：§4 把沖月令列 B 層、時刑／日害列 D 層且已對應 `mixed`，B 層不可能比 D 層輕，故 daily 同落 `mixed`。這是由文件自身分層推出的地板值，不是自創 severity；日後若補到原典對 daily 強度的直接說法，應以原典為準。
+- 關鍵 fixture：**辛日酉時（丁酉）同時是日祿與五不遇 → 必須 caution，不得 preferred**；申日寅時同時是時破與時刑（寅申六沖）→ reject 且日祿仍完整列出；巳日申時同時是六合與刑；自刑支日時相同時同時是時建與時刑。測試選案例時須注意六沖與刑的重疊，例如未日丑時同時是沖與刑，不能用來單測時刑。
+- `rescuesWeakDay` 只是標記：V1 不讓它改變 `status`、不寫回 Day Gate，且在有 structural veto 或五不遇時恆為 false（§4.2「不能救破日、時破這類 structural veto」）。
+- 旬中空亡與截路空亡未實作（原典明文「忌出行，不忌葬事」，不可作 universal penalty），`activitySpecific` 恆為空物件。
+- `reasons` 為穩定代碼 union，非中文句子，延續前幾輪的做法。
+- 本輪仍無 UI import 端；production bundle 仍為 `index-ByhQ1c1Q.js` 164.33 kB、single file 545,356 bytes。
+- 下一步：Hour Gate §12 第 4 步是 UI 最小顯示，與 Direction 層 UI 同樣卡在來源字型；兩者可合併為同一個 UI 輪。
+
 ### Hour Gate 三張表 `hourGateTables.ts`（已實作）
 
 - `src/selection/hourGateTables.ts` 完成 `docs/hour-gate-v1-authoritative-rules.md` §12 第 2 步：五不遇十組定局表、十干日祿時表、時干扶日五行關係。
@@ -463,9 +478,9 @@ Noto Serif CJK **Regular／Bold 的 .ttc**，沒有 Medium `.otf`。
 ## 驗證結果
 
 ```text
-test files  31 passed
-tests       316 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate
-            + 23 directionVirtues + 15 directionSelection + 16 hourGateTables）
+test files  32 passed
+tests       340 passed（198 基線 + 28 branchRelations + 21 mountains24 + 15 directionGate
+            + 23 directionVirtues + 15 directionSelection + 16 hourGateTables + 24 hourGate）
 build       production success
 PWA font    preload + precache（單一 entry）success
 PWA precache 11 entries（461.53 KiB）success

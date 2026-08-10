@@ -194,6 +194,20 @@ precedence（研究稿 §37）：
 
 **positive support 不得把 reject 翻回 pass。**
 
+### 7.1 實作補洞：daily 模式的時沖月令／歲君（2026-08-10 補記）
+
+上表只規定 `construction` 的沖月令／歲君為 `reject`，**沒有說 `daily` 落哪一級**。
+
+若照字面實作，`daily` ＋ 沖月令 ＋ 日祿會得到 `preferred`，與 §4 把它列為 `warning`
+明顯矛盾。
+
+`src/selection/hourGate.ts` 取**下限**而非新強度：§4 把時沖月令列為 B 層
+（major context），而時刑／日害是 D 層（minor）且已對應 `mixed`；B 層不可能比 D 層輕，
+故 `daily` 的沖月令／歲君同樣落在 `mixed`。
+
+這是由本文件自身分層推出的地板值，不是自創 severity，但仍屬實作期判斷。
+若日後補到原典對 daily 強度的直接說法，應以原典為準。
+
 ## 8. V1 程式契約（尚未實作）
 
 ```ts

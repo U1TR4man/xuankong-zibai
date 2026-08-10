@@ -6,6 +6,13 @@
 
 ### Added
 
+- 新增 `src/selection/hourGate.ts`：Hour Gate V1 組裝與 precedence，輸出 `preferred / pass / mixed / caution / reject`。**不寫回 `TimeGateAssessment.hourStatus`**（仍為 `not_evaluated`，依規則文件 §11 stop condition 2 需使用者批准），`rankingUse` 維持 `disabled`，無使用者可見行為變更。
+- Gate 不做算術抵消：時破為 structural veto，即使同時有日祿、三合、六合也不解除 reject；衝突與支持各自完整保存於 `conflicts` 與 `support`，`reasons` 衝突在前、支持在後並列。
+- 關鍵 fixture 已鎖定：辛日酉時（丁酉）同時是日祿與五不遇，必須是 `caution` 而非 `preferred`；申日寅時同時是時破與時刑，日祿仍完整列出但不解除 `reject`；巳日申時同時是六合與刑；自刑支日時相同時同時是時建與時刑。
+- **記錄一處 precedence 補洞**：規則文件 §7 只規定 `construction` 的沖月令／歲君為 `reject`，未說 `daily` 落哪一級；照字面實作會讓「daily ＋ 沖月令 ＋ 日祿」得到 `preferred`，與 §4 列為 `warning` 矛盾。實作取下限而非新強度——§4 把沖月令列為 B 層而時刑／日害為 D 層且已對應 `mixed`，B 層不可能比 D 層輕，故 daily 同樣落在 `mixed`。已補記為 §7.1。
+- 旬中空亡與截路空亡未實作：原典明文「忌出行，不忌葬事」，不可作 universal penalty，`activitySpecific` 恆為空物件。
+- 新增 24 個測試，含全枚舉合法日柱×十二時辰確認五種狀態都會出現、時破組合恆為 reject，以及 regression 證明 `hourStatus` 未被改動、八方 verdict 與排序不變。
+
 - 新增 `src/selection/hourGateTables.ts`：Hour Gate V1 的五不遇十組定局表、十干日祿時表與時干扶日五行關係。純表與純函式，不做 precedence 組裝、不改 `TimeGateAssessment.hourStatus`（仍為 `not_evaluated`）、不參與排序，亦無使用者可見行為變更。
 - 五不遇採**十組定局表**而非「時干剋日干且同陰陽」的 generic 推導，避免傳本干支配時差異造成 false positive；並明確不把「時支剋日支」混入。表與五鼠遁的一致性由測試驗證，但一致性只是驗證手段，不是取值來源。
 - `temporalRules.ts` 新增 `elementRelationBetween()`，複用既有 `GENERATES`／`CONTROLS`；時干扶日由此導出，不另建第二套五行表。`HourStemSupport` 的 `neutral` 經 100 組全枚舉確認 V1 永不回傳。
