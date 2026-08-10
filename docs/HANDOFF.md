@@ -55,6 +55,7 @@
 - 干支加入與 UI/UX refinement V2 紀錄：`docs/ganzhi-uiux-refinement-v2.md`
 - V2 Final UI/UX refinement 紀錄：`docs/v2-final-uiux-refinement.md`
 - Day Gate V1 權威規則：`docs/day-gate-v1-authoritative-rules.md`
+- Direction Positive Evidence V1 權威規則（第十一至十三輪）：`docs/direction-positive-v1-authoritative-rules.md`
 
 P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣、canonical 年月日時干支、V2 Final P0／P1 及 Day Gate V1 均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。V2 UI/UX 進入 freeze；Day Gate 下一步是四柱沖、月破、日時沖、時扶日與日干祿時。另需收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式、九宮式 Search selector、九宮 keyboard cleanup 或 P2 最佳時窗。
 
@@ -328,6 +329,20 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### Direction Positive Evidence V1 規則封版（第十一至十三輪，尚未實作）
+
+- 產出 `docs/direction-positive-v1-authoritative-rules.md`；本輪為接手指南 §5 Phase N0 的 read-only 考源封版，**沒有任何 production code 變更**，`src/` 零 diff。
+- 原始研究 `紫白擇吉_第十一至十三輪_正面DirectionGate與三德金匱總結.md`，SHA-256 `c429963ad14e2b337b0efd35c150e4ba5bc7eeb0b100297db2220732eb53f46e`（1,864 行）。依使用者本輪決定只記 checksum，原檔不收進 repo。
+- 補足 Direction Gate 的**正面**條件：第十輪回答「哪些方向要避」，本三輪回答「在沒有犯重大 Gate 的前提下，哪些方向有古法上的正面依據」。
+- 可封版：六德六張表（歲德、歲德合、天德、天德合、月德、月德合）、合德＝本德五合干、月德／月德合依三合局、三德＝歲德＋天德＋月德（不含合德）、三德聚方全枚舉恰 8 組年干×月支對應甲庚丙壬四山、六德精度為 24 山而非整宮、正面 evidence 必須是陣列且 overlap 並列。
+- **兩個空間例外必須保留**：戊、己為中宮干本無 24 山外方（全枚舉共 9 例，含歲德戊癸年、歲德合甲己年、天德合未申月、月德合卯未亥月），一律回傳 `central_stem` 不產生方位 boost；天德合在子、卯、午、酉四仲月官方曆例作「無合」，不得自動補四維互合。乾↔艮、巽↔坤互合只保存為 `tian_de_he_corner_directional_variant`，`defaultEnabled = false`。**禁止自造戊己寄宮。**
+- **第十三輪是刪規則**：月金匱撤回為 `reference_only`／`rankingUse: 'disabled'`。《協紀辨方書》指出同一帝旺既稱金匱吉又稱大煞／打頭火凶，固定吉論自相矛盾，故「金匱星今亦不用」。可計算、只在詳情顯示、不進排名，但比照 81 雙星不刪資料。
+- **architecture invariant**：正面 evidence 不得翻轉 structural veto。禁止 `if (sanDeCongJi) { suiPo = false; sanSha = false; }`，禁止數值化總分與正負抵消，禁止「命中 2 個六德＝priority」這類古法未明載的硬閾值。`virtueCancelsKiller = false`，但 UI 文字不得寫成「六德不能制煞」——V1 只是不具備判定制化成功的條件。
+- 六張表的八組推導關係已用全枚舉程式核對自洽；實作時應以推導不變式加測試鎖定，但六張表仍須明列（天德十二項無法由五合推出）。月德與月金匱一律複用 `src/selection/branchRelations.ts` 的 `SAN_HE_GROUPS`（月金匱＝`.center`），**不得新建第三張三合表**。
+- 研究稿 §七 名為 Migration Checklist，但本專案 Direction Gate V1 至今仍是 0 行 production code，因此沒有既有結構需要遷移；§37 的 `DirectionSelectionAssessmentV2` 是第一版就要直接採用的結構，negative constraints 與 positive evidence 應一次做成分離 channel。
+- 證據狀態：本三輪引《協紀辨方書》《星曆考原》《造命宗鏡集》《選擇紀要》，但**只有書名，無卷次、頁碼、版本或原頁影像**，定位精度同第十輪或更弱。因此曆法算法可封版，強度與適用性不可封版，全部 severity 保留 `reference_only`／`rankingUse: 'disabled'`，`primarySourceVerified = false`。
+- 實作順序見規則文件 §11：正面 evidence 依賴 24 山幾何，**必須排在第十輪負面規則之後**。
+
 ### 地支關係 primitive `branchRelations.ts`（已實作）
 
 - `src/selection/branchRelations.ts` 是全專案六沖、六合、六害、三合、刑的**唯一**實作；`docs/gates-v1-integration.md` §1／§8 的契約至此落地。三個 Gate 之後只能消費本檔，不得另建第二套地支關係表。
@@ -451,5 +466,6 @@ PATH=/Users/chungyingwa/.cache/codex-runtimes/codex-primary-runtime/dependencies
 - Search result 干支與最佳時窗仍為 P2；不得讓天干、旬空、納音或其他新條件在沒有獨立研究與規格前進入 verdict／ranking。
 - 雙星 81 組第二輪 source audit 及第三至七輪時間／白中殺規則已入庫，但尚未完成可追溯版本、頁碼／章節與原頁影像校對；下一位 agent 不可擅自設 `verified=true`／`primarySourceVerified=true`、改 `rankingWeight`，或把摘要／網頁轉錄當成唯一原文。
 - 第三輪「飛星回本宮＝暗建」、第四輪「暗建只套月層／五黃四隅是唯一答案」與 generic 宮剋星＝受剋殺均已廢止；不可從歷史文件回復。
+- 六德、三德聚方、月金匱已封版但未實作，且依賴尚未實作的 24 山幾何；不得跳過第十輪負面規則直接做正面 evidence。六德 severity 全部 `reference_only`，不得因為表可 deterministic 計算就升為 active。
 - 地支關係 primitive 已實作，但尚無任何消費者；六沖／六合／六害／三合／刑目前不影響 verdict、ranking 或 UI，`hourStatus` 仍為 `not_evaluated`。加入消費者時必須沿用 `docs/gates-v1-integration.md` §1 的六個具名欄位（`dayMonthBreak`／`hourBreak`／`clashMonth`／`clashYear`／`suiPoMountain`／`monthBreakMountain`），禁用 `yuePo`，且同一 clash fact 只登記一次。
 - 大月建公式已由第六輪封版，白中殺 9×6 程式矩陣已由第七輪封版，日干×月令 Day Gate V1 亦已封版，地支關係 primitive 已於本輪落地；仍暫緩的是四柱沖、月破、日時沖、時扶日、日干祿時、五黃傳本 selector、日／時白中殺 active 化與直接實例、時支有氣直接表、第七輪各書固定版本原頁證據包、月納音作用範圍、periodElement、修造／日常獨立模式與固定百分比。
