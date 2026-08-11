@@ -6,6 +6,9 @@
 
 ### Changed
 
+- **尋星結果列出該時間的干支。** 時與刻精度列年月日時四柱；**日精度只列年月日三柱**，因為一日包含十二個時辰、沒有唯一時柱，補上時柱等於捏造。干支一律來自 `buildTemporalPillars()`，年界、換日與時辰邊界全部沿用正式 engine 與使用者設定，UI 不自行推算。
+- 干支列為 `aria-hidden`，內容另行併入結果按鈕的 `aria-label`；否則 explicit label 會蓋掉按鈕內文，螢幕閱讀器讀不到干支。
+
 - **進階尋星條件可由 URL refresh、bookmark 或分享連結還原。** 先前只有簡易條件會寫入 URL，切到進階後重新整理就會失去三層設定。現行 URL 以 `mode=advanced` 標示，三層各自序列化為連續數字（飛星恆為 1–9 單一位數，例如 `dayStars=13&hourStars=9`），空集合不寫入。
 - URL state 由 `SimpleSearchUrlState` 改為 discriminated union `StarSearchUrlState`：簡易帶 `precision`／`star`，進階帶三層集合，兩者互斥。**沒有 `mode` 參數的舊連結仍解析為簡易模式**，既有 bookmark 不失效。
 - 還原只回填表單、不自動執行搜尋，與簡易模式一致。

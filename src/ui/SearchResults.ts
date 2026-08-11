@@ -3,6 +3,7 @@ import {
   formatUtc8Date, formatUtc8Time, MS_PER_DAY, parseUtc8, toUtc8Parts,
 } from '../engine/time/utc8';
 import { overlayLevelsThrough } from '../overlay/types';
+import { buildTemporalPillars, type TemporalPillarOptions } from '../selection/temporalPillars';
 import { showOverlayChart } from '../state/appState';
 import type { SearchMatch, StarSearchQuery } from '../search/types';
 import { el } from './dom';
@@ -28,8 +29,28 @@ function resultTime(match: SearchMatch): { date: string; time: string } {
   };
 }
 
-function ResultCard(match: SearchMatch): HTMLElement {
+/**
+ * 結果的干支只有一個來源：`buildTemporalPillars()`。
+ * 年界、換日與時辰邊界全在其中，UI 不得自行推算，也不得改用結果的字串時間去猜。
+ *
+ * 日精度沒有唯一時辰，因此只列年月日三柱；時與刻同屬一個時辰，四柱相同。
+ */
+function pillarChips(match: SearchMatch, options: TemporalPillarOptions): string[] {
+  const start = parseUtc8(match.startDateTime);
+  if (!start) return [];
+  const pillars = buildTemporalPillars(start, options);
+  const chips = [
+    `${LEVEL_LABEL.year} ${pillars.year.text}`,
+    `${LEVEL_LABEL.month} ${pillars.month.text}`,
+    `${LEVEL_LABEL.day} ${pillars.day.text}`,
+  ];
+  if (match.precision !== 'day') chips.push(`${LEVEL_LABEL.hour} ${pillars.hour.text}`);
+  return chips;
+}
+
+function ResultCard(match: SearchMatch, options: TemporalPillarOptions): HTMLElement {
   const time = resultTime(match);
+  const chips = pillarChips(match, options);
   const matchedLevels = new Set(match.matchedConditions.map((condition) => condition.level));
   const layers = el('span', { class: 'search-result__layers', 'aria-label': '命中時的上層疊盤' });
   for (const level of overlayLevelsThrough(match.precision)) {
@@ -54,7 +75,13 @@ function ResultCard(match: SearchMatch): HTMLElement {
   return el('button', {
     class: 'search-result',
     type: 'button',
-    'aria-label': `${time.date} ${time.time}，${palaceLabel(match.palace)}，查看此盤`,
+    // button 有 explicit aria-label，內容不會被朗讀，故干支必須併入。
+    'aria-label': [
+      `${time.date} ${time.time}`,
+      palaceLabel(match.palace),
+      ...chips,
+      '查看此盤',
+    ].join('，'),
     onclick: () => {
       const date = parseUtc8(match.startDateTime);
       if (date) showOverlayChart(
@@ -69,6 +96,8 @@ function ResultCard(match: SearchMatch): HTMLElement {
       el('span', { class: 'search-result__time' }, time.time),
       el('span', { class: 'search-result__palace' }, palaceLabel(match.palace)),
     ),
+    el('span', { class: 'search-result__pillars', 'aria-hidden': 'true' },
+      ...chips.map((chip) => el('span', {}, chip))),
     layers,
     el('span', { class: 'search-result__footer' },
       combinations.length > 0
@@ -95,7 +124,10 @@ function groupLabel(date: string): string {
   return `${parts.month}月${parts.day}日`;
 }
 
-function groupSections(matches: readonly SearchMatch[]): HTMLElement[] {
+function groupSections(
+  matches: readonly SearchMatch[],
+  options: TemporalPillarOptions,
+): HTMLElement[] {
   return Array.from(groupMatches(matches), ([date, group]) => el('section', {
     class: 'search-result-group', 'aria-labelledby': `search-group-${date}`,
   },
@@ -103,11 +135,16 @@ function groupSections(matches: readonly SearchMatch[]): HTMLElement[] {
     el('h3', { id: `search-group-${date}` }, groupLabel(date)),
     el('span', {}, `${group.length} 個`),
   ),
-  el('div', { class: 'search-result-group__items' }, ...group.map(ResultCard)),
+  el('div', { class: 'search-result-group__items' },
+    ...group.map((match) => ResultCard(match, options))),
   ));
 }
 
-export function SearchResults(query: StarSearchQuery, matches: readonly SearchMatch[]): HTMLElement {
+export function SearchResults(
+  query: StarSearchQuery,
+  matches: readonly SearchMatch[],
+  options: TemporalPillarOptions = {},
+): HTMLElement {
   const palace = palaceLabel(query.palace);
   const conditionText = query.conditions.map((condition) => (
     `流${LEVEL_LABEL[condition.level]} ${condition.stars.map(starName).join('／')}`
@@ -132,7 +169,7 @@ export function SearchResults(query: StarSearchQuery, matches: readonly SearchMa
     hidden: visibleCount >= matches.length,
   });
   const renderVisible = () => {
-    list.replaceChildren(...groupSections(matches.slice(0, visibleCount)));
+    list.replaceChildren(...groupSections(matches.slice(0, visibleCount), options));
     const remaining = matches.length - visibleCount;
     more.textContent = remaining > 0
       ? `再顯示 ${Math.min(RESULT_PAGE_SIZE, remaining)} 個（尚餘 ${remaining}）`

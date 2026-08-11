@@ -86,6 +86,13 @@ describe('Phase 3 搜尋 UI', () => {
     expect(firstResult.querySelectorAll('.search-result__layer')).toHaveLength(4);
     expect(firstResult.querySelectorAll('.search-result__layer.is-match')).toHaveLength(1);
     expect(firstResult.querySelector('.search-result__match')).toBeNull();
+    // 2026-09-01 15:00 起。日柱獨立核對：距 2000-01-01（戊午）9740 日，
+    //（54 + 9740）mod 60 = 14 → 戊寅；戊癸日壬子起，申時即庚申。
+    expect(Array.from(firstResult.querySelectorAll('.search-result__pillars > span'))
+      .map((span) => span.textContent)).toEqual(['年 丙午', '月 丙申', '日 戊寅', '時 庚申']);
+    // 干支寫在 aria-hidden 的視覺列，故必須另行併入 button 的 aria-label。
+    expect(firstResult.getAttribute('aria-label')).toContain('日 戊寅');
+    expect(firstResult.getAttribute('aria-label')).toContain('時 庚申');
     expect($('.search-results__summary')?.textContent).toContain('離 · 南 · 流時 九紫');
     expect(document.querySelectorAll('.search-result-group').length).toBeGreaterThan(0);
     const params = new URLSearchParams(location.search);
@@ -280,5 +287,25 @@ describe('Phase 3 搜尋 UI', () => {
 
     expect($('.search-form__error')?.textContent).toContain('最多搜尋一年');
     expect($('.search-status')).toBeNull();
+  });
+
+  it('日精度結果只列年月日三柱，不假造時柱', async () => {
+    $<HTMLInputElement>('input[name="startDate"]')!.value = '2026-09-01';
+    $<HTMLInputElement>('input[name="endDate"]')!.value = '2026-09-06';
+    const level = $<HTMLInputElement>('input[name="level"][value="day"]')!;
+    level.checked = true;
+    level.dispatchEvent(new Event('change', { bubbles: true }));
+    $<HTMLFormElement>('.search-form')!.dispatchEvent(new Event('submit', {
+      bubbles: true, cancelable: true,
+    }));
+    await waitForSearch();
+
+    const firstResult = $('.search-result')!;
+    expect(firstResult.querySelector('.search-result__time')?.textContent).toBe('全日');
+    // 2026-09-04：距 2000-01-01 9743 日，(54 + 9743) mod 60 = 17 → 辛巳。
+    // 一日包含十二個時辰，沒有唯一時柱，因此不得補上。
+    expect(Array.from(firstResult.querySelectorAll('.search-result__pillars > span'))
+      .map((span) => span.textContent)).toEqual(['年 丙午', '月 丙申', '日 辛巳']);
+    expect(firstResult.getAttribute('aria-label')).not.toContain('時 ');
   });
 });

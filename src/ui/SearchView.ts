@@ -398,7 +398,12 @@ export function SearchView(state: AppState): HTMLElement {
         el('span', {}, '正在裝置內計算，請稍候…'),
       )
       : null,
-    model.query && model.matches ? SearchResults(model.query, model.matches) : null,
+    model.query && model.matches
+      ? SearchResults(model.query, model.matches, {
+        dayChangeMode: state.settings.dayChangeMode,
+        yearBoundary: state.settings.yearBoundary,
+      })
+      : null,
     );
   return el('main', {
     class: 'search-view',

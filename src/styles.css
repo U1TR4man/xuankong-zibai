@@ -332,6 +332,11 @@ button, select, input { font: inherit; color: inherit; }
 .search-result__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s3); }
 .search-result__time { font-family: var(--font-display); font-size: 17px; font-variant-numeric: tabular-nums; }
 .search-result__palace { font-size: 13px; color: var(--ink-secondary); }
+.search-result__pillars {
+  display: flex; flex-wrap: wrap; gap: 0 var(--s2);
+  font-family: var(--font-display); font-size: 12px; color: var(--ink-secondary);
+  font-variant-numeric: tabular-nums;
+}
 .search-result__layers { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s1); }
 .search-result__layer {
   position: relative;
