@@ -205,8 +205,31 @@ describe('紫白擇吉 Phase 1 資料與判讀層', () => {
       version: 'seventh_round_9x6',
       restoredColumnOrder: [9, 1, 2, 3, 4, 5, 6, 7, 8],
       fiveYellowDefault: 'center', fiveYellowFourCorners: 'variant_only',
-      primarySourceVerified: false,
+      // 2026-08-11 逐頁核到《五要奇書》卷三十八六列完整直證後升為 true。
+      primarySourceVerified: true,
+      // 但只有這一本完整；另外三本受剋列脫格且互不相同，不得讀成多本互校。
+      corroboration: 'single_complete_witness',
+      // 《完孝錄》「以上星煞所忌，特見其例耳」——刑宮、害宮、空亡未實作。
+      completeness: 'example_set_not_exhaustive',
     });
+    // 異說只登記、不改格值，且一律不進排序。
+    expect(WHITE_KILLER_MATRIX_AUDIT.variants.map((v) => [v.rule, v.id, v.rankingUse]))
+      .toEqual([
+        ['douNiu', 'dou_niu_yuan_gui_three_four_same_palace', 'disabled'],
+        ['anJian', 'an_jian_five_yellow_four_corners', 'disabled'],
+      ]);
+    // 鬥牛異說是古本編者自己標明的，不是本專案發現的現代歧義。
+    expect(WHITE_KILLER_MATRIX_AUDIT.variants[0]?.acknowledgedBySource).toBe(true);
+    expect(WHITE_KILLER_MATRIX_AUDIT.definitionVariants[0]?.effectOnValues).toBe('none');
+    // 出處只存 stable chapter URL；帶時效簽名的原書影像 URL 不得入專案。
+    for (const ref of [
+      WHITE_KILLER_MATRIX_AUDIT.primarySource,
+      WHITE_KILLER_MATRIX_AUDIT.completenessSource,
+      ...WHITE_KILLER_MATRIX_AUDIT.variants.map((v) => v.source),
+    ]) {
+      expect(ref.stableChapterUrl).toMatch(/^https:\/\/www\.shidianguji\.com\/zh\/book\/[^/]+\/chapter\/[^/?#]+$/);
+      expect(ref.searchAnchor.length).toBeGreaterThan(0);
+    }
     for (const star of stars) {
       const row = WHITE_KILLER_MATRIX[star];
       const matching = (killer: PalaceKiller) => (
