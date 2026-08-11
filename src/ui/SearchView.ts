@@ -119,8 +119,31 @@ function starChoices(
   );
 }
 
-function option(value: string, label: string, selected: boolean): HTMLOptionElement {
-  return el('option', { value, selected }, label);
+/**
+ * 宮位以九宮方盤呈現，而非下拉選單。
+ *
+ * `PALACES` 本身已按洛書 4／9／2、3／5／7、8／1／6 排列（`row`／`col`），
+ * 因此這裡直接依序 render，不另建方位表——與飛星選擇器共用同一個 3×3 grid，
+ * 使用者在表單上看到的方位配置與盤面完全一致。
+ *
+ * 中宮仍可選（尋星允許中宮，只有擇吉八方排序不含中宮），標籤與原下拉一致。
+ */
+function palaceChoices(selected: string): HTMLElement {
+  return el('div', { class: 'search-palaces', 'data-layout': 'luoshu' },
+    ...PALACES.map((palace) => {
+      const checked = selected === palace.key;
+      return el('label', { class: `search-palace${checked ? ' is-selected' : ''}` },
+        el('input', {
+          type: 'radio', name: 'palace', value: palace.key, checked,
+          'aria-label': `${palace.name} ${palace.bearing}`,
+        }),
+        el('span', { class: 'search-palace__name' }, palace.name.replace(/宮$/, '')),
+        palace.key === 'center'
+          ? null
+          : el('span', { class: 'search-palace__bearing' }, palace.bearing),
+      );
+    }),
+  );
 }
 
 function SearchForm(
@@ -152,13 +175,9 @@ function SearchForm(
     ),
   );
 
-  const palace = el('select', { class: 'search-select', name: 'palace', required: true },
-    option('', '請選擇宮位', draft.palace === ''),
-    ...PALACES.map((item) => option(
-      item.key,
-      item.key === 'center' ? '中' : `${item.name.replace(/宮$/, '')} · ${item.bearing}`,
-      draft.palace === item.key,
-    )),
+  const palace = el('fieldset', { class: 'search-choice-group' },
+    el('legend', { class: 'search-field__label' }, '宮位'),
+    palaceChoices(draft.palace),
   );
 
   const simpleLevel = el('fieldset', { class: 'search-choice-group' },
@@ -192,14 +211,7 @@ function SearchForm(
     )),
   );
 
-  form.append(
-    dateFields,
-    el('label', { class: 'search-field' },
-      el('span', { class: 'search-field__label' }, '宮位'),
-      palace,
-    ),
-    draft.mode === 'simple' ? simpleLevel : advanced,
-  );
+  form.append(dateFields, palace, draft.mode === 'simple' ? simpleLevel : advanced);
   if (draft.mode === 'simple') form.append(simpleStars);
   if (viewModel.error) {
     form.append(el('p', { class: 'search-form__error', role: 'alert' }, viewModel.error));
@@ -234,7 +246,7 @@ function SearchForm(
         form.querySelectorAll<HTMLInputElement>(`input[name="${searchLevel}Stars"]:checked`),
       ).map((item) => item.value).sort((a, b) => Number(a) - Number(b));
     }
-    if (input.name === 'level' || input.name === 'star') {
+    if (input.name === 'level' || input.name === 'star' || input.name === 'palace') {
       const group = input.closest('fieldset');
       group?.querySelectorAll('label').forEach((label) => {
         label.classList.toggle('is-selected', label.contains(input));

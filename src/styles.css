@@ -245,7 +245,7 @@ button, select, input { font: inherit; color: inherit; }
 }
 .search-choice-group { min-width: 0; margin: 0; padding: 0; border: none; }
 .search-levels { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-top: var(--s2); }
-.search-choice, .search-star {
+.search-choice, .search-star, .search-palace {
   position: relative;
   display: flex;
   align-items: center;
@@ -257,15 +257,20 @@ button, select, input { font: inherit; color: inherit; }
   color: var(--ink-secondary);
   cursor: pointer;
 }
-.search-choice input, .search-star input { position: absolute; opacity: 0; pointer-events: none; }
-.search-choice:focus-within, .search-star:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
-.search-choice.is-selected, .search-star.is-selected {
+.search-choice input, .search-star input, .search-palace input { position: absolute; opacity: 0; pointer-events: none; }
+.search-choice:focus-within, .search-star:focus-within, .search-palace:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.search-choice.is-selected, .search-star.is-selected, .search-palace.is-selected {
   border-color: var(--cinnabar);
   background: var(--cinnabar-soft);
   color: var(--cinnabar);
 }
 .search-stars { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-top: var(--s2); }
 .search-star span { font-family: var(--font-display); font-size: 15px; }
+.search-palaces { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-top: var(--s2); }
+.search-palace { flex-direction: column; gap: 2px; min-height: 56px; }
+.search-palace__name { font-family: var(--font-display); font-size: 15px; }
+.search-palace__bearing { font-size: 11px; color: var(--ink-tertiary); }
+.search-palace.is-selected .search-palace__bearing { color: inherit; }
 .search-advanced { display: flex; flex-direction: column; gap: var(--s5); }
 .search-advanced__rule { margin: 0; padding: var(--s3); background: var(--paper-muted); font-size: 13px; color: var(--ink-secondary); }
 .search-advanced__level { padding-top: var(--s1); }

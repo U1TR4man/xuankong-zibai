@@ -56,7 +56,17 @@ describe('Phase 3 搜尋 UI', () => {
     ) ?? 0;
     expect(toggleBeforeSubmit & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(document.querySelectorAll('.search-date-range input[type="date"]')).toHaveLength(2);
-    expect(document.querySelectorAll('select[name="palace"] option')).toHaveLength(10);
+    // 宮位為九宮方盤，排列與盤面同為洛書 4／9／2、3／5／7、8／1／6。
+    expect(document.querySelector('select[name="palace"]')).toBeNull();
+    expect(Array.from(document.querySelectorAll<HTMLInputElement>('input[name="palace"]'))
+      .map((input) => input.value))
+      .toEqual(['xun', 'li', 'kun', 'zhen', 'center', 'dui', 'gen', 'kan', 'qian']);
+    expect(Array.from(document.querySelectorAll('.search-palace__name'))
+      .map((span) => span.textContent))
+      .toEqual(['巽', '離', '坤', '震', '中', '兌', '艮', '坎', '乾']);
+    // 中宮沒有方位可標；其餘八宮各有方位。
+    expect(document.querySelectorAll('.search-palace__bearing')).toHaveLength(8);
+    expect(document.querySelector('input[name="palace"]:checked')).toBeNull();
     expect(document.querySelectorAll('input[name="level"]')).toHaveLength(3);
     expect(document.querySelectorAll('input[name="star"]')).toHaveLength(9);
     expect(Array.from(document.querySelectorAll<HTMLInputElement>('input[name="star"]'))
@@ -68,7 +78,7 @@ describe('Phase 3 搜尋 UI', () => {
   it('搜尋離宮流時九紫，結果顯示年月日時與明確命中', async () => {
     $<HTMLInputElement>('input[name="startDate"]')!.value = '2026-09-01';
     $<HTMLInputElement>('input[name="endDate"]')!.value = '2026-09-03';
-    $<HTMLSelectElement>('select[name="palace"]')!.value = 'li';
+    $<HTMLInputElement>('input[name="palace"][value="li"]')!.click();
     const star = $<HTMLInputElement>('input[name="star"][value="9"]')!;
     star.checked = true;
     star.dispatchEvent(new Event('change', { bubbles: true }));
@@ -150,7 +160,7 @@ describe('Phase 3 搜尋 UI', () => {
       .find((button) => button.textContent === '搜尋')!;
     searchButton.click();
 
-    expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');
+    expect($<HTMLInputElement>('input[name="palace"][value="li"]')?.checked).toBe(true);
     expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
     expect(document.querySelectorAll('.search-result').length).toBeGreaterThan(0);
     expect(new URLSearchParams(location.search).get('searchPalace')).toBe('li');
@@ -171,7 +181,7 @@ describe('Phase 3 搜尋 UI', () => {
     expect(new URLSearchParams(location.search).has('mode')).toBe(false);
     expect($<HTMLInputElement>('input[name="startDate"]')?.value).toBe('2026-09-01');
     expect($<HTMLInputElement>('input[name="endDate"]')?.value).toBe('2026-09-03');
-    expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');
+    expect($<HTMLInputElement>('input[name="palace"][value="li"]')?.checked).toBe(true);
     expect($<HTMLInputElement>('input[name="level"][value="hour"]')?.checked).toBe(true);
     expect($<HTMLInputElement>('input[name="star"][value="9"]')?.checked).toBe(true);
   });
@@ -263,7 +273,7 @@ describe('Phase 3 搜尋 UI', () => {
       keStars: [],
     });
     expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('true');
-    expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');
+    expect($<HTMLInputElement>('input[name="palace"][value="li"]')?.checked).toBe(true);
     for (const selector of [
       'input[name="dayStars"][value="1"]',
       'input[name="dayStars"][value="3"]',
