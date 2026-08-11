@@ -382,32 +382,33 @@ WOFF2 SHA   298a8d3460e1992d739ad7b18fc680b95309e73348687921315cfefc41cc099b
 以 node 取出注入 `<style>` 的那段 `textContent` 運算式並求值，再檢查 `@font-face` 的 `src`、
 括號平衡與 base64 解碼長度。
 
-#### 尚未完成：四寬度 Browser QA
+#### 四寬度 Browser QA —— 已完成（2026-08-10）
 
-接手指南 §10 要求 UI 有變時實測 320／375／390／430px 無 horizontal overflow、console 0 error、keyboard 與 dialog 行為。
+以 `dist/` 經本機 http server（`python3 -m http.server`）實測。用 iframe 逐一設定寬度量測，
+避免 macOS Chrome 視窗最小寬度限制。**注意 `file://` 不能用**：file URL 是 opaque origin，
+`location.origin` 為字串 `"null"`，iframe 取不到 `contentDocument`。
 
-**本輪未能完成**：需在 `chrome://extensions` 為 Claude 擴充功能開啟「允許存取檔案網址」，
-才能以 `file://` 開啟 `玄空紫白.html`；沙箱無法對使用者瀏覽器提供 localhost。
-開啟該權限後即可由工具端自動完成四寬度量測。
+| 寬度 | client | scroll | 頁面 overflow | 詳情 sheet client／scroll | sheet overflow | 字體 |
+|---:|---:|---:|:--:|---:|:--:|:--:|
+| 320 | 320 | 320 | 無 | 318 / 318 | 無 | ✓ |
+| 375 | 375 | 375 | 無 | 373 / 373 | 無 | ✓ |
+| 390 | 390 | 390 | 無 | 388 / 388 | 無 | ✓ |
+| 430 | 430 | 430 | 無 | 428 / 428 | 無 | ✓ |
 
-需要人工補做，步驟：
+每個寬度都實際點入方向詳情、把四個 disclosure 全部展開後才量測，且確認
+`.direction-hour-gate`、`.direction-sha`、`.direction-virtue` 三個新區塊都存在。
+開啟 sheet 後頁面本身也沒有產生 overflow。
 
-1. 直接開啟專案根目錄的 `玄空紫白.html`（單檔版，已含字體）。
-2. 四個寬度各檢查 `document.documentElement.scrollWidth === clientWidth`。
-3. 點入任一方向詳情，展開「方位神煞與六德」與「為甚麼」，確認 sheet 內 `clientWidth === scrollWidth`。
-4. `document.fonts.check('1em "Zibai Serif"')` 應為 true，且新增字（歲德、三德叢聚、時課等）不出現逐字 fallback。
-5. console 應為 0 error／0 warning。
+其他：
 
-在完成前，本輪的 UI 不應視為已通過 QA。
+- `document.fonts.check('1em "Zibai Serif"')` 為 `true`，`FontFace.status` 為 `loaded`。
+- Service worker 已啟用，scope `http://localhost:4173/`。
+- `workbox-precache-v2` 共 9 個項目，含
+  `zibai-serif-medium.woff2?__WB_REVISION__=90ea6152899ca6e88b4801aafd573260`。
+- Console 0 error／0 warning（唯一的 12 條訊息全部來自使用者的 KISS-Translator 擴充功能，與本專案無關）。
 
-### 三德方考源補完（2026-08-10）
-
-- 補讀《協紀》四庫本**卷三十三**〈論修方〉，一次核到四項：**「三德方」為古籍既有名詞**、「甲年六月，則歲德、天德、月德會於甲方」、「帶吉不帶凶」、歲破與大月建「必不可犯」。
-- 前三項原先歸《造命宗鏡集》卷五而無法核對；實際在《協紀》卷三十三可讀到。**卷三十三、三十四多引選擇宗鏡**，所以宗鏡系統的內容其實可透過協紀的固定版本轉引核對——下一位接手者要查宗鏡的說法，先看這兩卷。
-- 「甲年六月→甲方」與 120 組全枚舉的第一組（甲／己年 未月 → 甲山）完全相符。
-- **「三德叢聚」一詞仍未核到**：維基文庫全站 397 筆「三德」全屬《周禮》師氏、《洪範》或佛教脈絡；《協紀》全書只有卷三十三出現「三德」，用「三德方」。《通書大全》不在維基文庫。
-- 已處理：UI 改為顯示 **「三德方」**。未處理：識別碼 `sanDeCongJu`／`detectSanDeCongJu()`／`positive_san_de_cong_ju` 仍沿用未核到的「叢聚」，改為 `sanDeFang` 屬第二次更名、不影響行為，**留待使用者決定**。
-- 字體 subset 仍含「叢」「聚」兩字（本輪未再重建）；覆蓋測試只檢查 UI 用字是否都在 subset 內，多餘字元不影響。
+**接手者請注意**：`mcp__claude-in-chrome__navigate` 會在 `file://` 前面加上 `https://`，
+因此瀏覽器端自動化必須走 http server，不能走單檔版。
 
 ### 固定版本原文核對（2026-08-10，無規則變更）
 
