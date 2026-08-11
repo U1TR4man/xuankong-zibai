@@ -115,7 +115,7 @@ Day、Hour、Direction 三個 Gate 的計算層與 UI 均已完成。**三者一
 | **Hour** | 時破、時沖月令／歲君、五不遇、時刑、日害；時建、六合、三合、時干扶日、日祿。輸出 `preferred / pass / mixed / caution / reject`。可在設定選「日常／修造」，**只影響本層** | [hour-gate-v1](docs/hour-gate-v1-authoritative-rules.md) |
 | **Direction** | 歲破、月破方、年／月／日三煞（negative）；六德、三德方、月金匱（positive） | [direction-gate-v1](docs/direction-gate-v1-authoritative-rules.md)、[direction-positive-v1](docs/direction-positive-v1-authoritative-rules.md) |
 
-[最佳時窗 Ranking V1](docs/time-window-ranking-v1-authoritative-rules.md) 已規格封版但**尚未實作**：那是**時間軸**排序（排時段，不排方向），排序鍵只有「可用性 → 日課 → 時課 → 時間」四個，依據是卷三十四「時者，日之用也」。方位軸不在授權範圍，`verdictFor()`／`rankDirections()` 仍讀不到任何 Gate 欄位。
+[最佳時窗 Ranking V1](docs/time-window-ranking-v1-authoritative-rules.md) 的計算層 `rankTimeWindows()` 已實作，**但尚未接上 UI**：那是**時間軸**排序（排時段，不排方向），排序鍵只有「可用性 → 日課 → 時課 → 時間」四個，依據是卷三十四「時者，日之用也」。方位軸不在授權範圍，`verdictFor()`／`rankDirections()` 仍讀不到任何 Gate 欄位。
 
 三個 Gate 之間的介面契約見 [gates-v1-integration](docs/gates-v1-integration.md)。核心是**同一個六沖只有一份實作**：破日、時破、時沖月令、時沖歲君、歲破方、月破方六個名目全部消費 `isClash()`，同一 clash fact 只登記一次，Gate 間不做數值相加，`yuePo` 是禁用名。
 
@@ -234,7 +234,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 ## 驗證
 
-- `npm test` — 341 個測試（32 個檔案），涵蓋算法、1,200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1／Final UI、資產與鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第六輪大月建合流／日白升級、第七輪 9×6 白中殺矩陣、Day Gate V1、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
+- `npm test` — 364 個測試（33 個檔案），涵蓋算法、1,200 點 snapshot、V1 下鑽、V2 Phase 2–6、V2.1／Final UI、資產與鍵盤操作，以及疊盤、尋星 A/B、紫白擇吉四欄橫排、第六輪大月建合流／日白升級、第七輪 9×6 白中殺矩陣、Day Gate V1、Pair 搜尋／學習、URL restore、Search → Chart、字體 glyph 覆蓋與結果 UX 回歸。
   三個 Gate 另有專屬 regression：計算 Gate 前後八方 verdict 與排序完全相同，且 `DirectionEvaluation`
   序列化後不含任何 Gate 專屬欄位。
   亦含六段日紫白在每個節氣前後 ±1 分鐘的切換。
@@ -255,7 +255,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
 - 三個 Gate 均已實作但**一律不參與方向排序**。要讓它們影響 `verdictFor()`／`rankDirections()` 屬各規則文件的 stop condition，需明確授權；時間軸排序已授權但尚未實作。
-- 最佳時窗 Ranking 只有規格、還沒有程式。實作後預設仍是時間順，改變既有排序預設屬另一個 UX 決策。
+- 最佳時窗 Ranking 有計算層與測試，還沒有 UI。接上後預設仍是時間順，改變既有排序預設屬另一個 UX 決策。
 - 五不遇的「支相生解除」細則：原文已核到完整上下文，但判準（藏干取用優先級、與日干或日支或兩者）原文未明言，因此不可實作。
 - 白中殺的 9×6 矩陣已逐頁核到《五要奇書》卷三十八的完整六列，六格逐格相符（含受剋全九格）；證據等級可升但尚未升。另需補記鬥牛的元龜異說、五黃暗建的四隅異說、受剋定義的二比一異文，以及《完孝錄》「以上星煞所忌，特見其例耳」——古本明說還須論刑宮、害宮與空亡，本專案未實作該層。
 - 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前方向 status 即使已加入第六輪分層條件，仍只是工具分級。

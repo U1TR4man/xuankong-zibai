@@ -6,6 +6,11 @@
 
 ### Added
 
+- **實作 `rankTimeWindows()`**（`src/selection/timeWindowRanking.ts`），依規格文件的四個排序鍵：可用性 → 日課 → 時課 → 時間。純函式、消費既有 `SearchMatch[]`、不重算飛星（測試以 reference equality 鎖定原物件未被複製或改寫）。尚未接上 UI。
+- 排序的關鍵後果有專屬測試，且刻意選了時間次序相反的例子：**囚日的 `preferred` 時辰（9/7）排在旺日的 `caution` 時辰（9/13）之後**。若排序被時間鍵主導，結果會相反，所以這個測試真的在測「時者，日之用也」而不是碰巧。
+- **實作期補到規格的一個洞**：「日精度跳過時課」只有在整批同精度時才是良定義的。混精度會讓比較失去遞移性（日精度與 `preferred` 平手、與 `caution` 也平手，但兩者之間分高下），排序結果隨輸入次序而變。`searchStars()` 每次查詢只算一次 precision，故混精度屬呼叫端錯誤——現在擲 `RangeError`，不產出無意義的順序。規則文件 §5.1 已補記。
+- 六項 regression 全部交付：八方 verdict／排序前後不變、`DirectionEvaluation` 不含時窗欄位、`RankedTimeWindow` 不含 `rankingUse` 與 `verdict`、方位 Gate 仍 `disabled`、`hourStatus` 仍 `not_evaluated`、排序可重現。
+
 - **最佳時窗 Ranking V1 規格封版（尚未實作）**：`docs/time-window-ranking-v1-authoritative-rules.md`。本專案第一個會排序的判定層，使用者授權範圍**僅限時間軸**——方位軸的 `rankingUse: 'disabled'` 一字未改。排序鍵只有四個：可用性（Hour Gate `reject` 出局）→ 日課 → 時課 → 時間。
 - 日課排在時課之前**有原文依據**：《協紀》卷三十四〈用時法〉「時者，日之用也」。後果講明白：囚日的 `preferred` 時辰會排在旺日的 `caution` 時辰之後；把時課提前等於推翻 Hour Gate 已封版的「時是日之用、不與日平起平坐」。
 - lexicographic 分層而非加權和：不得把兩個 Gate 換算成數字相加（違反「Gate 不做算術抵消」），不得輸出 0–100 分或星級。平手按時間由早到晚，這是**可重現手段不是判定**，UI 須明示。雙星、六德、白中殺、歲破三煞都不得用來打破平手。

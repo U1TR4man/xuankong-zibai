@@ -1,6 +1,6 @@
 # 最佳時窗 Ranking V1 authoritative rules
 
-> 狀態：2026-08-11 規格封版，**尚未實作**。本輪不寫 production code、不改 `verdictFor()`、不改 `rankDirections()`、不改任何 Gate 的 `rankingUse`。
+> 狀態：2026-08-11 規格封版；同日完成**計算層** `src/selection/timeWindowRanking.ts`，**尚未接上 UI**。`verdictFor()`、`rankDirections()` 與三個 Gate 的 `rankingUse` 一律未改。
 >
 > 這是本專案第一個**會排序**的判定層。前四份規則文件（Day / Hour / Direction Gate / Direction Positive）全部以 `rankingUse: 'disabled'` 收尾；本文件是使用者於 2026-08-11 明確授權後才開的。授權範圍**僅限時間軸**，方向軸的 `rankingUse` 一律不變。
 
@@ -98,7 +98,7 @@ rankingShape = 'lexicographic_tiers';   // 不是 'weighted_sum'
 - 方位是 24 山精度，時窗是時間精度，兩者混進同一個排序鍵等於把 15° 的資料當成時間訊號。
 - **正面 evidence 不得翻轉 structural veto**（`direction-positive-v1` 既有邊界）；若讓六德參與時窗排序，等於開了一條抵銷路徑。
 
-## 5. 程式契約（尚未實作）
+## 5. 程式契約（已實作）
 
 ```ts
 export type TimeWindowAdmissibility = 'admissible' | 'rejected';
@@ -150,6 +150,14 @@ hourStatus = 'not_applicable';   // 不是 'pass'，也不是挑一個時辰代�
 並且**鍵 2 跳過**，只用 `dayStatus` 與時間排序。把日精度硬塞一個時辰是捏造，把它當 `pass` 則會讓它無故排在真正 `mixed` 的時辰之前。
 
 `TimeWindowRankingOptions` 因此需要 `HourGateStatus | 'not_applicable'` 的聯集型別，不得重用 `not_evaluated`——後者已被 `TimeGateAssessment.hourStatus` 佔用，語義是「本版本尚未評估」，與「此精度無此概念」不同。
+
+**2026-08-11 實作期補洞**：上面「鍵 2 跳過」這條，只有在**整批同精度**時才是良定義的。
+若把日精度與時精度混在同一批，比較會失去遞移性——設 A 為日精度、B 為 `preferred`、C 為
+`caution`，則 A 與 B 平手、A 與 C 平手，但 B 勝 C，排序結果會隨輸入次序而變。
+
+`searchStars()` 的 `precision` 每次查詢只算一次，同一批 `SearchMatch` 必然同精度，
+因此混精度代表呼叫端把不同查詢的結果併在一起，屬程式錯誤。`rankTimeWindows()`
+**擲出 `RangeError`**，而不是產出一個沒有意義的順序。
 
 ## 6. 兩個軸永不共用欄位名
 
@@ -203,7 +211,8 @@ primarySourceVerified: false;
 
 ## 11. 建議實作順序
 
-1. `rankTimeWindows()` 純函式 ＋ 單元測試（含 §7 的六項 regression）。
+1. ~~`rankTimeWindows()` 純函式 ＋ 單元測試（含 §7 的六項 regression）~~ —— **2026-08-11 完成**，
+   `src/selection/timeWindowRanking.ts`、`tests/timeWindowRanking.test.ts`（17 個測試）。
 2. 搜尋結果 UI 加入排序切換（時間順 / 時窗品質順），預設維持**時間順**——改變既有預設屬 UX 決策，需另行確認。
 3. 顯示每個時窗的日課／時課與被排除原因；平手按時間的事實必須明示。
 4. 四寬度 QA ＋ 字體 subset 重建。

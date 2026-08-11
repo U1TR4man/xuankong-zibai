@@ -338,6 +338,26 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### 最佳時窗 `rankTimeWindows()` 已實作（C2b 第二步，2026-08-11）
+
+`src/selection/timeWindowRanking.ts` ＋ `tests/timeWindowRanking.test.ts`（17 測試）。
+**尚未接上 UI**，目前沒有任何使用者可見輸出。
+
+- 排序鍵四個，與規格文件一致。純函式，`mode` 由呼叫端自 settings 取好傳入。
+- **規格有一個洞在實作期才浮現並已補**：「日精度跳過時課」只在**整批同精度**時良定義。
+  混精度會失去遞移性（日精度與 `preferred` 平手、與 `caution` 也平手，但兩者分高下），
+  排序隨輸入次序而變。`searchStars()` 每次查詢只算一次 precision，故混精度屬呼叫端錯誤，
+  現在 **擲 `RangeError`**。規則文件 §5.1 已補記。
+- 測試刻意選時間次序相反的例子（caution 日在 9/7、pass 日在 9/13），
+  否則「日課優先」與「時間優先」會得到同樣的順序，測不出東西。
+- **`src/**` 的 throw 訊息一律英文**：字體 subset 會掃描字串常量，不值得為使用者看不到的
+  programmer error 擴大自帶字體。既有慣例見 `ganzhiFromStemBranch` 的 `invalid Ganzhi pair`。
+  本輪字體**未變**（929 字）。
+- `npm test` 347 → **364**。
+
+**下一步（規則文件 §11 第 2 項）**：搜尋結果 UI 加入排序切換。
+**預設必須維持時間順**——改變既有排序預設屬 UX 決策，需另行確認，不得順手改掉。
+
 ### 最佳時窗 Ranking V1 規格封版（C2b 第一步，2026-08-11，尚未實作）
 
 `docs/time-window-ranking-v1-authoritative-rules.md`。與前四份 Gate 文件同樣是
