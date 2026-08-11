@@ -338,6 +338,23 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### 擇吉九宮焦點框溢出修正（2026-08-11，使用者實機回報）
+
+回報：「宮位點開資訊，再向下 swipe 退回後多了一個邊框」，附 iPhone 前後對照照片。
+
+- **成因**：全域 `:focus-visible` 的 `outline-offset: 2px` 把焦點框畫在元素外面。
+  九宮格子是等分 grid item，外框疊到相鄰格、又在盤緣被 `.grid` 的 `overflow: hidden`
+  切掉，成為一圈殘缺的多餘邊框。`.overlay-cell` 早有 `outline-offset: -3px` 的處理，
+  **`.selection-cell` 漏了**。
+- **為什麼只在關閉 sheet 後出現**：手指點的當下是 pointer 互動，`:focus-visible` 不匹配；
+  `returnFocusSelector` 是**程式呼叫 `.focus()`**，Safari 對程式性 focus 會套用
+  `:focus-visible`。**焦點框不可移除**（鍵盤操作必要），只能改畫在內側。
+- 新增 `tests/v21Assets.test.ts` 的掃描測試：`*Grid.ts` 裡凡是 `button` 格子，
+  都必須有對應的內側 focus ring 規則。**已驗證拿掉修正後該測試會失敗。**
+- 只改 CSS 一行 ＋ 一個測試；`npm test` 365 → **366**。
+- **待補**：Chrome 擴充當時斷線，尚未做修正後的實機／瀏覽器目視覆核。
+  下次有瀏覽器時值得再看一眼擇吉九宮的 focus 態。
+
 ### 最佳時窗接上尋星結果 UI（C2b 第三步，2026-08-11，完成）
 
 - 排序控制「依時間 / 依日課時課」。**預設 `'time'`，與改動前完全一致**——

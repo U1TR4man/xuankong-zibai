@@ -795,6 +795,15 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
   background: rgb(166 64 53 / 3%);
   box-shadow: none;
 }
+/* 九宮格子是等分 grid item，全域 `:focus-visible` 的 `outline-offset: 2px`
+   會把 focus ring 畫到格子**外面**：既與相鄰格重疊，也在盤緣被 `.grid` 的
+   `overflow: hidden` 切掉，看起來像多了一圈殘缺的邊框。
+   焦點框改畫在格子內側，與 `.overlay-cell` 同一處理。
+
+   使用者實測 2026-08-11：點開方向詳情、下滑關閉後，`returnFocusSelector`
+   會**以程式呼叫 `.focus()`**——Safari 對程式性 focus 會套用 `:focus-visible`，
+   所以這一圈只在關閉 sheet 之後出現，用手指點的當下不會。 */
+.selection-cell:focus-visible { position: relative; z-index: 1; outline-offset: -3px; }
 .selection-cell.is-selected {
   background: var(--cinnabar-soft);
   box-shadow: inset 0 0 0 2px var(--cinnabar);

@@ -55,6 +55,30 @@ describe('V2.1 離線品牌字體', () => {
     expect(license).toContain('SIL OPEN FONT LICENSE Version 1.1');
   });
 
+  it('每個可 focus 的九宮格子都把焦點框畫在內側', () => {
+    // 全域 `:focus-visible` 的 outline-offset 是 +2px，焦點框畫在元素**外面**。
+    // 九宮格子是等分 grid item，外框會疊到相鄰格、並在盤緣被 `.grid` 的
+    // overflow: hidden 切掉，看起來像多了一圈殘缺的邊框——2026-08-11 實機回報過。
+    // 只在關閉 sheet 之後出現，是因為 returnFocusSelector 用程式呼叫 .focus()。
+    // 新增可 focus 的格子時必須同時補上內側 focus ring，本測試會擋下遺漏。
+    const css = readFileSync(resolve(root, 'src/styles.css'), 'utf8');
+    const srcRoot = resolve(root, 'src');
+    const cellClasses = new Set<string>();
+    for (const relative of readdirSync(srcRoot, { recursive: true }).map(String)) {
+      if (!relative.endsWith('Grid.ts')) continue;
+      const source = readFileSync(resolve(srcRoot, relative), 'utf8');
+      if (!source.includes("el('button'")) continue;
+      for (const match of source.matchAll(/'([a-z]+-cell)'/g)) cellClasses.add(match[1]!);
+    }
+    expect([...cellClasses].sort()).toEqual(['overlay-cell', 'selection-cell']);
+    for (const cls of cellClasses) {
+      expect(
+        new RegExp(`\\.${cls}:focus-visible\\s*\\{[^}]*outline-offset:\\s*-`).test(css),
+        `.${cls} 缺少內側 focus ring`,
+      ).toBe(true);
+    }
+  });
+
   it('可重跑 glyph inventory 涵蓋所有目前靜態 UI 中文', () => {
     const inventory = readFileSync(resolve(root, 'public/fonts/zibai-serif-glyphs.txt'), 'utf8');
     const srcRoot = resolve(root, 'src');
