@@ -3,16 +3,41 @@ import {
   formatUtc8Date, formatUtc8Time, MS_PER_DAY, parseUtc8, toUtc8Parts,
 } from '../engine/time/utc8';
 import { overlayLevelsThrough } from '../overlay/types';
+import type { SelectionMode } from '../selection/hourGate';
 import { buildTemporalPillars, type TemporalPillarOptions } from '../selection/temporalPillars';
+import { type RankedTimeWindow, rankTimeWindows } from '../selection/timeWindowRanking';
 import { showOverlayChart } from '../state/appState';
 import type { SearchMatch, StarSearchQuery } from '../search/types';
 import { el } from './dom';
+import {
+  DAY_STATUS_LABEL, TIME_WINDOW_HOUR_STATUS_LABEL, TIME_WINDOW_REJECTION_LABEL,
+} from './gateLabels';
 
 const LEVEL_LABEL: Record<StarLevel, string> = {
   year: '年', month: '月', day: '日', hour: '時', ke: '刻',
 };
 
 const RESULT_PAGE_SIZE = 50;
+
+/**
+ * 結果排序方式。
+ *
+ * `time` 是**既有預設，不得更動**——改變既有排序預設屬 UX 決策
+ * （最佳時窗規則文件 §11 第 2 項）。
+ *
+ * `window` 依「可用性 → 日課 → 時課 → 時間」排序，見 `rankTimeWindows()`。
+ */
+export type ResultSort = 'time' | 'window';
+
+const SORT_LABEL: Record<ResultSort, string> = {
+  time: '依時間', window: '依日課時課',
+};
+
+export interface SearchResultsOptions extends TemporalPillarOptions {
+  mode?: SelectionMode;
+  sort?: ResultSort;
+  onSortChange?: (sort: ResultSort) => void;
+}
 
 function palaceLabel(key: SearchMatch['palace']): string {
   const palace = PALACES.find((item) => item.key === key)!;
@@ -48,9 +73,38 @@ function pillarChips(match: SearchMatch, options: TemporalPillarOptions): string
   return chips;
 }
 
-function ResultCard(match: SearchMatch, options: TemporalPillarOptions): HTMLElement {
+/**
+ * 時窗評級只在**依日課時課**排序時顯示。
+ *
+ * 依時間排序時列表沒有用到這個判定，若照樣顯示，使用者會把清單讀成
+ * 「已按吉凶排好」——那正是這裡要避免的誤導。
+ */
+function windowGateRow(window: RankedTimeWindow): HTMLElement {
+  const parts = [
+    `日課 ${DAY_STATUS_LABEL[window.dayStatus]}`,
+    `時課 ${TIME_WINDOW_HOUR_STATUS_LABEL[window.hourStatus]}`,
+  ];
+  if (window.rejectedBy.length > 0) {
+    parts.push(window.rejectedBy.map((reason) => TIME_WINDOW_REJECTION_LABEL[reason]).join('、'));
+  }
+  return el('span', {
+    class: `search-result__gates gates--${window.admissibility}`,
+    'aria-hidden': 'true',
+  }, ...parts.map((part) => el('span', {}, part)));
+}
+
+function ResultCard(
+  match: SearchMatch,
+  options: TemporalPillarOptions,
+  window?: RankedTimeWindow,
+): HTMLElement {
   const time = resultTime(match);
   const chips = pillarChips(match, options);
+  const gateChips = window ? [
+    `日課 ${DAY_STATUS_LABEL[window.dayStatus]}`,
+    `時課 ${TIME_WINDOW_HOUR_STATUS_LABEL[window.hourStatus]}`,
+    ...window.rejectedBy.map((reason) => TIME_WINDOW_REJECTION_LABEL[reason]),
+  ] : [];
   const matchedLevels = new Set(match.matchedConditions.map((condition) => condition.level));
   const layers = el('span', { class: 'search-result__layers', 'aria-label': '命中時的上層疊盤' });
   for (const level of overlayLevelsThrough(match.precision)) {
@@ -80,6 +134,7 @@ function ResultCard(match: SearchMatch, options: TemporalPillarOptions): HTMLEle
       `${time.date} ${time.time}`,
       palaceLabel(match.palace),
       ...chips,
+      ...gateChips,
       '查看此盤',
     ].join('，'),
     onclick: () => {
@@ -98,6 +153,7 @@ function ResultCard(match: SearchMatch, options: TemporalPillarOptions): HTMLEle
     ),
     el('span', { class: 'search-result__pillars', 'aria-hidden': 'true' },
       ...chips.map((chip) => el('span', {}, chip))),
+    window ? windowGateRow(window) : null,
     layers,
     el('span', { class: 'search-result__footer' },
       combinations.length > 0
@@ -140,11 +196,70 @@ function groupSections(
   ));
 }
 
+/**
+ * 依日課時課排序時改以 tier 分組——日期分組在這個次序下會被打散成無意義的碎片。
+ * tier 是「可用性／日課／時課」三者相同的一群，正好是使用者要比較的單位。
+ */
+function tierSections(
+  windows: readonly RankedTimeWindow[],
+  options: TemporalPillarOptions,
+): HTMLElement[] {
+  const groups = new Map<number, RankedTimeWindow[]>();
+  for (const window of windows) {
+    const group = groups.get(window.tier) ?? [];
+    group.push(window);
+    groups.set(window.tier, group);
+  }
+  return Array.from(groups, ([tier, group]) => {
+    const head = group[0]!;
+    const title = `日課 ${DAY_STATUS_LABEL[head.dayStatus]} · `
+      + `時課 ${TIME_WINDOW_HOUR_STATUS_LABEL[head.hourStatus]}`;
+    return el('section', {
+      class: `search-result-group search-tier--${head.admissibility}`,
+      'aria-labelledby': `search-tier-${tier}`,
+    },
+    el('header', { class: 'search-result-group__head' },
+      el('h3', { id: `search-tier-${tier}` }, title),
+      el('span', {}, `${group.length} 個`),
+    ),
+    el('div', { class: 'search-result-group__items' },
+      ...group.map((window) => ResultCard(window.match, options, window))),
+    );
+  });
+}
+
+/** 排序切換；`onSortChange` 未提供時不 render，避免出現點了沒反應的控制。 */
+function sortControl(
+  sort: ResultSort,
+  onSortChange: (next: ResultSort) => void,
+): HTMLElement {
+  return el('div', { class: 'search-sort', role: 'group', 'aria-label': '結果排序' },
+    ...(['time', 'window'] as const).map((value) => el('button', {
+      class: `search-sort__item${sort === value ? ' is-active' : ''}`,
+      type: 'button',
+      'aria-pressed': String(sort === value),
+      onclick: () => { if (value !== sort) onSortChange(value); },
+    }, SORT_LABEL[value])),
+  );
+}
+
 export function SearchResults(
   query: StarSearchQuery,
   matches: readonly SearchMatch[],
-  options: TemporalPillarOptions = {},
+  options: SearchResultsOptions = {},
 ): HTMLElement {
+  const sort = options.sort ?? 'time';
+  // 只有依日課時課排序時才算；依時間排序完全不碰時窗層。
+  const windows = sort === 'window' && matches.length > 0
+    ? rankTimeWindows(matches, {
+      mode: options.mode,
+      dayChangeMode: options.dayChangeMode,
+      yearBoundary: options.yearBoundary,
+    })
+    : [];
+  const ordered: readonly SearchMatch[] = sort === 'window'
+    ? windows.map((window) => window.match)
+    : matches;
   const palace = palaceLabel(query.palace);
   const conditionText = query.conditions.map((condition) => (
     `流${LEVEL_LABEL[condition.level]} ${condition.stars.map(starName).join('／')}`
@@ -162,22 +277,29 @@ export function SearchResults(
       '結果較多，可縮短日期或增加條件；列表會分批顯示，總結果不會被截斷。'));
   }
 
-  let visibleCount = Math.min(RESULT_PAGE_SIZE, matches.length);
+  if (sort === 'window') {
+    notices.push(el('p', { class: 'search-results__notice' },
+      '同一組內按時間先後排列，先後不代表吉凶。日課、時課只作參考，不改方向排序。'));
+  }
+
+  let visibleCount = Math.min(RESULT_PAGE_SIZE, ordered.length);
   const list = el('div', { class: 'search-results__list' });
   const more = el('button', {
     class: 'btn btn--ghost search-results__more', type: 'button',
-    hidden: visibleCount >= matches.length,
+    hidden: visibleCount >= ordered.length,
   });
   const renderVisible = () => {
-    list.replaceChildren(...groupSections(matches.slice(0, visibleCount), options));
-    const remaining = matches.length - visibleCount;
+    list.replaceChildren(...(sort === 'window'
+      ? tierSections(windows.slice(0, visibleCount), options)
+      : groupSections(ordered.slice(0, visibleCount), options)));
+    const remaining = ordered.length - visibleCount;
     more.textContent = remaining > 0
       ? `再顯示 ${Math.min(RESULT_PAGE_SIZE, remaining)} 個（尚餘 ${remaining}）`
       : '已顯示全部結果';
     more.hidden = remaining === 0;
   };
   more.addEventListener('click', () => {
-    visibleCount = Math.min(visibleCount + RESULT_PAGE_SIZE, matches.length);
+    visibleCount = Math.min(visibleCount + RESULT_PAGE_SIZE, ordered.length);
     renderVisible();
   });
   renderVisible();
@@ -189,6 +311,9 @@ export function SearchResults(
         el('p', {}, `${query.startDate} – ${query.endDate}`),
       ),
       el('strong', { class: 'search-results__count', 'aria-live': 'polite' }, `共 ${matches.length} 個結果`),
+      options.onSortChange && matches.length > 0
+        ? sortControl(sort, options.onSortChange)
+        : null,
       ...notices,
     ),
     matches.length > 0

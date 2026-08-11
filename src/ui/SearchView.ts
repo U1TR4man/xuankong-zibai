@@ -9,7 +9,7 @@ import {
 } from '../state/appState';
 import { el } from './dom';
 import { cancelPairSearch, PairSearchView } from './PairSearchView';
-import { SearchResults } from './SearchResults';
+import { type ResultSort, SearchResults } from './SearchResults';
 
 type SearchMode = 'simple' | 'advanced';
 type SearchTool = 'stars' | 'pairs';
@@ -41,6 +41,13 @@ let model: SearchViewModel | undefined;
 let searchRunId = 0;
 let appliedSearchRestoreVersion = -1;
 let activeSearchTool: SearchTool = 'stars';
+/**
+ * 結果排序方式。**預設 `'time'`，與改動前一致**——最佳時窗規則文件 §11 第 2 項
+ * 明訂改變既有排序預設屬 UX 決策，需另行確認。
+ *
+ * 只存在頁面生命週期內，不進 URL：URL 目前只帶查詢條件，排序是呈現偏好。
+ */
+let resultSort: ResultSort = 'time';
 
 const SEARCH_LEVELS: readonly SearchLevel[] = ['day', 'hour', 'ke'];
 const LUOSHU_STARS = [
@@ -414,6 +421,9 @@ export function SearchView(state: AppState): HTMLElement {
       ? SearchResults(model.query, model.matches, {
         dayChangeMode: state.settings.dayChangeMode,
         yearBoundary: state.settings.yearBoundary,
+        mode: state.settings.selectionMode,
+        sort: resultSort,
+        onSortChange: (next) => { resultSort = next; setView('search'); },
       })
       : null,
     );

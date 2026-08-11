@@ -338,6 +338,24 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### 最佳時窗接上尋星結果 UI（C2b 第三步，2026-08-11，完成）
+
+- 排序控制「依時間 / 依日課時課」。**預設 `'time'`，與改動前完全一致**——
+  既有測試全數未改即通過，可證預設視圖未動。
+- **評級只在依日課時課時顯示**。依時間時列表沒用到這個判定，顯示它會讓人把清單
+  讀成「已按吉凶排好」。若日後要在依時間模式也顯示，屬另一個 UX 決策。
+- 依日課時課時改用 **tier 分組**取代日期分組；日期分組在那個次序下會碎掉。
+- 排序方式**不進 URL**，只存頁面生命週期：URL 只帶查詢條件，排序是呈現偏好。
+- `src/ui/gateLabels.ts` 是 Gate 中文標籤的唯一來源，`DirectionDetailSheet` 已改為引用。
+  兩處各留一份的話，同一個 `caution` 會在兩個畫面讀到不同的字。
+- 四寬度 QA 零溢出；字體 subset 未變（929 字），新文案全部落在既有字內。
+- 實測 9/1–9/20 離宮流時九紫 26 筆分 12 個 tier，末兩組為「日課 通過 · 時課 不用」與
+  「日課 偏弱 · 時課 不用」——**旺日因時破被壓到最底**，veto 不受「日為體」約束，
+  這正是規格 §1 要的行為。
+- `npm test` 364 → **365**。
+
+**C2(b) 至此完成。** 規則文件 §10 的六項 stop condition 一項未動。
+
 ### 最佳時窗 `rankTimeWindows()` 已實作（C2b 第二步，2026-08-11）
 
 `src/selection/timeWindowRanking.ts` ＋ `tests/timeWindowRanking.test.ts`（17 測試）。

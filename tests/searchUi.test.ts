@@ -318,4 +318,53 @@ describe('Phase 3 搜尋 UI', () => {
       .map((span) => span.textContent)).toEqual(['年 丙午', '月 丙申', '日 辛巳']);
     expect(firstResult.getAttribute('aria-label')).not.toContain('時 ');
   });
+
+  it('結果排序可在依時間與依日課時課之間切換，預設為依時間', async () => {
+    $<HTMLInputElement>('input[name="startDate"]')!.value = '2026-09-01';
+    $<HTMLInputElement>('input[name="endDate"]')!.value = '2026-09-20';
+    const level = $<HTMLInputElement>('input[name="level"][value="hour"]')!;
+    level.checked = true;
+    level.dispatchEvent(new Event('change', { bubbles: true }));
+    $<HTMLFormElement>('.search-form')!.dispatchEvent(new Event('submit', {
+      bubbles: true, cancelable: true,
+    }));
+    await waitForSearch();
+    expect(document.querySelectorAll('.search-result').length).toBeGreaterThan(1);
+
+    // 預設不得改動：最佳時窗規則文件 §11 第 2 項。
+    expect($('.search-sort__item.is-active')?.textContent).toBe('依時間');
+    expect(document.querySelector('.search-result__gates')).toBeNull();
+    expect($('.search-result-group__head h3')?.textContent).toMatch(/^\d+月\d+日$/);
+
+    const sortButton = (label: string) => Array
+      .from(document.querySelectorAll<HTMLButtonElement>('.search-sort__item'))
+      .find((button) => button.textContent === label)!;
+    sortButton('依日課時課').click();
+
+    expect($('.search-sort__item.is-active')?.textContent).toBe('依日課時課');
+    // tier 標題取代日期標題。
+    const heads = Array.from(document.querySelectorAll('.search-result-group__head h3'))
+      .map((h) => h.textContent ?? '');
+    expect(heads.length).toBeGreaterThan(0);
+    for (const head of heads) expect(head).toMatch(/^日課 .+ · 時課 .+$/);
+    // 每張卡片都帶日課／時課。
+    const gates = document.querySelectorAll('.search-result__gates');
+    expect(gates).toHaveLength(document.querySelectorAll('.search-result').length);
+    expect(gates[0]?.textContent).toContain('日課');
+    expect(gates[0]?.textContent).toContain('時課');
+    // 平手按時間的事實必須明示，否則會被讀成越早越吉。
+    expect($('.search-results')?.textContent).toContain('先後不代表吉凶');
+    // 不可用的時窗排最後並標明原因。
+    const groups = Array.from(document.querySelectorAll('.search-result-group'));
+    const rejected = groups.filter((g) => g.classList.contains('search-tier--rejected'));
+    expect(rejected.length).toBeGreaterThan(0);
+    expect(rejected.at(-1)).toBe(groups.at(-1));
+    expect(rejected[0]?.textContent).toContain('時課不用');
+
+    sortButton('依時間').click();
+    expect($('.search-sort__item.is-active')?.textContent).toBe('依時間');
+    expect(document.querySelector('.search-result__gates')).toBeNull();
+    expect($('.search-result-group__head h3')?.textContent).toMatch(/^\d+月\d+日$/);
+    expect($('.search-results')?.textContent).not.toContain('先後不代表吉凶');
+  });
 });

@@ -1,6 +1,6 @@
 # 最佳時窗 Ranking V1 authoritative rules
 
-> 狀態：2026-08-11 規格封版；同日完成**計算層** `src/selection/timeWindowRanking.ts`，**尚未接上 UI**。`verdictFor()`、`rankDirections()` 與三個 Gate 的 `rankingUse` 一律未改。
+> 狀態：2026-08-11 規格封版；同日完成計算層 `src/selection/timeWindowRanking.ts` 與尋星結果 UI。`verdictFor()`、`rankDirections()` 與三個 Gate 的 `rankingUse` 一律未改。
 >
 > 這是本專案第一個**會排序**的判定層。前四份規則文件（Day / Hour / Direction Gate / Direction Positive）全部以 `rankingUse: 'disabled'` 收尾；本文件是使用者於 2026-08-11 明確授權後才開的。授權範圍**僅限時間軸**，方向軸的 `rankingUse` 一律不變。
 
@@ -213,6 +213,18 @@ primarySourceVerified: false;
 
 1. ~~`rankTimeWindows()` 純函式 ＋ 單元測試（含 §7 的六項 regression）~~ —— **2026-08-11 完成**，
    `src/selection/timeWindowRanking.ts`、`tests/timeWindowRanking.test.ts`（17 個測試）。
-2. 搜尋結果 UI 加入排序切換（時間順 / 時窗品質順），預設維持**時間順**——改變既有預設屬 UX 決策，需另行確認。
-3. 顯示每個時窗的日課／時課與被排除原因；平手按時間的事實必須明示。
-4. 四寬度 QA ＋ 字體 subset 重建。
+2. ~~搜尋結果 UI 加入排序切換，預設維持時間順~~ —— **2026-08-11 完成**。
+   控制為「依時間 / 依日課時課」，**預設仍是依時間**。
+3. ~~顯示每個時窗的日課／時課與被排除原因；平手按時間的事實必須明示~~ —— **2026-08-11 完成**。
+4. ~~四寬度 QA ＋ 字體 subset 重建~~ —— **2026-08-11 完成**，四寬度零溢出，字體未新增字元。
+
+### 11.1 實作期的兩個 UI 決策
+
+**評級只在「依日課時課」時顯示。** 依時間排序時列表沒有用到這個判定，若照樣顯示，
+使用者會把清單讀成「已按吉凶排好」——那正是本文件 §3 要避免的誤導。
+（若日後決定在依時間模式也顯示，屬另一個 UX 決策。）
+
+**依日課時課時改用 tier 分組，取代日期分組。** 日期分組在這個次序下會被打散成
+無意義的碎片；tier 正好是「可用性／日課／時課」三者相同的一群，即使用者要比較的單位。
+
+排序方式**不進 URL**：URL 目前只帶查詢條件，排序是呈現偏好，不是查詢的一部分。

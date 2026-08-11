@@ -8,19 +8,18 @@ import {
   buildDirectionSelectionAssessment, buildDirectionSelectionContext,
 } from '../selection/directionSelection';
 import type { DirectionVirtueCode, DirectionVirtueEvidence } from '../selection/directionVirtues';
-import {
-  type HourGate, type HourGateStatus, type SelectionMode, buildHourGate,
-} from '../selection/hourGate';
+import { type HourGate, type SelectionMode, buildHourGate } from '../selection/hourGate';
 import { purposeLabel } from '../selection/purpose';
 import { PURPLE_WHITE_SIGNAL_LABEL, WHITE_KILLER_LABEL } from '../selection/researchEvidence';
 import type { TemporalPillars } from '../selection/temporalPillars';
 import {
   VERDICT_LABEL, type BranchQiState, type DirectionEvaluation, type DirectionLevel,
-  type DayGateStatus, type DayMasterSeasonState, type LayerRole, type PairHit, type PalaceElementRelation, type SeasonalState,
+  type DayMasterSeasonState, type LayerRole, type PairHit, type PalaceElementRelation, type SeasonalState,
   type SourceGrade, type TemporalStarAssessment,
 } from '../selection/types';
 import { getState } from '../state/appState';
 import { openBottomSheet } from './BottomSheet';
+import { DAY_STATUS_LABEL, HOUR_STATUS_LABEL } from './gateLabels';
 import { el } from './dom';
 import { openPairRuleSheet } from './PairRuleSheet';
 
@@ -46,9 +45,6 @@ const ROLE_LABEL: Record<LayerRole, string> = {
 const DAY_STATE_LABEL: Record<DayMasterSeasonState, string> = {
   wang: '旺', xiang: '相', xiu: '休', qiu: '囚', si: '死',
 };
-const DAY_STATUS_LABEL: Record<DayGateStatus, string> = {
-  pass: '通過', mixed: '偏弱', caution: '慎看',
-};
 const ELEMENT_RELATION_LABEL: Record<PalaceElementRelation, (
   palace: string, star: string,
 ) => string> = {
@@ -59,9 +55,6 @@ const ELEMENT_RELATION_LABEL: Record<PalaceElementRelation, (
   star_controls_palace: (palace, star) => `星${star}剋宮${palace}`,
 };
 
-const HOUR_STATUS_LABEL: Record<HourGateStatus, string> = {
-  preferred: '宜用', pass: '可用', mixed: '吉凶並見', caution: '慎用', reject: '不用',
-};
 const HOUR_CONFLICT_LABEL: Record<string, string> = {
   hourBreak: '時破', clashMonth: '時沖月令', clashYear: '時沖歲君',
   fiveBuYu: '五不遇', punishment: '時刑', harm: '日害',
