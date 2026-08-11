@@ -337,6 +337,30 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### 四寬度 Browser QA 與一個 CSS 修正（2026-08-11）
+
+以 `dist/` 經本機 http server（`scripts/serve-dist.command`）實測。
+
+```text
+寬度        320   375   390   430
+page        全部 clientWidth === scrollWidth
+sheet       318   373   388   428（皆 client === scroll）
+九宮宮位盤  281   328   343   383（皆 client === scroll）
+干支列      四個寬度皆單行不折，且不超出結果卡片
+```
+
+- service worker active、precache 9 項含新版 WOFF2、`document.fonts.check()` 為 true。
+- **QA 抓到一個真 bug 並已修**：`.direction-disclosure summary` 是**後代**選擇器，
+  上一輪新增的巢狀 `details.direction-virtue__others` 因此吃到 top-level 樣式
+  （48px 列高、16px 字、22px chevron），`justify-content: space-between` 再把 chevron
+  推出內容框，造成**四個寬度都是固定 13px** 的溢出——按比例縮放的才是版面問題，
+  固定值就該去找固定寬度的元素。已收窄為 `.direction-disclosure > summary`。
+  **下次在 disclosure body 內加巢狀 `<details>` 時要記得這件事。**
+- **已登記未修**：`.chart-mode-panel` 與 `.card` 在四個寬度都有固定 5px 的內部溢出，
+  來源是九宮 `.grid`。`.grid` 有 `overflow: hidden`、頁面層 `clientWidth === scrollWidth`，
+  畫面上看不出來。**本 session 未動過 `.grid`／`.cell`／`.chart-mode-panel`**
+  （`git diff 832987e -- src/styles.css` 可驗證），屬既有落差，依規矩只登記不順手修。
+
 ### 固定版本原頁核對第二輪：歲德、五不遇、白中殺（2026-08-11）
 
 | commit | 內容 |

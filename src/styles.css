@@ -988,7 +988,26 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
   font-size: 12px;
 }
 .direction-virtue__others { margin-top: var(--s2); font-size: 12px; }
-.direction-virtue__others summary { color: var(--ink-secondary); cursor: pointer; }
+.direction-virtue__others summary {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 32px;
+  list-style: none;
+  color: var(--ink-secondary);
+  cursor: pointer;
+}
+.direction-virtue__others summary::-webkit-details-marker { display: none; }
+/* chevron 緊跟文字，不用 space-between，才不會被推到內容框外。 */
+.direction-virtue__others summary::after {
+  content: '›';
+  color: var(--ink-tertiary);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+.direction-virtue__others[open] summary::after { transform: rotate(90deg); }
 .direction-virtue__others ul {
   margin: var(--s1) 0 0;
   padding-left: 1.25rem;
@@ -1082,7 +1101,10 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
 }
 .direction-disclosures { border-top: 1px solid var(--line); }
 .direction-disclosure { border-bottom: 1px solid var(--line); }
-.direction-disclosure summary {
+/* 必須是直接子代：`.direction-virtue__others` 是巢狀 details，
+   若用後代選擇器，它的 summary 會誤得 48px 列高與 22px chevron，
+   chevron 再被 space-between 推出內容框，造成固定 13px 橫向溢出。 */
+.direction-disclosure > summary {
   min-height: 48px;
   display: flex;
   align-items: center;
@@ -1095,8 +1117,8 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
   font-weight: 500;
   cursor: pointer;
 }
-.direction-disclosure summary::-webkit-details-marker { display: none; }
-.direction-disclosure summary::after {
+.direction-disclosure > summary::-webkit-details-marker { display: none; }
+.direction-disclosure > summary::after {
   content: '›';
   color: var(--ink-secondary);
   font-family: var(--font-ui);
@@ -1104,7 +1126,7 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
   font-weight: 400;
   transition: transform 160ms ease;
 }
-.direction-disclosure[open] summary::after { transform: rotate(90deg); }
+.direction-disclosure[open] > summary::after { transform: rotate(90deg); }
 .direction-disclosure__body {
   display: flex;
   flex-direction: column;

@@ -242,9 +242,11 @@ export const TraditionalKeStrategy: KeStarStrategy = {
   `scripts/build-font-subset.py` 核對），927 個 UI 字元／928 glyph／248,116 bytes。
   preload、CSS `@font-face`、PWA precache 與 single-file data URI 四個管道均已確認含新字體；
   `tools/make-single-file.mjs` 另在 build 期斷言內嵌字體解碼後的 byte 數等於來源。
-- 四寬度 Browser QA（經本機 http server 實測 `dist/`）：320／375／390／430px 的頁面與方向詳情
-  sheet `clientWidth` 與 `scrollWidth` 全部相等，四個 disclosure 全展開後仍無 horizontal overflow；
-  service worker 已啟用，console 0 error／0 warning。
+- 四寬度 Browser QA（經本機 http server 實測 `dist/`，`scripts/serve-dist.command` 可直接啟動）：
+  320／375／390／430px 的頁面與方向詳情 sheet `clientWidth` 與 `scrollWidth` 全部相等
+  （sheet 318／373／388／428），六個 disclosure 全展開後無 horizontal overflow；
+  尋星九宮宮位盤 client＝scroll，結果干支列單行不折、不超出卡片；
+  service worker 已啟用，precache 9 項含新版 WOFF2，`document.fonts.check()` 為 true。
 
 ## 尚未做的事
 

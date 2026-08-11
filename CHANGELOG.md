@@ -6,6 +6,9 @@
 
 ### Changed
 
+- **修正方向詳情「本盤其餘六德」的固定 13px 橫向溢出。** `.direction-disclosure summary` 是後代選擇器，因此上一輪新增的巢狀 `<details>` 也吃到了 top-level disclosure 的樣式：48px 列高、16px 標題字與 22px chevron，而 `justify-content: space-between` 把那個 chevron 推出內容框。規則收窄為直接子代 `.direction-disclosure > summary`，巢狀 details 另給次級樣式（32px、12px、chevron 緊跟文字）。四個寬度的溢出量都是 13px 而非按比例縮放，正是固定寬度 chevron 的特徵。
+- 新增 `scripts/serve-dist.command`：在 Finder 雙擊即可啟動 QA 用本機 server。用 python3 而非 npx（本機未必裝 node），用 http 而非 `file://`（後者是 opaque origin，service worker 不會註冊，量到的不是 production 行為）。
+
 - **白中殺 `primarySourceVerified` 由 `false` 升為 `true`**，出處為《五要奇書》卷三十八。同時新增 `corroboration: 'single_complete_witness'`：只有這一本六列完整，另外三本的受剋列脫格且互不相同，**不得讀成四本互校**。**格值一格未改，強度完全不變**——`confidence` 六列未動，年月白中殺仍 active、日時仍 `reference_only`，八方 verdict 與排序輸出零差異。
 - 新增 `WHITE_KILLER_VARIANTS`：鬥牛的元龜「三碧四綠同宮」異說（古本自註「未詳孰是」，故本規則不再標為無異說）與五黃暗建的四隅異說，兩者 `rankingUse: 'disabled'`。另記受剋殺定義的二比一異文，`effectOnValues: 'none'`。
 - 新增 `completeness: 'example_set_not_exhaustive'`：《完孝錄》卷六明言「以上星煞所忌，特見其例耳」，還須論刑宮、害宮與四空亡。本專案未實作該層，因此 9×6 矩陣不得再被描述為完整的白中殺判定。
