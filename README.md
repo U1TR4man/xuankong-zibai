@@ -43,7 +43,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 ### V2.1 視覺精修與 iOS 日期時間修正
 
 - 日期／時間仍使用原生 `<input type="date">`、`<input type="time">`；外層 shell 統一繪製 border 與 focus，避免 iOS WebKit 原生控件內外框尺寸不同步。
-- 自帶約 249 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、928 個 cmap 字元／929 glyphs，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
+- 自帶約 249 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、927 個 cmap 字元／928 glyphs，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
 - 頂欄 info／settings 改為同一套 1.5px inline SVG，不再依賴平台 emoji。
 - 層級列改為無外框 tab + 朱砂短底線；主畫面只保留一個「今」，UTC+8 說明留在選時與設定 Sheet。
 - 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
@@ -237,7 +237,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
   **2996 個取樣時間點**重算年／月／日／時／刻五層入中星與順逆：**零筆不一致**。
 - 自帶字體 subset：來源 `NotoSerifCJKtc-Medium.otf` 2.003（source SHA-256 由
-  `scripts/build-font-subset.py` 核對），928 個 UI 字元／929 glyph／248,584 bytes。
+  `scripts/build-font-subset.py` 核對），927 個 UI 字元／928 glyph／248,116 bytes。
   preload、CSS `@font-face`、PWA precache 與 single-file data URI 四個管道均已確認含新字體；
   `tools/make-single-file.mjs` 另在 build 期斷言內嵌字體解碼後的 byte 數等於來源。
 - 四寬度 Browser QA（經本機 http server 實測 `dist/`）：320／375／390／430px 的頁面與方向詳情

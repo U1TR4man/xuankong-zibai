@@ -65,7 +65,7 @@
 - Day Gate V1 權威規則：`docs/day-gate-v1-authoritative-rules.md`
 - Direction Positive Evidence V1 權威規則（第十一至十三輪）：`docs/direction-positive-v1-authoritative-rules.md`
 
-P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣、canonical 年月日時干支、V2 Final P0／P1 及 Day Gate V1 均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。V2 UI/UX 進入 freeze；Day Gate 下一步是四柱沖、月破、日時沖、時扶日與日干祿時。另需收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式、九宮式 Search selector、九宮 keyboard cleanup 或 P2 最佳時窗。
+P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣、canonical 年月日時干支、V2 Final P0／P1 及 Day Gate V1 均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。V2 UI/UX 進入 freeze；Day Gate 下一步是四柱沖、月破、日時沖、時扶日與日干祿時。另需收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式、九宮 keyboard cleanup 或 P2 最佳時窗。九宮式 Search selector 已於 2026-08-11 經使用者授權實作。
 
 ---
 
@@ -336,6 +336,35 @@ tests/fixtures/chart-snapshot.json
 - 三 Gate 一律 `rankingUse: 'disabled'`；`verdictFor()`／`rankDirections()` 不得讀取任何 Gate 欄位，實作時須附 regression test
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
+
+### Search backlog 四項 + README 更新（2026-08-11）
+
+使用者一次授權四項 backlog，分成四個 commit（外加字體）依風險遞增執行。
+
+| commit | 內容 |
+|---|---|
+| `a373095` | README 補三個 Gate、考源狀態、七個新 selection 模組、Hour／Direction 規則列，並修正過時的測試數與字體數字 |
+| `5cf5ff9` | 進階尋星條件 URL serialization |
+| `c83c38a` | 尋星結果顯示干支 |
+| `4b58bfa` | 尋星宮位改為九宮方盤 |
+
+- **URL state 改為 discriminated union `StarSearchUrlState`**。簡易帶 `precision`／`star`，進階帶 `dayStars`／`hourStars`／`keStars`；飛星恆為一位數故序列化為連續數字（`dayStars=13`），空層不寫入。**沒有 `mode` 參數的舊連結仍解析為簡易**，`parseStarSearchUrlState()` 有測試鎖定。重複數字去重而非判為無效（OR 集合去重後語義相同）。
+- 舊名 `simpleSearch`／`setSimpleSearchUrlState`／`parseSimpleSearchUrlState` 全部更名為 `starSearch`／`setStarSearchUrlState`／`parseStarSearchUrlState`，無其他消費端。
+- **結果干支只有一個來源 `buildTemporalPillars()`**，年界／換日／時辰邊界跟隨使用者設定，UI 不得改由結果時間字串自行推算。**日精度只列年月日三柱**：一日十二時辰無唯一時柱。干支列為 `aria-hidden`，內容併入 button 的 `aria-label`（explicit label 會蓋掉按鈕內文）。
+- 測試以獨立算式核對干支，不與實作互相印證：2026-09-01 距 2000-01-01（戊午，index 54）9740 日，(54+9740) mod 60 = 14 → **戊寅**；戊癸日壬子起，申時 → **庚申**。2026-09-04 為 (54+9743) mod 60 = 17 → **辛巳**。年 **丙午**、9/1 月 **丙申**（白露前）、9/13 月 **丁酉**（白露後）。
+- 宮位九宮盤直接 render `PALACES`（其 `row`／`col` 已是洛書 4／9／2、3／5／7、8／1／6），**不另建方位表**。中宮仍可選；`select[name="palace"]` 已不存在，測試改查 `input[name="palace"]`。
+- **字體 subset 重建後字元數不增反減**：本輪的宮名、方位與干支早已在 subset 內；少掉的是「叢」，隨先前 `sanDeCongJu` → `sanDeFang` 更名離開 `src/**` 而當時未重建。
+
+```text
+UI 字元     928 → 927
+cmap/glyph  927 / 928
+WOFF2       248,584 → 248,116 bytes
+WOFF2 SHA   73a19319a1a381e0c06870ccf60e6a930a00a0e0296675b35beb7a5ea709197d
+source SHA  da0a79ee44322329dd9ff87d2cc878dc897c5180195e3f9b6cd4c8569781e887（未變，腳本核對通過）
+```
+
+- `npm test` 198 → **343 個測試／32 個檔案**；typecheck、`build`、`build:single` 全部通過，`tests/engineSnapshot.test.ts` 未受影響。
+- 四寬度 Browser QA 待重跑（需使用者重新啟動本機 http server）。
 
 ### Gate UI 首次上線 + 字體 subset 重建（2026-08-10）
 
