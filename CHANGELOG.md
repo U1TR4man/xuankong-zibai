@@ -4,6 +4,13 @@
 
 ## [Unreleased]
 
+### Added
+
+- **設定新增「用事：日常／修造」。** 規則層的 `SelectionMode` 早已實作，但一直沒有入口，實務上永遠是 `daily`。選「修造」時，時沖月令或歲君由「不宜」提升為「不用」，依據是《協紀》卷七「大事則忌，小事可勿論」。
+- 放在設定而非擇吉盤內，是因為它與日柱換日、年界同類——都是影響計算的解讀選項，且「我在擇動土日」是穩定情境而非每張盤的切換。方向詳情的時課區會標示當前模式，否則使用者看到 `reject` 卻不知道它從哪來。
+- **作用範圍嚴格限於 Hour Gate。** 日課的旺相休囚死與方位的歲破三煞，原典都沒有按事情大小分級；把開關擴大到那兩層等於自造判準。測試鎖定切換模式後八方 verdict、排序與 `dayStatus` 完全不變。
+- 字體 subset 隨之重建：新增「忌」「勿」兩字（來自設定說明引的原文），927 → **929** 個 UI 字元，cmap 929／glyphs 930，WOFF2 **249,012 bytes**，SHA-256 `a546a1b1ea8929c13b7abfc222498ca7d68ef89d6f9381c0b05bba804304402a`。與先前為引文 anchor 而擴充不同，這是使用者實際會讀的 UI 文字。
+
 ### Changed
 
 - **修正方向詳情「本盤其餘六德」的固定 13px 橫向溢出。** `.direction-disclosure summary` 是後代選擇器，因此上一輪新增的巢狀 `<details>` 也吃到了 top-level disclosure 的樣式：48px 列高、16px 標題字與 22px chevron，而 `justify-content: space-between` 把那個 chevron 推出內容框。規則收窄為直接子代 `.direction-disclosure > summary`，巢狀 details 另給次級樣式（32px、12px、chevron 緊跟文字）。四個寬度的溢出量都是 13px 而非按比例縮放，正是固定寬度 chevron 的特徵。

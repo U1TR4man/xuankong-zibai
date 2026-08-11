@@ -8,7 +8,9 @@ import {
   buildDirectionSelectionAssessment, buildDirectionSelectionContext,
 } from '../selection/directionSelection';
 import type { DirectionVirtueCode, DirectionVirtueEvidence } from '../selection/directionVirtues';
-import { type HourGate, type HourGateStatus, buildHourGate } from '../selection/hourGate';
+import {
+  type HourGate, type HourGateStatus, type SelectionMode, buildHourGate,
+} from '../selection/hourGate';
 import { purposeLabel } from '../selection/purpose';
 import { PURPLE_WHITE_SIGNAL_LABEL, WHITE_KILLER_LABEL } from '../selection/researchEvidence';
 import type { TemporalPillars } from '../selection/temporalPillars';
@@ -17,6 +19,7 @@ import {
   type DayGateStatus, type DayMasterSeasonState, type LayerRole, type PairHit, type PalaceElementRelation, type SeasonalState,
   type SourceGrade, type TemporalStarAssessment,
 } from '../selection/types';
+import { getState } from '../state/appState';
 import { openBottomSheet } from './BottomSheet';
 import { el } from './dom';
 import { openPairRuleSheet } from './PairRuleSheet';
@@ -228,7 +231,11 @@ function pillarsOf(evaluation: DirectionEvaluation): TemporalPillars | null {
   return { year, month, day, hour };
 }
 
-function hourGateSection(gate: HourGate): HTMLElement {
+const SELECTION_MODE_LABEL: Record<SelectionMode, string> = {
+  daily: '日常', construction: '修造',
+};
+
+function hourGateSection(gate: HourGate, mode: SelectionMode): HTMLElement {
   const conflicts = Object.entries({
     hourBreak: gate.conflicts.hourBreak,
     clashMonth: gate.conflicts.clashMonth.active,
@@ -258,7 +265,8 @@ function hourGateSection(gate: HourGate): HTMLElement {
   el('p', { class: 'direction-hour-gate__row' },
     el('small', {}, '有利'), el('span', {}, supports.length > 0 ? supports.join('、') : '無')),
   el('small', { class: 'direction-hour-gate__boundary' },
-    '時為日之用。正負兩邊並列保存，不相抵；時課只作顯示，不改方向排序。'));
+    `用事：${SELECTION_MODE_LABEL[mode]}。`
+    + '時為日之用。正負兩邊並列保存，不相抵；時課只作顯示，不改方向排序。'));
 }
 
 function shaSection(assessment: DirectionSelectionAssessmentV2): HTMLElement {
@@ -350,7 +358,9 @@ export function openDirectionDetailSheet(
   // Gate 資料由 canonical 四柱另行計算，不寫回 DirectionEvaluation，
   // 因此 verdictFor()／rankDirections() 仍讀不到任何 Gate 欄位。
   const pillars = pillarsOf(evaluation);
-  const hourGate = pillars ? buildHourGate(pillars) : null;
+  // 用事模式只從設定讀，只餵給 Hour Gate；Day Gate 與 Direction Gate 不接受此參數。
+  const selectionMode = getState().settings.selectionMode;
+  const hourGate = pillars ? buildHourGate(pillars, { mode: selectionMode }) : null;
   const selectionContext = pillars ? buildDirectionSelectionContext({
     yearStem: pillars.year.stem,
     yearBranch: pillars.year.branch,
@@ -381,7 +391,7 @@ export function openDirectionDetailSheet(
           starItem(LEVEL_LABEL[state.level], state.ganzhi.text, state.star)
         ))),
       dayGateSection(evaluation),
-      hourGate ? hourGateSection(hourGate) : null,
+      hourGate ? hourGateSection(hourGate, selectionMode) : null,
       el('h2', { class: 'direction-detail__section-label' }, '方向'),
       el('p', { class: `direction-detail__verdict verdict--${evaluation.verdict}` },
         VERDICT_LABEL[evaluation.verdict]),

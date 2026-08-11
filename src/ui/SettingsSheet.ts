@@ -3,6 +3,7 @@
 import { DAY_CHANGE_LABEL, type DayChangeMode } from '../engine/time/ganzhiDay';
 import { YEAR_BOUNDARY_LABEL, type YearBoundary } from '../engine/flyingStar/yearStar';
 import { KE_STRATEGIES } from '../engine/flyingStar/ke/registry';
+import type { SelectionMode } from '../selection/hourGate';
 import { getState, updateSettings } from '../state/appState';
 import type { DisplayMode } from '../state/settings';
 import { openBottomSheet } from './BottomSheet';
@@ -40,6 +41,11 @@ function toggle(value: boolean, onChange: (v: boolean) => void): HTMLElement {
   });
 }
 
+/** 設定項的補充說明；不是控制項，故不用 `row()` 的 label 結構。 */
+function note(text: string): HTMLElement {
+  return el('p', { class: 'set__note' }, text);
+}
+
 function group(title: string, ...rows: HTMLElement[]): HTMLElement {
   return el('section', { class: 'set-group' },
     el('h3', { class: 'set-group__title' }, title),
@@ -67,6 +73,13 @@ export function openSettingsSheet(trigger: HTMLElement): HTMLDialogElement {
       row('刻盤算法', select(settings.keStrategyId,
         KE_STRATEGIES.map((strategy) => [strategy.id, strategy.name] as [string, string]),
         (v) => updateSettings({ keStrategyId: v }))),
+    ),
+    group('擇吉',
+      row('用事', select<SelectionMode>(settings.selectionMode,
+        [['daily', '日常'], ['construction', '修造']],
+        (v) => updateSettings({ selectionMode: v }))),
+      note('修造時，時沖月令或歲君由「不宜」提升為「不用」。依據是《協紀》'
+        + '「大事則忌，小事可勿論」，只作用於時課，不改日課、方位與方向排序。'),
     ),
     group('關於',
       staticRow('時間制', 'UTC+8'),

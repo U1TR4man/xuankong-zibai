@@ -8,6 +8,7 @@ import { evaluateDirections, rankDirections } from '../src/selection/evaluateDir
 import { type SelectionMode, buildHourGate } from '../src/selection/hourGate';
 import { type TemporalPillars, buildTemporalPillars } from '../src/selection/temporalPillars';
 import { buildTemporalBranchContext, buildTimeGateAssessment } from '../src/selection/temporalRules';
+import { DEFAULT_SETTINGS } from '../src/state/settings';
 
 /** 干支必須同陰陽；不合法組合直接拋錯，避免測試建出不存在的柱。 */
 function ganzhi(stem: Stem, branch: Branch): Ganzhi {
@@ -242,6 +243,68 @@ describe('Gate 不做算術抵消', () => {
       }
     }
     expect(seen.size).toBe(5);
+  });
+});
+
+describe('用事模式：只作用於 Hour Gate', () => {
+  const AT = fromUtc8(2026, 8, 7, 11, 38);
+
+  it('設定預設為 daily，與 SelectionMode 的規格預設一致', () => {
+    expect(DEFAULT_SETTINGS.selectionMode).toBe('daily');
+    expect(buildHourGate(buildTemporalPillars(AT)).mode).toBe('daily');
+  });
+
+  it('修造把時沖月令由 mixed 提升為 reject，日常維持 mixed', () => {
+    // 子日午時：午沖子（時破）會蓋過一切，故改用不沖日支的組合。
+    // 丑月、寅日、申時：申沖寅是時破——同樣要避開。
+    // 取 卯日 · 酉月 · 卯時：卯沖酉為沖月令，且卯與卯不沖，日支無事。
+    const pillars: TemporalPillars = {
+      year: anyGanzhiWithBranch('辰'),
+      month: anyGanzhiWithBranch('酉'),
+      day: ganzhi('乙', '卯'),
+      hour: hourPillar('乙', '卯'),
+    };
+    expect(buildHourGate(pillars, { mode: 'daily' }).conflicts.clashMonth.active).toBe(true);
+    expect(buildHourGate(pillars, { mode: 'daily' }).status).toBe('mixed');
+    expect(buildHourGate(pillars, { mode: 'construction' }).status).toBe('reject');
+    // severity 也隨模式改變，但 active 這個事實兩邊相同——同一 fact 只登記一次。
+    expect(buildHourGate(pillars, { mode: 'daily' }).conflicts.clashMonth.severity).toBe('warning');
+    expect(buildHourGate(pillars, { mode: 'construction' }).conflicts.clashMonth.severity)
+      .toBe('reject');
+  });
+
+  it('沒有沖月令／歲君時，兩個模式的輸出完全相同', () => {
+    const pillars: TemporalPillars = {
+      year: anyGanzhiWithBranch('辰'),
+      month: anyGanzhiWithBranch('辰'),
+      day: ganzhi('乙', '卯'),
+      hour: hourPillar('乙', '卯'),
+    };
+    const daily = buildHourGate(pillars, { mode: 'daily' });
+    const construction = buildHourGate(pillars, { mode: 'construction' });
+    expect({ ...construction, mode: 'daily' }).toEqual(daily);
+  });
+
+  it('模式不得外溢到 Day Gate、Direction Gate 或八方排序', () => {
+    // 型別層面：Day Gate 與 Direction Gate 的建構式都不接受 mode。
+    // 行為層面：改變模式不影響 chart-level 的任何輸出。
+    const chart = computeFullChart(AT);
+    const evaluations = evaluateDirections(chart);
+    const fingerprint = {
+      verdicts: evaluations.map((e) => `${e.snapshot.palace}:${e.verdict}`),
+      order: rankDirections(evaluations).map((e) => e.snapshot.palace),
+      dayStatus: buildTimeGateAssessment(buildTemporalBranchContext(AT)).dayStatus,
+    };
+    const pillars = buildTemporalPillars(AT);
+    for (const mode of ['daily', 'construction'] as const) {
+      expect(buildHourGate(pillars, { mode }).mode).toBe(mode);
+      const after = evaluateDirections(computeFullChart(AT));
+      expect({
+        verdicts: after.map((e) => `${e.snapshot.palace}:${e.verdict}`),
+        order: rankDirections(after).map((e) => e.snapshot.palace),
+        dayStatus: buildTimeGateAssessment(buildTemporalBranchContext(AT)).dayStatus,
+      }).toEqual(fingerprint);
+    }
   });
 });
 

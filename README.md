@@ -43,7 +43,7 @@ Phase 1–3（規劃書 §38）已完成並通過測試，另含 Phase 4–6 的
 ### V2.1 視覺精修與 iOS 日期時間修正
 
 - 日期／時間仍使用原生 `<input type="date">`、`<input type="time">`；外層 shell 統一繪製 border 與 focus，避免 iOS WebKit 原生控件內外框尺寸不同步。
-- 自帶約 249 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、927 個 cmap 字元／928 glyphs，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
+- 自帶約 249 KB `Zibai Serif`（Noto Serif CJK TC Medium 2.003、929 個 cmap 字元／930 glyphs，SIL OFL 1.1），PWA 預載／離線快取，單檔版改為 data URI 內嵌；可用 `scripts/build-font-subset.py` 從專案靜態 UI 文字重建。
 - 頂欄 info／settings 改為同一套 1.5px inline SVG，不再依賴平台 emoji。
 - 層級列改為無外框 tab + 朱砂短底線；主畫面只保留一個「今」，UTC+8 說明留在選時與設定 Sheet。
 - 層級 tabs 支援方向鍵、Home／End 與 automatic activation，並與盤面 `tabpanel` 正確關聯。
@@ -112,7 +112,7 @@ Day、Hour、Direction 三個 Gate 的計算層與 UI 均已完成。**三者一
 | Gate | 內容 | 規則文件 |
 |---|---|---|
 | **Day** | 日干五行 × 節氣月司令；四立前十八日取土旺。旺／相 `pass`、休 `mixed`、囚／死 `caution` | [day-gate-v1](docs/day-gate-v1-authoritative-rules.md) |
-| **Hour** | 時破、時沖月令／歲君、五不遇、時刑、日害；時建、六合、三合、時干扶日、日祿。輸出 `preferred / pass / mixed / caution / reject` | [hour-gate-v1](docs/hour-gate-v1-authoritative-rules.md) |
+| **Hour** | 時破、時沖月令／歲君、五不遇、時刑、日害；時建、六合、三合、時干扶日、日祿。輸出 `preferred / pass / mixed / caution / reject`。可在設定選「日常／修造」，**只影響本層** | [hour-gate-v1](docs/hour-gate-v1-authoritative-rules.md) |
 | **Direction** | 歲破、月破方、年／月／日三煞（negative）；六德、三德方、月金匱（positive） | [direction-gate-v1](docs/direction-gate-v1-authoritative-rules.md)、[direction-positive-v1](docs/direction-positive-v1-authoritative-rules.md) |
 
 三個 Gate 之間的介面契約見 [gates-v1-integration](docs/gates-v1-integration.md)。核心是**同一個六沖只有一份實作**：破日、時破、時沖月令、時沖歲君、歲破方、月破方六個名目全部消費 `isClash()`，同一 clash fact 只登記一次，Gate 間不做數值相加，`yuePo` 是禁用名。
@@ -123,6 +123,7 @@ Day、Hour、Direction 三個 Gate 的計算層與 UI 均已完成。**三者一
 - **正面 evidence 不得翻轉 structural veto。** 六德與三德方不會解除歲破或三煞，`directionSelection.ts` 裡沒有任何抵銷路徑。
 - **方位精度是 24 山不是整宮。** 三煞橫跨三宮、通常每宮只有一山受影響，UI 逐山列出並明示不可當作整宮受煞。既有的大月建與白中殺屬飛宮型，本來就是整宮語義，兩者不同軌。
 - **不判定制化成功。** 古法確有制煞之理（〈制煞要法〉列干犯干制、支犯支制、三合犯三合制、納音犯納音制與月令衰旺），但本版本不實作這套條件，因此不替使用者宣告「已制」。
+- **用事模式只作用於時課。** 設定的「日常／修造」只改變時沖月令／歲君的等級（依據是《協紀》「大事則忌，小事可勿論」）。日課的旺相休囚死與方位的歲破三煞，原典都沒有按事情大小分級，因此不套用。
 - `TimeGateAssessment.hourStatus` 仍為 `not_evaluated`；把它改為正式狀態需要明確授權。
 
 ## 考源狀態
@@ -239,7 +240,7 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 - 另以完全獨立的 Python 實作（節氣與干支日都改用 sxtwl）對 1905–2094 之間
   **2996 個取樣時間點**重算年／月／日／時／刻五層入中星與順逆：**零筆不一致**。
 - 自帶字體 subset：來源 `NotoSerifCJKtc-Medium.otf` 2.003（source SHA-256 由
-  `scripts/build-font-subset.py` 核對），927 個 UI 字元／928 glyph／248,116 bytes。
+  `scripts/build-font-subset.py` 核對），929 個 UI 字元／930 glyph／249,012 bytes。
   preload、CSS `@font-face`、PWA precache 與 single-file data URI 四個管道均已確認含新字體；
   `tools/make-single-file.mjs` 另在 build 期斷言內嵌字體解碼後的 byte 數等於來源。
 - 四寬度 Browser QA（經本機 http server 實測 `dist/`，`scripts/serve-dist.command` 可直接啟動）：
@@ -252,7 +253,6 @@ export const TraditionalKeStrategy: KeStarStrategy = {
 
 - 只有一種刻盤算法。找到其他流派後依上節新增即可。
 - 三個 Gate 均已實作但**一律不參與排序**。要讓它們影響 `verdictFor()`／`rankDirections()` 屬各規則文件的 stop condition，需明確授權。
-- `daily`／`construction` 模式的使用者選擇方式未定義，規格確定前一律以 `daily` 為預設語義；construction 級 severity 只作文字說明。
 - 五不遇的「支相生解除」細則：原文已核到完整上下文，但判準（藏干取用優先級、與日干或日支或兩者）原文未明言，因此不可實作。
 - 白中殺的 9×6 矩陣已逐頁核到《五要奇書》卷三十八的完整六列，六格逐格相符（含受剋全九格）；證據等級可升但尚未升。另需補記鬥牛的元龜異說、五黃暗建的四隅異說、受剋定義的二比一異文，以及《完孝錄》「以上星煞所忌，特見其例耳」——古本明說還須論刑宮、害宮與空亡，本專案未實作該層。
 - 跨時段最佳時窗、個人化吉凶評分、節氣前後排除、多宮／任一宮及入中星搜尋均保留為未來能力；目前方向 status 即使已加入第六輪分層條件，仍只是工具分級。

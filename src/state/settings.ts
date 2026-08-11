@@ -3,6 +3,7 @@
 import type { DayChangeMode } from '../engine/time/ganzhiDay';
 import type { YearBoundary } from '../engine/flyingStar/yearStar';
 import { DEFAULT_KE_STRATEGY_ID } from '../engine/flyingStar/ke/registry';
+import type { SelectionMode } from '../selection/hourGate';
 
 export type DisplayMode = 'simple' | 'study';
 
@@ -16,6 +17,17 @@ export interface Settings {
   showPalaceName: boolean;
   showLuoshu: boolean;
   displayMode: DisplayMode;
+  /**
+   * 擇吉用途模式。**只影響 Hour Gate**，不影響 Day Gate、Direction Gate
+   * 或八方 verdict／排序。
+   *
+   * 依據只有《協紀》卷七對時沖月令／歲君的「大事則忌，小事可勿論」；
+   * 旺相休囚死與歲破三煞，原典都沒有按事情大小分級，因此**不得**把本開關
+   * 擴大到那兩層——那是自造規則，不是實作細節。
+   *
+   * 預設 `'daily'`，與 `SelectionMode` 的規格預設一致。
+   */
+  selectionMode: SelectionMode;
 }
 
 const KEY = 'zibai.settings.v1';
@@ -29,6 +41,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showPalaceName: true,
   showLuoshu: false,
   displayMode: 'simple',
+  selectionMode: 'daily',
 };
 
 export function loadSettings(): Settings {

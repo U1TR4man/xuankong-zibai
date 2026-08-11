@@ -1635,6 +1635,13 @@ button.selection-cell:hover { background: rgb(122 34 32 / 4%); }
 }
 .set__row:last-child { border-bottom: none; }
 .set__label { font-size: 15px; color: var(--ink-secondary); }
+.set__note {
+  margin: 0;
+  padding: var(--s2) 0 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
 .set__control {
   max-width: 62%;
   min-height: var(--tap);

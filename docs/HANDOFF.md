@@ -337,6 +337,29 @@ tests/fixtures/chart-snapshot.json
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
 
+### 用事模式 UI（C3，2026-08-11）
+
+Hour Gate 規則文件 §10 的 stop condition「`daily`／`construction` 由使用者如何選擇」已定案並實作。
+
+- `settings.selectionMode`（`'daily' | 'construction'`，預設 `daily`，localStorage 持久化），
+  與日柱換日、年界同組。**理由**：三者都是影響計算的解讀選項，且用事是穩定情境而非每張盤的切換。
+  另一個選項（擇吉盤內控制、進 URL）被否決，因為既有的「用途」控制明示**不改排序**，
+  而用事模式**會改判定**，兩個長得一樣的控制語義不同容易誤讀。
+- **作用範圍嚴格限 Hour Gate。** `buildDayGate`／`buildDirectionSelectionAssessment` 都不接受
+  mode 參數，型別層面即擋住。行為層面有測試鎖定：切換模式後八方 verdict、`rankDirections()`
+  次序與 `dayStatus` 完全相同。**要擴大到 Day/Direction 需要新證據**——原典沒有給那兩層
+  按事情大小分級的說法。
+- 方向詳情時課區顯示「用事：日常／修造」。缺了這行，使用者會看到 `reject` 卻找不到來源。
+- 字體 subset 929 字／930 glyph／249,012 bytes，SHA-256
+  `a546a1b1ea8929c13b7abfc222498ca7d68ef89d6f9381c0b05bba804304402a`。
+  新增的「忌」「勿」來自設定說明所引原文，屬使用者可讀的 UI 文字，與引文 anchor 不同軌。
+- `npm test` 343 → **347**。
+
+**下一步是 C2(b) 最佳時窗**，且應先寫規格文件再實作（前面三個 Gate 都是這個順序）。
+已議定的邊界：消費既有 `SearchMatch[]` 不重算飛星、不做 0–100 分、不做算術抵消
+（lexicographic 分層）、時間軸與方向軸**不共用欄位名**。
+C2(a)「Gate 進八方排序」已否決：Day/Hour Gate 不隨宮位變化，八方同加同值，排序輸出不會改變。
+
 ### 四寬度 Browser QA 與一個 CSS 修正（2026-08-11）
 
 以 `dist/` 經本機 http server（`scripts/serve-dist.command`）實測。

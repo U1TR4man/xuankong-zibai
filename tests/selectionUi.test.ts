@@ -200,6 +200,8 @@ describe('紫白擇吉 Phase 2 主盤 UI', () => {
     // 時課與方位層只作顯示，不得改動方向 verdict 與排序
     expect($('.direction-hour-gate h3')?.textContent).toBe('時課');
     expect($('.direction-hour-gate')?.textContent).toContain('時柱戊午');
+    // 用事模式必須在時課區明示，否則使用者看到判定卻不知道它由哪個設定產生。
+    expect($('.direction-hour-gate__boundary')?.textContent).toContain('用事：日常');
     expect($('.direction-sha')?.textContent).toContain('本宮三山');
     expect($('.direction-gate-boundary')?.textContent).toContain('不參與八方排序');
     expect($('.direction-detail__verdict')?.textContent).toBe('慎用');
