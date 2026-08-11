@@ -63,6 +63,7 @@
 - 干支加入與 UI/UX refinement V2 紀錄：`docs/ganzhi-uiux-refinement-v2.md`
 - V2 Final UI/UX refinement 紀錄：`docs/v2-final-uiux-refinement.md`
 - Day Gate V1 權威規則：`docs/day-gate-v1-authoritative-rules.md`
+- 最佳時窗 Ranking V1 規則（尚未實作）：`docs/time-window-ranking-v1-authoritative-rules.md`
 - Direction Positive Evidence V1 權威規則（第十一至十三輪）：`docs/direction-positive-v1-authoritative-rules.md`
 
 P0 iPhone 實機使用已回報無問題。疊盤、搜尋 A/B、UI 與 URL cleanup、紫白擇吉 Phase 1–4、四星橫排、第六輪時間規則、第七輪白中殺 9×6 矩陣、canonical 年月日時干支、V2 Final P0／P1 及 Day Gate V1 均已完成；大月建 36 個月型態已由月入中星本宮統一，不再另算。V2 UI/UX 進入 freeze；Day Gate 下一步是四柱沖、月破、日時沖、時扶日與日干祿時。另需收入第七輪所引固定版本原頁證據包、日／時白 killer 直接實例、月納音作用範圍與 deploy，不應擅自發明暫緩公式、九宮 keyboard cleanup 或 P2 最佳時窗。九宮式 Search selector 已於 2026-08-11 經使用者授權實作。
@@ -336,6 +337,28 @@ tests/fixtures/chart-snapshot.json
 - 三 Gate 一律 `rankingUse: 'disabled'`；`verdictFor()`／`rankDirections()` 不得讀取任何 Gate 欄位，實作時須附 regression test
 - 證據狀態：第八輪有卷次且附 ctext 連結、第九輪有卷次但無連結、第十輪僅有篇名。三輪皆 `primarySourceVerified = false`，第十輪最弱故 severity 全部 `reference_only`
 - `daily`／`construction` 模式的使用者選擇方式尚未定義；規格確定前一律以 daily 為預設語義
+
+### 最佳時窗 Ranking V1 規格封版（C2b 第一步，2026-08-11，尚未實作）
+
+`docs/time-window-ranking-v1-authoritative-rules.md`。與前四份 Gate 文件同樣是
+**先封版、後實作**；本輪未寫任何 production code。
+
+- **這是本專案第一個會排序的判定層**，使用者明確授權，範圍**僅限時間軸**。
+  `gates-v1-integration` §6 的方位軸 `rankingUse: 'disabled'` 一字未改。
+- **排序鍵只有四個**：`admissible`（Hour Gate reject 出局）→ `dayStatus` → `hourStatus`
+  → `startDateTime`。第五個鍵需要新授權。
+- **日課在時課之前，有原文依據**：卷三十四〈用時法〉「時者，日之用也」。
+  後果要講清楚：**囚日的 preferred 時辰排在旺日的 caution 時辰之後**。
+  若把時課提前，等於推翻 `hour-gate-v1` §0 已封版的 `hourRole = 'support_and_refinement'`。
+- **lexicographic 分層，不是加權和。** 不得把兩個 Gate 換算成數字相加——那會直接違反
+  `hour-gate-v1` §7「Gate 不做算術抵消」。也不得輸出 0–100 分或星級。
+- **平手按時間由早到晚，這是可重現手段不是判定**，UI 必須明示，別讓使用者以為越早越吉。
+  雙星、六德、白中殺、歲破三煞**都不得**用來打破平手，各有封版理由（見文件 §3 表）。
+- **`rankingUse` 在時間層是禁用名**，時間層用 `timeRankingUse`。兩軸永不共用欄位名，
+  `RankedTimeWindow` 也不得有 `verdict`。
+- **日精度時窗的 `hourStatus` 是 `'not_applicable'`**，不是 `'pass'`、不是挑一個時辰代表，
+  也**不得**重用 `'not_evaluated'`——後者語義是「本版本尚未評估」，與「此精度無此概念」不同。
+- 實作時必須同時交付文件 §7 的六項 regression。
 
 ### 用事模式 UI（C3，2026-08-11）
 

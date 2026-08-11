@@ -104,6 +104,15 @@ rankingUse: 'disabled'      // 三個 Gate 一律不參與八方排序
 
 解除此限制屬使用者決策，見各 Gate 文件的 Stop conditions。
 
+**2026-08-11 更新**：使用者已授權 Gate 參與**時間軸**排序，見
+`docs/time-window-ranking-v1-authoritative-rules.md`。**方位軸不在授權範圍內**：
+上面那行 `rankingUse: 'disabled'` 與 `verdictFor()`／`rankDirections()` 不得讀取 Gate 欄位
+的規定，一字未改。
+
+兩個軸**不得共用欄位名**：時間層用 `timeRankingUse`，`rankingUse` 在時間層是禁用名，
+地位同 §1 的 `yuePo`。理由是日後看到 `rankingUse: 'active'` 必須能立刻判定為錯，
+而不必先追它屬於哪個軸。
+
 ## 7. 證據狀態總表
 
 | 輪次 | Gate | 卷次級引用 | 頁碼／版本／原頁 | `primarySourceVerified` |
@@ -135,4 +144,6 @@ isPunishment(dayBranch, hourBranch) // 刑，有向
 
 - 第九輪 §45 建議的 Direction Gate 研究次序中，大月建與年／月白中殺已在第五至七輪完成，本整合契約未重述。
 - 三個 Gate 的合併輸出型別（例如 `SelectionGates`）尚未定義；各 Gate 實作完成後再視需要新增，不先預造。
-- 兩階段排序（先 Hour Gate 分組、組內再比紫白）屬實作期決策，需在授權 ranking 後才動。
+- 兩階段排序（先 Hour Gate 分組、組內再比紫白）**已於 2026-08-11 授權，但形式與此處設想不同**：
+  時窗排序的鍵是「日課 → 時課 → 時間」，**紫白不進排序鍵**（雙星仍 `reference_only`）。
+  見最佳時窗規則文件 §2、§3。
