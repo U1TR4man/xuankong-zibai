@@ -28,14 +28,41 @@ const SELECTION_PURPOSES: readonly SelectionPurpose[] = [
 ];
 const PAIR_LAYERS: readonly PairLayer[] = ['YM', 'YD', 'YH', 'MD', 'MH', 'DH'];
 
-/** 第一輪只序列化 A 類簡易尋星；進階條件仍留在頁面生命週期內。 */
+/**
+ * 尋星條件的 URL 表述。兩種模式共用日期與宮位，星的部分互斥，
+ * 因此用 discriminated union 而不是可選欄位袋：
+ * 進階狀態不可能帶著 `precision`，簡易狀態也不可能帶著三層集合。
+ *
+ * 舊 URL（只有 `from`／`to`／`searchPalace`／`precision`／`star`、沒有 `mode`）
+ * 仍解析為簡易模式，既有的 bookmark 與分享連結不會失效。
+ */
+export type SearchUrlMode = 'simple' | 'advanced';
+
+/** 簡易尋星：單一層級、單一飛星。 */
 export interface SimpleSearchUrlState {
+  mode: 'simple';
   from: string;
   to: string;
   searchPalace: PalaceKey;
   precision: SearchPrecision;
   star: number;
 }
+
+/**
+ * 進階尋星：三層各自持有一組飛星，同層為 OR、跨層為 AND，
+ * 與 `StarSearchQuery.conditions` 的語義一致（空陣列＝該層無條件）。
+ */
+export interface AdvancedSearchUrlState {
+  mode: 'advanced';
+  from: string;
+  to: string;
+  searchPalace: PalaceKey;
+  dayStars: readonly number[];
+  hourStars: readonly number[];
+  keStars: readonly number[];
+}
+
+export type StarSearchUrlState = SimpleSearchUrlState | AdvancedSearchUrlState;
 
 export interface AppState {
   view: AppView;
@@ -59,7 +86,7 @@ export interface AppState {
   overlayPrimaryLevel: Level;
   /** Search → Chart 時命中的層，只供 selected palace 的輕量 UI 標示。 */
   searchMatchedLevels: Level[];
-  simpleSearch?: SimpleSearchUrlState;
+  starSearch?: StarSearchUrlState;
   /** 只在 URL restore 時遞增，讓 SearchView 可辨識 refresh／back。 */
   searchRestoreVersion: number;
 }
@@ -83,7 +110,7 @@ const state: AppState = {
   selectedPairLayer: undefined,
   overlayPrimaryLevel: 'hour',
   searchMatchedLevels: [],
-  simpleSearch: undefined,
+  starSearch: undefined,
   searchRestoreVersion: 0,
 };
 
@@ -198,9 +225,9 @@ export function setView(view: AppView, opts: { push?: boolean } = {}): void {
   emit();
 }
 
-/** 更新簡易尋星 URL，不觸發整頁重繪，避免輸入欄位失去焦點。 */
-export function setSimpleSearchUrlState(value: SimpleSearchUrlState | undefined): void {
-  state.simpleSearch = value;
+/** 更新尋星 URL，不觸發整頁重繪，避免輸入欄位失去焦點。 */
+export function setStarSearchUrlState(value: StarSearchUrlState | undefined): void {
+  state.starSearch = value;
   if (state.view === 'search') syncUrl();
 }
 
@@ -332,7 +359,7 @@ function syncUrl(push = false): void {
   p.set('t', `${formatUtc8Date(state.selectedDateTime)}T${formatUtc8Time(state.selectedDateTime)}`);
   p.set('view', state.view);
   if (state.view === 'search') {
-    appendSimpleSearchUrlState(p, state.simpleSearch);
+    appendStarSearchUrlState(p, state.starSearch);
   } else {
     p.set('level', state.level);
     if (state.selectionMode) {
@@ -356,31 +383,91 @@ function syncUrl(push = false): void {
   }
 }
 
-export function appendSimpleSearchUrlState(
+const ADVANCED_STAR_PARAM: Readonly<Record<'day' | 'hour' | 'ke', string>> = {
+  day: 'dayStars', hour: 'hourStars', ke: 'keStars',
+};
+
+/**
+ * 一層的飛星集合序列化為連續數字，例如 `hourStars=89`。
+ * 飛星恆為 1–9 單一位數，故不需分隔符；空集合不寫入參數。
+ */
+function formatStarSet(stars: readonly number[]): string {
+  return [...stars].sort((a, b) => a - b).join('');
+}
+
+/**
+ * 解析單層飛星集合。重複數字（如 `11`）會去重而非判為無效：
+ * OR 集合去重後語義完全相同，不可能因此得出錯誤的搜尋條件。
+ * 出現 0 或非數字則整層作廢。
+ */
+function parseStarSet(raw: string | null): readonly number[] | undefined {
+  if (raw === null || raw === '') return [];
+  if (!/^[1-9]+$/.test(raw)) return undefined;
+  return [...new Set(raw.split('').map(Number))].sort((a, b) => a - b);
+}
+
+function appendSharedSearchParams(
   params: URLSearchParams,
-  value: SimpleSearchUrlState | undefined,
+  value: StarSearchUrlState,
 ): void {
-  if (!value) return;
   params.set('from', value.from);
   params.set('to', value.to);
   params.set('searchPalace', value.searchPalace);
-  params.set('precision', value.precision);
-  params.set('star', String(value.star));
 }
 
-export function parseSimpleSearchUrlState(
+export function appendStarSearchUrlState(
   params: URLSearchParams,
-): SimpleSearchUrlState | undefined {
+  value: StarSearchUrlState | undefined,
+): void {
+  if (!value) return;
+  appendSharedSearchParams(params, value);
+  if (value.mode === 'simple') {
+    params.set('precision', value.precision);
+    params.set('star', String(value.star));
+    return;
+  }
+  params.set('mode', 'advanced');
+  for (const [level, param] of Object.entries(ADVANCED_STAR_PARAM)) {
+    const stars = value[`${level as 'day' | 'hour' | 'ke'}Stars`];
+    if (stars.length > 0) params.set(param, formatStarSet(stars));
+  }
+}
+
+interface SharedSearchUrlState {
+  from: string;
+  to: string;
+  searchPalace: PalaceKey;
+}
+
+function parseSharedSearchParams(params: URLSearchParams): SharedSearchUrlState | undefined {
   const from = params.get('from');
   const to = params.get('to');
   const searchPalace = params.get('searchPalace') as PalaceKey | null;
-  const precision = params.get('precision') as SearchPrecision | null;
-  const star = Number(params.get('star'));
   if (!from || !to || !parseUtc8(from) || !parseUtc8(to)) return undefined;
   if (!searchPalace || !PALACE_KEYS.includes(searchPalace)) return undefined;
+  return { from, to, searchPalace };
+}
+
+export function parseStarSearchUrlState(
+  params: URLSearchParams,
+): StarSearchUrlState | undefined {
+  const shared = parseSharedSearchParams(params);
+  if (!shared) return undefined;
+  // 沒有 mode 參數即視為簡易，保持舊連結可用。
+  if (params.get('mode') === 'advanced') {
+    const dayStars = parseStarSet(params.get(ADVANCED_STAR_PARAM.day));
+    const hourStars = parseStarSet(params.get(ADVANCED_STAR_PARAM.hour));
+    const keStars = parseStarSet(params.get(ADVANCED_STAR_PARAM.ke));
+    if (!dayStars || !hourStars || !keStars) return undefined;
+    // 三層全空即無條件可搜，與 UI 的「請至少設定一個層級條件」一致。
+    if (dayStars.length + hourStars.length + keStars.length === 0) return undefined;
+    return { mode: 'advanced', ...shared, dayStars, hourStars, keStars };
+  }
+  const precision = params.get('precision') as SearchPrecision | null;
+  const star = Number(params.get('star'));
   if (!precision || !SEARCH_PRECISIONS.includes(precision)) return undefined;
   if (!Number.isInteger(star) || star < 1 || star > 9) return undefined;
-  return { from, to, searchPalace, precision, star };
+  return { mode: 'simple', ...shared, precision, star };
 }
 
 /** 由 URL 還原狀態。回傳是否成功還原。 */
@@ -393,7 +480,7 @@ export function restoreFromUrl(): boolean {
   if (d) state.selectedDateTime = d;
   state.view = searchView ? 'search' : 'chart';
   if (searchView) {
-    state.simpleSearch = parseSimpleSearchUrlState(p);
+    state.starSearch = parseStarSearchUrlState(p);
     state.searchRestoreVersion += 1;
   } else {
     const level = p.get('level') as Level | null;

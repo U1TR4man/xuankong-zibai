@@ -6,6 +6,10 @@
 
 ### Changed
 
+- **進階尋星條件可由 URL refresh、bookmark 或分享連結還原。** 先前只有簡易條件會寫入 URL，切到進階後重新整理就會失去三層設定。現行 URL 以 `mode=advanced` 標示，三層各自序列化為連續數字（飛星恆為 1–9 單一位數，例如 `dayStars=13&hourStars=9`），空集合不寫入。
+- URL state 由 `SimpleSearchUrlState` 改為 discriminated union `StarSearchUrlState`：簡易帶 `precision`／`star`，進階帶三層集合，兩者互斥。**沒有 `mode` 參數的舊連結仍解析為簡易模式**，既有 bookmark 不失效。
+- 還原只回填表單、不自動執行搜尋，與簡易模式一致。
+
 - **四寬度 Browser QA 已完成**：以 `dist/` 經本機 http server 實測 320／375／390／430px，頁面與方向詳情 sheet 的 `clientWidth` 與 `scrollWidth` 全部相等（sheet 分別為 318／373／388／428），四個 disclosure 全展開後仍無 horizontal overflow。字體 `document.fonts.check()` 為 true 且 `FontFace.status` 為 `loaded`；service worker 已啟用，workbox precache 9 個項目含新的 WOFF2；console 0 error／0 warning。
 - **Hour Gate precedence：時刑由 `mixed` 提升為 `caution`，與五不遇同級。** 依據是《協紀》四庫本卷三十四〈用時法〉把兩者並列為「次凶」，以及卷七〈八錄〉「建合則吉，而破刑害則凶也」三者並列不分高下。原本的高下來自研究稿未經核對的分層，且該分層為時刑所引的「次凶，亦輕可」一句在兩卷均未見。現行對應為：大凶 → `reject`、次凶（時刑／五不遇）→ `caution`、其餘凶 → `mixed`。日害維持 `mixed`，因兩卷都沒有給它明確等級。
 - 識別碼由 `sanDeCongJu` 更名為 `sanDeFang`（含 `detectSanDeFang()`、`SanDeFangResult`、`positive_san_de_fang`），`src/**` 註解中的「三德叢聚」一併改為已核對的「三德方」。原名建立在未核到的「叢聚」一詞上。純命名，不影響行為。

@@ -156,9 +156,12 @@ describe('Phase 3 搜尋 UI', () => {
     const { getState } = await import('../src/state/appState');
 
     expect(getState().view).toBe('search');
-    expect(getState().simpleSearch).toEqual({
+    expect(getState().starSearch).toEqual({
+      mode: 'simple',
       from: '2026-09-01', to: '2026-09-03', searchPalace: 'li', precision: 'hour', star: 9,
     });
+    // 舊連結沒有 mode 參數，仍須解析為簡易模式。
+    expect(new URLSearchParams(location.search).has('mode')).toBe(false);
     expect($<HTMLInputElement>('input[name="startDate"]')?.value).toBe('2026-09-01');
     expect($<HTMLInputElement>('input[name="endDate"]')?.value).toBe('2026-09-03');
     expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');
@@ -215,6 +218,57 @@ describe('Phase 3 搜尋 UI', () => {
     expect($<HTMLInputElement>('input[name="hourStars"][value="8"]')?.checked).toBe(true);
     expect($<HTMLInputElement>('input[name="keStars"][value="9"]')?.checked).toBe(true);
     $<HTMLButtonElement>('.search-advanced-toggle')!.click();
+  });
+
+  it('進階條件可由 URL refresh 還原三層飛星', async () => {
+    $<HTMLButtonElement>('.search-advanced-toggle')!.click();
+    expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('true');
+
+    // 承接上一輪保留下來的 時 8／9、刻 8／9，改成 日 1／3 ＋ 時 9。
+    for (const selector of [
+      'input[name="hourStars"][value="8"]',
+      'input[name="keStars"][value="8"]',
+      'input[name="keStars"][value="9"]',
+      'input[name="dayStars"][value="1"]',
+      'input[name="dayStars"][value="3"]',
+    ]) $<HTMLInputElement>(selector)!.click();
+
+    const params = new URLSearchParams(location.search);
+    expect(params.get('mode')).toBe('advanced');
+    expect(params.get('searchPalace')).toBe('li');
+    // 飛星恆為一位數，同層集合序列化為升序連續數字。
+    expect(params.get('dayStars')).toBe('13');
+    expect(params.get('hourStars')).toBe('9');
+    // 空集合不寫入，且進階模式不得殘留簡易模式的欄位。
+    expect(params.has('keStars')).toBe(false);
+    expect(params.has('precision')).toBe(false);
+    expect(params.has('star')).toBe(false);
+
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    const { getState } = await import('../src/state/appState');
+    expect(getState().starSearch).toEqual({
+      mode: 'advanced',
+      from: $<HTMLInputElement>('input[name="startDate"]')!.value,
+      to: $<HTMLInputElement>('input[name="endDate"]')!.value,
+      searchPalace: 'li',
+      dayStars: [1, 3],
+      hourStars: [9],
+      keStars: [],
+    });
+    expect($('.search-advanced-toggle')?.getAttribute('aria-expanded')).toBe('true');
+    expect($<HTMLSelectElement>('select[name="palace"]')?.value).toBe('li');
+    for (const selector of [
+      'input[name="dayStars"][value="1"]',
+      'input[name="dayStars"][value="3"]',
+      'input[name="hourStars"][value="9"]',
+    ]) expect($<HTMLInputElement>(selector)?.checked).toBe(true);
+    expect($<HTMLInputElement>('input[name="dayStars"][value="9"]')?.checked).toBe(false);
+    expect(document.querySelectorAll('input[name="keStars"]:checked')).toHaveLength(0);
+
+    // 復原成簡易模式：URL restore 後單星欄位已清空，需重新選星。
+    $<HTMLButtonElement>('.search-advanced-toggle')!.click();
+    $<HTMLInputElement>('input[name="star"][value="9"]')!.click();
+    expect(new URLSearchParams(location.search).has('mode')).toBe(false);
   });
 
   it('超過一年會明確拒絕，不會在背景無限掃描', () => {

@@ -5,7 +5,7 @@ import { parseCandidateRange } from '../search/candidateIterator';
 import { searchStars } from '../search/StarSearchEngine';
 import type { SearchLevel, SearchMatch, StarSearchQuery } from '../search/types';
 import {
-  getState, setSimpleSearchUrlState, setView, type AppState, type SimpleSearchUrlState,
+  getState, setStarSearchUrlState, setView, type AppState, type StarSearchUrlState,
 } from '../state/appState';
 import { el } from './dom';
 import { cancelPairSearch, PairSearchView } from './PairSearchView';
@@ -59,33 +59,45 @@ function sortStarValues(values: string[]): string[] {
 
 function defaults(state: AppState): SearchViewModel {
   const today = nowUtc8();
-  const restored = state.simpleSearch;
+  const restored = state.starSearch;
+  const advanced = restored?.mode === 'advanced' ? restored : undefined;
   return {
     draft: {
-      mode: 'simple',
+      mode: restored?.mode ?? 'simple',
       startDate: restored?.from ?? formatUtc8Date(today),
       endDate: restored?.to ?? formatUtc8Date(addDays(today, 30)),
       palace: restored?.searchPalace ?? '',
-      level: restored?.precision ?? 'hour',
-      star: restored ? String(restored.star) : '',
-      advancedStars: { day: [], hour: [], ke: [] },
+      level: restored?.mode === 'simple' ? restored.precision : 'hour',
+      star: restored?.mode === 'simple' ? String(restored.star) : '',
+      advancedStars: {
+        day: (advanced?.dayStars ?? []).map(String),
+        hour: (advanced?.hourStars ?? []).map(String),
+        ke: (advanced?.keStars ?? []).map(String),
+      },
     },
   };
 }
 
-function simpleUrlState(draft: SearchDraft): SimpleSearchUrlState | undefined {
-  if (draft.mode !== 'simple') return undefined;
+/**
+ * draft → URL state。條件不完整（未選宮位或未選星）時回傳 `undefined`，
+ * URL 便不會帶著半截條件；這也是剛切到進階、尚未點星時的正常狀態。
+ */
+function searchUrlState(draft: SearchDraft): StarSearchUrlState | undefined {
   const palace = PALACES.find((item) => item.key === draft.palace)?.key;
-  const star = Number(draft.star);
   if (!draft.startDate || !draft.endDate || !palace) return undefined;
+  const shared = { from: draft.startDate, to: draft.endDate, searchPalace: palace };
+  if (draft.mode === 'advanced') {
+    const stars = (level: SearchLevel): number[] => draft.advancedStars[level].map(Number)
+      .filter((value) => Number.isInteger(value) && value >= 1 && value <= 9);
+    const dayStars = stars('day');
+    const hourStars = stars('hour');
+    const keStars = stars('ke');
+    if (dayStars.length + hourStars.length + keStars.length === 0) return undefined;
+    return { mode: 'advanced', ...shared, dayStars, hourStars, keStars };
+  }
+  const star = Number(draft.star);
   if (!Number.isInteger(star) || star < 1 || star > 9) return undefined;
-  return {
-    from: draft.startDate,
-    to: draft.endDate,
-    searchPalace: palace,
-    precision: draft.level,
-    star,
-  };
+  return { mode: 'simple', ...shared, precision: draft.level, star };
 }
 
 function starChoices(
@@ -230,7 +242,7 @@ function SearchForm(
     } else if (input instanceof HTMLInputElement && input.type === 'checkbox') {
       input.closest('label')?.classList.toggle('is-selected', input.checked);
     }
-    setSimpleSearchUrlState(simpleUrlState(draft));
+    setStarSearchUrlState(searchUrlState(draft));
   });
 
   form.addEventListener('submit', (event) => {
@@ -252,7 +264,7 @@ function SearchForm(
           ? sortStarValues(data.getAll('keStars').map(String)) : draft.advancedStars.ke,
       },
     };
-    setSimpleSearchUrlState(simpleUrlState(nextDraft));
+    setStarSearchUrlState(searchUrlState(nextDraft));
     let query: StarSearchQuery;
     try {
       if (!nextDraft.palace) throw new RangeError('請選擇宮位');
@@ -326,7 +338,7 @@ export function SearchView(state: AppState): HTMLElement {
     searchRunId += 1;
     const nextDraft = { ...model!.draft, mode: nextMode };
     model = { draft: nextDraft };
-    setSimpleSearchUrlState(simpleUrlState(nextDraft));
+    setStarSearchUrlState(searchUrlState(nextDraft));
     setView('search');
   };
   const switchTool = (tool: SearchTool, focus = false) => {
@@ -337,7 +349,7 @@ export function SearchView(state: AppState): HTMLElement {
     searchRunId += 1;
     cancelPairSearch();
     activeSearchTool = tool;
-    setSimpleSearchUrlState(tool === 'stars' ? simpleUrlState(model!.draft) : undefined);
+    setStarSearchUrlState(tool === 'stars' ? searchUrlState(model!.draft) : undefined);
     setView('search');
     if (focus) queueMicrotask(() => document.getElementById(`search-tab-${tool}`)?.focus());
   };
