@@ -183,9 +183,16 @@ interface VirtueDefinition {
  * - 天德、天德合、月德、月德合：《御定星厯考原》四庫本卷三，
  *   另有《協紀》卷二十至三十一〈月表〉逐月佐證。
  *
- * 注意 `role` 的證據狀態與表不同：〈月吉神總論〉明言天德月德「大吉」、
- * 兩合德「次吉」，但**沒有**給歲德、歲德合任何等級。歲家同為 `primary_virtue`
- * 目前只是「未被列為次吉」的消極推論，「並屬上吉」一句尚未核到原文。
+ * `role` 的證據狀態原本弱於表，2026-08-11 已補上直接引文：
+ * 《協紀》卷四〈義例一〉歲德合按語作「歲德與歲德合，並屬上吉，有宜無忌」。
+ * 歲家兩者同為 `primary_virtue` 至此是**直接引文**，不再是「未被列為次吉」的消極推論。
+ *
+ * 同一按語接著分歲德為剛辰、歲德合為柔辰，並建議「外事以剛，内事以柔」，
+ * 但作者自己註明「選擇家雖未論及此，用者可以意通也」——那是編者的意理發揮，
+ * 不是既存的選擇家分級，因此**不得據以拆成 primary／secondary**，也不得寫成 weight。
+ *
+ * 〈月吉神總論〉的天德月德「大吉」、兩合德「次吉」屬**月家**系統，
+ * 不得類推到歲家：歲家原文已明言兩者並屬上吉。
  */
 const VIRTUE_DEFINITIONS: Readonly<Record<DirectionVirtueCode, VirtueDefinition>> = Object.freeze({
   sui_de: { role: 'primary_virtue', evidenceLevel: 'A', primarySourceVerified: true },
